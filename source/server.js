@@ -252,7 +252,8 @@ async function downloadFile(href, log) {
 /* ---------------- xlsx 解析 ---------------- */
 function unzipTo(zipPath, dir) {
   return new Promise((resolve, reject) => {
-    execFile('tar', ['-xf', zipPath, '-C', dir], { windowsHide: true }, (err, so, se) =>
+    // Windows 自带 bsdtar 会把盘符 "C:" 误判成远程主机，--force-local 强制按本地路径处理
+    execFile('tar', ['--force-local', '-xf', zipPath, '-C', dir], { windowsHide: true }, (err, so, se) =>
       err ? reject(new Error(String(se || err.message).slice(0, 200))) : resolve());
   });
 }
@@ -630,7 +631,9 @@ const localStamp = (d) => {
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname === '/api/selfcheck') {
-    const out = { cwd: process.cwd(), node: process.execPath, pathHead: (process.env.PATH || '').slice(0, 300) };
+    // 调试端点：默认关闭，只有显式 LEXMOUNT_SELFCHECK=1 才回应，避免顺手暴露本机路径与 PATH
+    if (process.env.LEXMOUNT_SELFCHECK !== '1') { res.writeHead(404); return res.end('not found'); }
+    const out = {};
     try {
       const { execFileSync } = require('child_process');
       out.where = String(execFileSync('where', ['pdftotext'])).split(/\r?\n/).filter(Boolean);
@@ -669,7 +672,7 @@ const server = http.createServer(async (req, res) => {
     req.on('data', (c) => (body += c));
     req.on('end', async () => {
       const logs = [];
-      const log = (m) => { logs.push({ t: new Date().toISOString().slice(11, 19), m }); };
+      const log = (m) => { logs.push({ t: localStamp(new Date()).slice(11, 19), m }); };
       try {
         const { urls = [], engine = 'lexmount', expand = false, concurrency = 3, maxChildren = 5 } = JSON.parse(body || '{}');
         const list = urls.map((s) => String(s).trim()).filter((s) => /^https?:\/\//i.test(s));
@@ -704,7 +707,7 @@ const server = http.createServer(async (req, res) => {
     req.on('data', (c) => (body += c));
     req.on('end', async () => {
       const logs = [];
-      const log = (m) => { logs.push({ t: new Date().toISOString().slice(11, 19), m }); };
+      const log = (m) => { logs.push({ t: localStamp(new Date()).slice(11, 19), m }); };
       try {
         const { url, engine = 'lexmount', expand = false, concurrency = 3, maxChildren = 5 } = JSON.parse(body || '{}');
         if (!/^https?:\/\//i.test(url || '')) throw new Error('URL 需要以 http(s):// 开头');
@@ -730,15 +733,31 @@ const server = http.createServer(async (req, res) => {
       let meta = {};
       try {
         const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-        const d = j.data || {};
-        meta = {
-          url: d.url, title: (d.title || d.h1 || '').slice(0, 60),
-          files: (d.files || []).length,
-          rows: (d.sheets || []).reduce((n, s) => n + s.sheets.reduce((m, x) => m + x.rows.length, 0), 0)
-            + (d.pdfs || []).reduce((n, p2) => n + p2.rows.length, 0)
-            + ((d.children || []).reduce((n, c) => n + ((c.pdfs || []).reduce((m, p3) => m + p3.rows.length, 0)), 0)),
-          ms: d.ms, engine: d.engine,
-        };
+        if (Array.isArray(j.data)) {
+          // 批次记录：聚合每条单跑的元信息，避免历史页出现空行
+          const arr = j.data;
+          meta = {
+            url: (j.urls || [])[0],
+            title: `批次 · ${arr.length} 条${j.fails && j.fails.length ? `（${j.fails.length} 失败）` : ''}`,
+            files: arr.reduce((n, d) => n + ((d.files || []).length), 0),
+            rows: arr.reduce((n, d) => n
+              + (d.sheets || []).reduce((m, s) => m + s.sheets.reduce((k, x) => k + x.rows.length, 0), 0)
+              + (d.pdfs || []).reduce((m, p2) => m + p2.rows.length, 0)
+              + (d.children || []).reduce((m, c) => m + (c.pdfs || []).reduce((k, p3) => k + p3.rows.length, 0), 0), 0),
+            ms: arr.reduce((n, d) => n + (d.ms || 0), 0),
+            engine: j.engine,
+          };
+        } else {
+          const d = j.data || {};
+          meta = {
+            url: d.url, title: (d.title || d.h1 || '').slice(0, 60),
+            files: (d.files || []).length,
+            rows: (d.sheets || []).reduce((n, s) => n + s.sheets.reduce((m, x) => m + x.rows.length, 0), 0)
+              + (d.pdfs || []).reduce((n, p2) => n + p2.rows.length, 0)
+              + ((d.children || []).reduce((n, c) => n + ((c.pdfs || []).reduce((m, p3) => m + p3.rows.length, 0)), 0)),
+            ms: d.ms, engine: d.engine,
+          };
+        }
       } catch (e) { meta.err = e.message; }
       return { file: f, at: localStamp(st.mtime), size: st.size, ...meta };
     }).sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 40);
@@ -753,8 +772,14 @@ const server = http.createServer(async (req, res) => {
     return res.end(fs.readFileSync(p));
   }
 
-  const fp = u.pathname === '/' ? path.join(ROOT, 'public', 'index.html') : path.join(ROOT, u.pathname);
-  if (!fp.startsWith(ROOT)) { res.writeHead(403); return res.end('no'); }
+  // 静态文件：先解码，再解析成绝对路径，最后确认仍落在 ROOT 内——挡掉 ../ 穿越和同前缀兄弟目录
+  let relPath;
+  try { relPath = decodeURIComponent(u.pathname); } catch (e) { res.writeHead(400); return res.end('bad path'); }
+  if (relPath.indexOf('\0') >= 0) { res.writeHead(400); return res.end('bad path'); }
+  const rootAbs = path.resolve(ROOT);
+  const fp = path.resolve(relPath === '/' ? path.join(rootAbs, 'public', 'index.html') : path.join(rootAbs, relPath));
+  const cmpFp = fp.toLowerCase(), cmpRoot = rootAbs.toLowerCase();
+  if (cmpFp !== cmpRoot && !cmpFp.startsWith(cmpRoot + path.sep)) { res.writeHead(403); return res.end('no'); }
   fs.readFile(fp, (err, buf) => {
     if (err) { res.writeHead(404); return res.end('not found'); }
     res.writeHead(200, { 'content-type': MIME[path.extname(fp)] || 'application/octet-stream' });
