@@ -1,7 +1,8 @@
 # 岗位要求的地层 · 一次可回放的云端采样
 
+> **在线看：https://mikuascendlog.com/position-strata/**
 > Lexmount 云平台真实任务挑战 · 参赛作品材料包
-> 作者：（待填）｜提交日期：2026-10-20
+> 提交日期：2026-10-20
 
 ---
 
@@ -53,7 +54,8 @@ HR／求职者想知道「这批岗位到底卡什么」，只能一张张表翻
 
 | 材料 | 位置 |
 | --- | --- |
-| 报告（单文件 HTML，双击即开） | `report/index.html` |
+| **在线报告（Pages）** | **https://mikuascendlog.com/position-strata/** |
+| 报告（单文件 HTML，双击即开） | `index.html` |
 | 报告 PDF | `技能地层采样报告.pdf` |
 | 归一后的岗位底表（9,200 行 CSV） | `data/岗位表_统一字段.csv` |
 | 会话台账（批次／成功失败／Session ID） | `data/会话台账.csv` |
