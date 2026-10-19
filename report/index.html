@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>岗位要求的地层 · 招聘门槛采样报告</title>
 <meta name="description" content="19 个地址、29 次提交、9,200 个岗位：看招聘门槛是怎么一层层沉下去、又在哪里断掉。">
-<meta property="og:title" content="岗位要求的地层 · SKILL STRATA">
+<meta property="og:title" content="岗位要求的地层 · SKILL STARTA">
 <meta property="og:description" content="19 个地址 · 9,200 个岗位 · 一次可回放的云浏览器采样">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230A0B0C'/%3E%3Crect x='7' y='9' width='18' height='3' fill='%23E4572E'/%3E%3Crect x='7' y='15' width='12' height='3' fill='%23F4EFE4'/%3E%3Crect x='7' y='21' width='7' height='3' fill='%236E8BFF'/%3E%3C/svg%3E">
 <style>
@@ -363,7 +363,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
 <div class="progress" id="prog"></div>
 
 <header class="bar">
-  <div><b>岗位要求的地层</b> &nbsp;/&nbsp; SKILL STRATA SURVEY</div>
+  <div><b>岗位要求的地层</b> &nbsp;/&nbsp; SKILL STARTA SURVEY</div>
   <div class="r">
     <span class="keep">19 SITES · 29 SUBMITS</span>
     <span class="keep">9,200 POSITIONS</span>
@@ -383,7 +383,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
       <p>19 个地址、29 次提交抓回来，其中一份省级公告拖出 5 张岗位表——9,200 个岗位（两份公告）沿垂直方向切开，看门槛是怎么一层层沉下去、又在哪里断掉。每一行都带编号：这份表不是总结，是<u>现场记录</u>。</p>
       <div class="hero-metrics">
         <div><b>19</b><span>个地址 / SITES</span></div>
-        <div><b>9,200</b><span>个岗位 / STRATA</span></div>
+        <div><b>9,200</b><span>个岗位 / STARTA</span></div>
         <div class="t3"><b><span>223<i>s</i></span></b><span>云端总用时 / TIME</span></div>
       </div>
     </div>
@@ -671,14 +671,14 @@ close     每个 session 结束即 close，防遗漏计费</div>
           批次会落到 <span class="mono">runs/batch-*.json</span>，然后跑
           <span class="mono">python canon_stat.py runs/batch-1792437271749.json</span>，输出学历构成、专业频次、地区分布、单位数、聘用人数合计。<br>
           <b>4 · 看报告</b><br>
-          <span class="mono">strata-report/index.html</span> 是单文件，双击就能开；要截图或打印就 <span class="mono">python -m http.server 8899</span> 起个本地服务再访问。<br>
+          <span class="mono">starta-report/index.html</span> 是单文件，双击就能开；要截图或打印就 <span class="mono">python -m http.server 8899</span> 起个本地服务再访问。<br>
           <b>环境依赖</b>：Node 22+；<span class="mono">.doc</span> 转 <span class="mono">.docx</span> 需要 LibreOffice；PDF 用 <span class="mono">bin/pdftotext/pdftotext.exe</span>（已随工具打包，含三个 DLL）；xlsx 只用 tar 解包 + XML 解析，不依赖 Office。
         </div>
       </details>
     </div>
 
     <div class="foot">
-      <span>岗位要求的地层 / SKILL STRATA SURVEY</span>
+      <span>岗位要求的地层 / SKILL STARTA SURVEY</span>
       <span>数据由 Lexmount 云浏览器 20 个 Session 产出 · 2026-10-20</span>
     </div>
   </div>
@@ -905,13 +905,13 @@ close     每个 session 结束即 close，防遗漏计费</div>
   }
   $('#csv').addEventListener('click',function(){
     var rows=[['major','positions']].concat(SKILLS);
-    dl('skill-strata.csv','\ufeff'+rows.map(function(r){return r.join(',')}).join('\n'),'text/csv;charset=utf-8');
+    dl('skill-starta.csv','\ufeff'+rows.map(function(r){return r.join(',')}).join('\n'),'text/csv;charset=utf-8');
   });
   $('#json').addEventListener('click',function(){
     var d={report:'岗位要求的地层',version:'preview',sites:19,submits:29,ok:20,positions:9200,units:4519,people:11208,
       majors:SKILLS.map(function(r){return {major:r[0],positions:r[1]}}),
       evidence:{sessions:24,failed:9},generated:'2026-10-20'};
-    dl('skill-strata.json',JSON.stringify(d,null,2),'application/json;charset=utf-8');
+    dl('skill-starta.json',JSON.stringify(d,null,2),'application/json;charset=utf-8');
   });
 })();
 </script>
