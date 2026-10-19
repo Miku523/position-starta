@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>招聘公告采集台 · HR 工作台</title>
+<style>
+:root{
+  --bg:#0B0C0E; --panel:#111417; --panel2:#171B1F; --line:#262B31; --line2:#353C44;
+  --ink:#F0EDE6; --dim:#B9BFC7; --dim2:#8E959E;
+  --orange:#E4572E; --blue:#7C97FF; --ok:#4FBF8B; --red:#E0655A; --warn:#D9A648;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Cascadia Mono",monospace;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;
+  -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#2A3037;border-radius:5px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+
+header{display:flex;align-items:center;gap:16px;padding:0 20px;height:52px;
+  border-bottom:1px solid var(--line);background:var(--panel);flex:0 0 auto;position:relative}
+.brand{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;color:var(--dim);white-space:nowrap}
+.brand b{color:var(--ink);font-weight:600}
+.brand .sub{color:var(--dim2);font-size:10.5px;letter-spacing:.18em;margin-left:6px}
+.spacer{flex:1}
+.state{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--dim2);white-space:nowrap}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:6px;vertical-align:1px}
+.dot.busy{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--orange);
+  transition:width .35s ease,opacity .4s;z-index:60;pointer-events:none}
+.hint{font-size:11px;color:var(--dim2);line-height:1.8;margin-top:8px}
+.linklike{color:var(--blue);font-size:11px;padding:0;text-decoration:underline;text-underline-offset:3px}
+.linklike:hover{color:var(--ink)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#2A3037;border-radius:5px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+main{flex:1;display:flex;min-height:0}
+.side{width:322px;flex:0 0 auto;border-right:1px solid var(--line);background:var(--panel);
+  display:flex;flex-direction:column;min-height:0}
+.side .box{padding:14px 16px;border-bottom:1px solid var(--line)}
+.side label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+  color:var(--dim2);margin-bottom:7px}
+textarea{width:100%;height:126px;resize:vertical;background:var(--panel2);color:var(--ink);
+  border:1px solid var(--line2);border-radius:2px;padding:9px 10px;font-family:var(--mono);
+  font-size:11.5px;line-height:1.7;outline:none}
+textarea:focus{border-color:var(--dim2)}
+.row{display:flex;gap:8px;align-items:center}
+.row+.row{margin-top:10px}
+select{flex:1;background:var(--panel2);color:var(--ink);border:1px solid var(--line2);
+  border-radius:2px;padding:7px 8px;font-size:12px;font-family:var(--mono);outline:none}
+button.go{flex:1;background:var(--orange);color:#160B06;font-weight:700;padding:10px 14px;border-radius:2px;
+  font-size:13.5px;letter-spacing:.05em;transition:filter .15s}
+button.go:hover{filter:brightness(1.08)}
+button.go:disabled{filter:grayscale(.7) brightness(.7);cursor:progress}
+button.ghost{border:1px solid var(--line2);color:var(--dim);padding:7px 11px;border-radius:2px;
+  font-family:var(--mono);font-size:11px;transition:.15s}
+button.ghost:hover{color:var(--ink);border-color:var(--dim2)}
+.chk{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+/* 高级设置折叠区：默认对普通用户隐藏 */
+details.adv{margin-top:10px;border:1px dashed var(--line2);border-radius:3px}
+details.adv summary{cursor:pointer;padding:9px 12px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.08em;color:var(--dim2);display:flex;align-items:center;gap:8px;user-select:none}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::before{content:'▸';font-size:10px;transition:transform .15s}
+details.adv[open] summary::before{transform:rotate(90deg)}
+details.adv summary .advtag{margin-left:auto;font-size:10px;color:var(--dim2);opacity:.7}
+details.adv[open] summary{border-bottom:1px dashed var(--line2)}
+details.adv .row{margin:10px 12px}
+.chk input{accent-color:var(--orange)}
+.logs{flex:1;overflow:auto;padding:12px 14px;font-family:var(--mono);font-size:11.5px;line-height:1.85;min-height:170px}
+.logs div{color:var(--dim);word-break:break-all}
+.logs .t{color:var(--dim2);margin-right:6px}
+.logs .e{color:var(--red)}
+.logs .ok{color:var(--ok)}
+
+.panes{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+nav{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--line);
+  background:var(--panel);flex:0 0 auto;height:46px;align-items:flex-end;overflow-x:auto;scrollbar-width:thin}
+nav button{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--dim2);
+  padding:0 14px 11px;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap;flex:0 0 auto}
+nav button.on{color:var(--ink);border-bottom-color:var(--orange)}
+nav button:hover{color:var(--ink)}
+.cnt{display:inline-block;min-width:17px;padding:0 5px;margin-left:7px;border-radius:9px;
+  background:var(--line2);color:var(--ink);font-size:10px;line-height:17px;text-align:center;vertical-align:1px}
+.cnt:empty{display:none}
+.pane{flex:1;overflow:auto;padding:18px 22px 60px;display:none}
+.pane.on{display:block}
+
+h3{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;color:var(--dim2);
+  font-weight:400;margin:0 0 12px;text-transform:uppercase}
+.empty{color:var(--dim2);font-family:var(--mono);font-size:12.5px;line-height:1.9;
+  border:1px dashed var(--line2);padding:30px 22px;border-radius:3px;text-align:center}
+.empty svg{width:32px;height:32px;stroke:var(--line2);margin-bottom:10px}
+.empty .et{font-size:13.5px;color:var(--dim);letter-spacing:.05em}
+.empty .ed{font-size:12px;max-width:460px;margin:4px auto 0}
+.empty .steps{display:inline-block;margin-top:12px;font-size:11.5px;color:var(--dim2);
+  border:1px dashed var(--line2);border-radius:4px;padding:8px 14px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border:1px solid var(--line);
+  background:var(--panel);border-radius:2px;overflow:hidden}
+.meta div{padding:14px 16px;border-right:1px solid var(--line)}
+.meta div:last-child{border-right:0}
+.meta .wide{grid-column:span 2}
+.meta .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--dim2);margin-bottom:8px}
+.meta .v{font-size:13.5px;color:var(--ink);line-height:1.5;word-break:break-all}
+.meta .v b{font-size:15px}
+.meta .v.ttl{font-size:14px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:640px){.meta .wide{grid-column:span 1}}
+.sess{margin-top:14px;border:1px solid var(--line);background:var(--panel);border-radius:2px;
+  display:grid;grid-template-columns:1.4fr .7fr .7fr 1fr}
+.sess div{padding:12px 14px;border-right:1px solid var(--line)}
+.sess div:last-child{border-right:0}
+.sess .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--dim2);margin-bottom:7px}
+.sess .v{font-family:var(--mono);font-size:11.5px;color:var(--ink);word-break:break-all}
+.sess .v.one{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.tech{margin-top:14px;border:1px dashed var(--line2);border-radius:3px}
+details.tech summary{cursor:pointer;padding:9px 12px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.1em;color:var(--dim2);display:flex;align-items:center;gap:8px;user-select:none}
+details.tech summary::-webkit-details-marker{display:none}
+details.tech summary::before{content:'▸';font-size:10px;transition:transform .15s}
+details.tech[open] summary::before{transform:rotate(90deg)}
+details.tech[open] summary{border-bottom:1px dashed var(--line2)}
+details.tech .sess{margin-top:0;border:0;border-radius:0}
+.shot{margin-top:14px;border:1px solid var(--line);background:var(--panel);border-radius:2px;overflow:hidden}
+.shot img{display:block;width:100%;max-height:300px;object-fit:cover;object-position:top}
+/* 截图不可用兜底 */
+.shot.bad img{display:none}
+.shot.bad::before{content:'整页截图不可用';display:block;padding:34px 14px;text-align:center;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--dim2)}
+.shot.bad .cap{border-top:0}
+.shot.none{border-style:dashed}
+.shot.none::before{content:'本页没有留痕截图';display:block;padding:26px 14px;text-align:center;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--dim2)}
+.cap{padding:8px 12px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--dim2);
+  border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+
+ul.files{list-style:none}
+ul.files li{display:flex;justify-content:space-between;gap:12px;padding:9px 2px;
+  border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.6}
+ul.files .n{word-break:break-all}
+ul.files .ext{font-family:var(--mono);font-size:10px;color:var(--dim2);letter-spacing:.1em;flex:0 0 auto}
+.badge{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--warn);
+  border:1px solid var(--warn);padding:1px 6px;margin-left:8px}
+
+.tblwrap{overflow:auto;max-height:calc(100vh - 210px);border:1px solid var(--line);border-radius:2px}
+table{width:100%;min-width:max-content;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;
+  max-width:230px;min-width:70px}
+th{color:var(--dim2);font-weight:400;font-size:11px;letter-spacing:.1em;white-space:nowrap;
+  position:sticky;top:0;background:var(--panel);z-index:2}
+td{white-space:normal;word-break:break-word;line-height:1.65}
+td.src{max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dim2);font-size:11px}
+td.dup{color:var(--warn);white-space:nowrap}
+
+.batchbar{display:flex;flex-wrap:wrap;gap:26px;padding:12px 0 14px;border-bottom:1px solid var(--line);
+  margin-bottom:14px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--dim2)}
+.batchbar b{color:var(--ink);font-weight:400;font-size:16px;margin-right:4px}
+.fails{border:1px dashed #6B3530;padding:0;margin-top:14px;border-radius:2px}
+.fails .h{padding:10px 14px;border-bottom:1px dashed #6B3530;font-family:var(--mono);
+  font-size:11px;color:var(--red);letter-spacing:.1em}
+.fails li{padding:8px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim);
+  list-style:none;word-break:break-all}
+
+/* 响应式 */
+@media (max-width:860px){
+  main{flex-direction:column}
+  .side{width:100%;flex:0 0 auto;border-right:0;border-bottom:1px solid var(--line)}
+  .logs{min-height:110px;max-height:30vh}
+  textarea{height:96px}
+  .sess{grid-template-columns:1fr 1fr}
+  .sess div{border-bottom:1px solid var(--line)}
+  .brand .sub{display:none}
+  .panes .pane{padding:16px 14px 50px}
+}
+@media (max-width:640px){
+  header{padding:0 14px;gap:10px}
+  .brand{font-size:11.5px}
+  #state{font-size:10.5px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><b>招聘公告采集台</b><span class="sub">RECRUIT-CRAWLER</span></div>
+  <div class="spacer"></div>
+  <div class="state" id="state"><span class="dot"></span>待命 · 引擎 Lexmount 云浏览器</div>
+  <div id="prog"></div>
+</header>
+
+<main>
+  <div class="side">
+    <div class="box">
+      <label>公告 / 列表页地址（一行一条）</label>
+      <textarea id="urls" spellcheck="false" placeholder="https://example.gov.cn/notice/2026/1042.html"></textarea>
+      <div class="hint">支持一次贴多条。<button class="linklike" id="filldemo">填入示例链接</button> · 快捷键 Ctrl + Enter 开始</div>
+      <details class="adv">
+        <summary>高级设置<span class="advtag">引擎 · 抓取方式</span></summary>
+        <div class="row" style="margin-top:10px">
+          <select id="engine">
+            <option value="lexmount">Lexmount 云浏览器（留痕）</option>
+            <option value="local">本机 Chrome（快，无留痕）</option>
+          </select>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <label class="chk" title="公告是列表页时，自动跟进前 5 条详情页逐条抓取"><input type="checkbox" id="expand" checked>列表页展开详情（自动跟进前 5 条）</label>
+        </div>
+      </details>
+      <div class="row" style="margin-top:12px">
+        <button class="go" id="run">开始采集</button>
+        <button class="ghost" id="clear">清空</button>
+      </div>
+    </div>
+    <div class="logs" id="logs"><div><span class="t">--:--:--</span>等待输入地址</div></div>
+  </div>
+
+  <div class="panes">
+    <nav>
+      <button data-p="p1" class="on">总览</button>
+      <button data-p="p6">汇总表<span class="cnt" id="c-p6"></span></button>
+      <button data-p="p2">附件<span class="cnt" id="c-p2"></span></button>
+      <button data-p="p7">岗位要点<span class="cnt" id="c-p7"></span></button>
+      <button data-p="p3">岗位表<span class="cnt" id="c-p3"></span></button>
+      <button data-p="p4">采集链路</button>
+      <button data-p="p5">历史记录</button>
+    </nav>
+    <div class="pane on" id="p1"></div>
+    <div class="pane" id="p2"></div>
+    <div class="pane" id="p3"></div>
+    <div class="pane" id="p4"></div>
+    <div class="pane" id="p6"></div>
+    <div class="pane" id="p5"></div>
+    <div class="pane" id="p7"></div>
+  </div>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const now = () => new Date().toTimeString().slice(0, 8);
+
+/* ---------- 空状态 / 计数 / 进度 ---------- */
+const svg = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICONS = {
+  page: svg('<path d="M3 13l3.5-8h11L21 13v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/>'),
+  grid: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18M9 9.5V20M3 15h18"/>'),
+  file: svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 13h7M8.5 17h4"/>'),
+  list: svg('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>'),
+  table: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M9 10v9M15 10v9"/>'),
+  chain: svg('<path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11.4 4.5"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.4-1.4"/>'),
+  clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>'),
+};
+const emptyHTML = (t, d, steps, icon) => `<div class="empty">${icon || ICONS.page}<div class="et">${t}</div><div class="ed">${d}</div>${steps ? `<div class="steps">${steps}</div>` : ''}</div>`;
+const EMPTY = {
+  p1: () => emptyHTML('还没有结果', '在左侧粘贴一条公告链接，点「开始采集」。', '1 粘贴链接 → 2 引擎保持默认云端即可 → 3 开始采集', ICONS.page),
+  p6: () => emptyHTML('还没有汇总数据', '采集完成后，这里会把本批所有公告里的岗位表合并成一张大表，并自动去重。', '', ICONS.grid),
+  p2: () => emptyHTML('还没有附件', '采集后列出公告里的 PDF / Word / Excel 附件，点击即可打开原件。', '', ICONS.file),
+  p7: () => emptyHTML('还没有岗位要点', '自动摘出含「岗位 / 学历 / 专业 / 任职要求」等关键词的行，快速看门槛和待遇。', '', ICONS.list),
+  p3: () => emptyHTML('还没有岗位表', '附件或网页里解析出的结构化表格会显示在这里，可导出 CSV 用 Excel 打开。', '', ICONS.table),
+  p4: () => emptyHTML('还没有采集链路', '采集后展示主页面与列表详情页的抓取链路，以及失败明细。', '', ICONS.chain),
+  p5: () => emptyHTML('读取历史批次…', '每次采集都会自动留档，切换到本页即读取最近记录。', '', ICONS.clock),
+};
+function resetPanes() {
+  ['p1','p6','p2','p7','p3','p4','p5'].forEach((id) => { const el = document.getElementById(id); if (el) el.innerHTML = EMPTY[id](); });
+  setCnt({ p6: '', p2: '', p7: '', p3: '' });
+}
+function setCnt(m) { Object.keys(m).forEach((id) => { const el = document.getElementById('c-' + id); if (el) el.textContent = m[id] || ''; }); }
+function setProg(p) {
+  const el = $('#prog');
+  el.style.opacity = p > 0 ? 1 : 0;
+  el.style.width = p + '%';
+}
+const engLabel = (v) => v === 'local' ? '本机 Chrome' : 'Lexmount 云浏览器';
+$('#engine').addEventListener('change', (e) => {
+  if (!$('#run').disabled) $('#state').innerHTML = '<span class="dot"></span>待命 · 引擎 ' + engLabel(e.target.value);
+});
+$('#filldemo').onclick = () => {
+  const ta = $('#urls');
+  const demo = ta.placeholder.trim();
+  ta.value = ta.value.trim() ? ta.value.replace(/\s+$/, '') + '\n' + demo : demo;
+  ta.focus();
+};
+$('#urls').addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); $('#run').click(); }
+});
+resetPanes();
+
+function addLog(t, m, cls) {
+  const el = $('#logs');
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.innerHTML = '<span class="t">' + t + '</span>' + esc(m);
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+function switchTab(id) {
+  document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b.dataset.p === id));
+  document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.id === id));
+}
+document.querySelectorAll('nav button').forEach((b) => { b.onclick = () => switchTab(b.dataset.p); });
+/* 采集完成后智能跳转：解析出表格就看汇总表，否则留在总览 */
+function finishTab() {
+  const n = (window.__rows && window.__rows.length > 1) ? window.__rows.length - 1 : 0;
+  if (n > 0) {
+    switchTab('p6');
+    addLog(now(), `已跳到汇总表（${n} 行，可导出 CSV）`, 'ok');
+    return 'p6';
+  }
+  switchTab('p1');
+  addLog(now(), '本批没有解析出岗位表，留在总览；可看「附件」是否有扫描件', 'e');
+  return 'p1';
+}
+
+/* ---------- 渲染单次结果 ---------- */
+let CUR = null;
+function render(d) {
+  CUR = d;
+  const shot = d.shot
+    ? `<div class="shot" id="shotbox"><img src="${esc(d.shot)}" alt="整页快照" onerror="document.getElementById('shotbox').classList.add('bad')">
+      <div class="cap"><span>${esc(d.shot)} · 整页截图</span><span>${esc((d.pubDate || '—') + ' 发布')}</span></div></div>`
+    : `<div class="shot none"><div class="cap"><span>未留痕</span><span>${esc((d.pubDate || '—') + ' 发布')}</span></div></div>`;
+  const title = d.title || d.h1 || d.url;
+  $('#p1').innerHTML = `
+    <h3>本次采集</h3>
+    <div class="meta">
+      <div class="wide"><div class="k">标题</div><div class="v ttl" title="${esc(title)}">${esc(title.slice(0, 120))}</div></div>
+      <div><div class="k">正文字数</div><div class="v"><b>${d.charCount || 0}</b></div></div>
+      <div><div class="k">附件</div><div class="v"><b>${(d.files || []).length}</b></div></div>
+      <div><div class="k">解析出的表</div><div class="v"><b>${(d.tables || []).length + (d.sheets || []).length + (d.pdfs || []).length}</b></div></div>
+      <div><div class="k">用时</div><div class="v"><b>${((d.ms || 0) / 1000).toFixed(1)}</b>s</div></div>
+    </div>
+    <details class="tech">
+      <summary>技术详情 · SESSION / 回放</summary>
+      <div class="sess">
+        <div><div class="k">SESSION ID</div><div class="v one" title="${esc((d.session && d.session.id) || '—')}">${esc((d.session && d.session.id) || '—')}</div></div>
+        <div><div class="k">区域</div><div class="v one" title="${esc((d.session && d.session.region) || '—')}">${esc((d.session && d.session.region) || '—')}</div></div>
+        <div><div class="k">引擎</div><div class="v">${d.engine === 'local' ? '本机 Chrome' : 'Lexmount 云'}</div></div>
+        <div><div class="k">来源</div><div class="v"><a href="${esc(d.url)}" target="_blank" rel="noopener">打开原页</a>
+          ${d.session && d.session.replay ? ` · <a href="${esc(d.session.replay)}" target="_blank" rel="noopener">回放</a>` : ''}</div></div>
+      </div>
+    </details>${shot}`;
+
+  const files = d.files || [];
+  const docs = d.docs || [];
+  $('#p2').innerHTML = (files.length ? `<h3>检出的附件（${files.length}）</h3><ul class="files">${files.map((f) => `
+      <li><span class="n"><a href="${esc(f.href)}" target="_blank" rel="noopener">${esc(f.name || f.href)}</a></span>
+      <span class="ext">${esc((f.href.split('.').pop() || '').slice(0, 4).toUpperCase())}</span></li>`).join('')}</ul>`
+      : emptyHTML('这一页没有附件链接', '没有检出 .pdf / .docx / .xlsx。常见原因：附件挂在列表页的二级详情里，勾选「列表页展开详情」再试。', '', ICONS.file))
+    + (docs.length ? `<h3 style="margin-top:22px">已解析的文档（${docs.length}）</h3><ul class="files">${docs.map((x) => `
+      <li><span class="n">${esc(x.file)}${x.unsupported ? '<span class="badge">未解析</span>' : ''}
+        <div class="cap" style="border:0;padding:4px 0 0">${x.unsupported ? esc(x.unsupported)
+          : `${x.chars} 字 / ${(x.tables || []).length} 表 / ${(x.paras || []).length} 段${x.via ? ' · ' + esc(x.via) : ''}`}</div></span>
+      <span class="ext">${esc((x.kind || '').toUpperCase())}</span></li>`).join('')}</ul>` : '');
+
+  /* 岗位要点（关键词命中行） */
+  const hits = d.hits || [];
+  $('#p7').innerHTML = hits.length
+    ? `<h3>岗位要点（命中「岗位 / 学历 / 专业 / 任职要求」等词的行）</h3>
+       <ul class="files">${hits.map((h) => `<li><span class="n">${esc(h)}</span></li>`).join('')}</ul>`
+    : emptyHTML('没有命中岗位关键词', '可能这页只有导航，正文在 iframe 或需要点击展开。', '', ICONS.list);
+  setCnt({ 'p2': (files.length + docs.length) || '', 'p7': hits.length || '' });
+
+  /* 表格页 */
+  let html = '';
+  (d.sheets || []).forEach((s) => s.sheets.forEach((sh) => {
+    html += `<h3>${esc(s.file)} · ${esc(sh.name)} · ${sh.rows.length} 行</h3>`
+      + tbl(sh.header && sh.header.length ? sh.header : null, sh.rows);
+  }));
+  (d.pdfs || []).forEach((p) => {
+    const badge = p.scanned ? '疑似扫描件·需 OCR' : (p.conf === 'low' ? '置信度低：' + (p.why || '') : 'ok');
+    html += `<h3>${esc(p.file)} · ${p.cols} 列 / ${(p.rows || []).length} 行 · ${esc(badge)}</h3>`
+      + tbl(p.header && p.header.length ? p.header : null, p.rows || []);
+  });
+  if ((d.tables || []).length) {
+    html += `<h3>页面内表格 · ${d.tables.length} 张</h3>`;
+    d.tables.forEach((t, i) => { html += `<div class="cap" style="border:0;padding:6px 0">表 ${i + 1} · ${t.length} 行</div>` + tbl(null, t); });
+  }
+  $('#p3').innerHTML = html || emptyHTML('没有解析出结构化表格', '岗位表通常在附件里——若附件是 PDF 扫描件，需要 OCR 才能拿表。', '', ICONS.table);
+  let rowsN = 0;
+  (d.sheets || []).forEach((s) => s.sheets.forEach((sh) => { rowsN += sh.rows.length; }));
+  (d.pdfs || []).forEach((p) => { rowsN += (p.rows || []).length; });
+  (d.tables || []).forEach((t) => { rowsN += t.length; });
+  setCnt({ 'p3': rowsN || '' });
+
+  /* 链路 */
+  const kids = d.children || [];
+  $('#p4').innerHTML = `<h3>采集链路</h3>
+    <ul class="files">
+      <li><span class="n">主页面 · ${esc((d.title || d.url).slice(0, 60))}<div class="cap" style="border:0;padding:4px 0 0">${esc(d.url)}</div></span>
+        <span class="ext">${(d.files || []).length} 附件</span></li>
+      ${kids.map((c) => `<li><span class="n">子页面 · ${esc((c.title || c.listTitle || c.url).slice(0, 60))}
+        <div class="cap" style="border:0;padding:4px 0 0">${esc(c.url)} · ${((c.ms || 0) / 1000).toFixed(1)}s</div></span>
+        <span class="ext">${(c.files || []).length} 附件</span></li>`).join('')}
+    </ul>
+    ${(d.failures || []).length ? `<div class="fails"><div class="h">失败 ${d.failures.length} 条（原始 URL 与原因）</div>
+      <ul>${d.failures.map((f) => `<li>${esc(f.url)} — ${esc(f.error || '')}</li>`).join('')}</ul></div>` : ''}`;
+}
+function tbl(header, rows) {
+  if (!rows || !rows.length) return '<div class="empty">空表</div>';
+  const w = Math.max(header ? header.length : 0, ...rows.map((r) => r.length));
+  const head = header && header.length ? Array.from({ length: w }, (_, i) => header[i] || '列' + (i + 1)) : null;
+  return `<div class="tblwrap"><table>${head ? `<thead><tr>${head.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>` : ''}
+    <tbody>${rows.slice(0, 300).map((r) => `<tr>${Array.from({ length: w }, (_, i) => `<td>${esc(r[i])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ---------- 跨公告统一字段（不同公告的表头写法不一样，先归一） ---------- */
+const CANON = [
+  { k: '地区', syns: ['考区', '地区', '工作地点', '所在地', '招聘地区', '工作区域'] },
+  { k: '单位', syns: ['招聘单位', '单位名称', '用人单位', '招录机关', '单位'], not: /代码|编码|编号/ },
+  { k: '岗位', syns: ['岗位名称', '招聘岗位', '职位名称', '岗位', '职位'], not: /职责|任务|描述|要求|等级|类别|代码|编码/ },
+  { k: '岗位代码', syns: ['岗位代码', '职位代码', '岗位编码', '岗位编号', '职位编码'] },
+  { k: '学历', syns: ['学历要求', '最低学历', '学历'] },
+  { k: '学位', syns: ['学位要求', '学位'] },
+  { k: '专业', syns: ['专业要求', '专业'], multi: true, not: /代码/ },
+  { k: '人数', syns: ['聘用人数', '招聘人数', '招录人数', '计划人数', '人数', '计划数'] },
+  { k: '部门', syns: ['工作部门', '部门', '内设机构'], not: /代码|编码/ },
+  { k: '职责', syns: ['岗位职责任务', '岗位职责', '职位描述', '工作内容'] },
+  { k: '等级', syns: ['岗位等级', '岗位类别', '职级'] },
+];
+function pickCols(header, syns, opts) {
+  opts = opts || {};
+  if (!header || !header.length) return [];
+  const norm = (s) => String(s || '').replace(/[\s　]/g, '').replace(/[（）]/g, '');
+  const out = [];
+  const ok = (h) => !(opts.not && opts.not.test(String(h || '')));
+  const push = (i) => { if (i >= 0 && !out.includes(i)) out.push(i); };
+  const wantCode = syns.some((s) => /代码|编码|编号/.test(s));
+  const isCode = (h) => /代码|编码|编号/.test(String(h || ''));
+  for (const syn of syns) {
+    header.forEach((h, i) => { if (norm(h) === norm(syn) && ok(h) && (wantCode || !isCode(h))) push(i); });
+    if (out.length && !opts.multi) return out;
+  }
+  for (const syn of syns) {
+    header.forEach((h, i) => { if (norm(h).startsWith(norm(syn)) && ok(h) && (wantCode || !isCode(h))) push(i); });
+    if (out.length && !opts.multi) return out;
+  }
+  /* 第三轮：表头里「含有」同义词（如「序号 / 单位」「职位名称及代码」），仍然受 not 正则约束 */
+  for (const syn of syns) {
+    const n = norm(syn);
+    if (n.length < 2) continue;
+    header.forEach((h, i) => { if (norm(h).includes(n) && ok(h) && (wantCode || !isCode(h))) push(i); });
+    if (out.length && !opts.multi) return out;
+  }
+  return out;
+}
+function canonOf(tab) {
+  const cols = [];
+  let hit = 0;
+  CANON.forEach((f, ki) => {
+    const got = pickCols(tab.header, f.syns, { multi: f.multi, not: f.not });
+    cols[ki] = got;
+    if (got.length) hit++;
+  });
+  if (hit < 3) return null;
+  return { cols, hit };
+}
+function canonAll(tabs) {
+  const fields = CANON.map((f) => f.k);
+  const rows = [];
+  const fill = new Array(fields.length).fill(0);
+  let used = 0, skipped = 0;
+  const sources = new Set();
+  const skippedList = [];
+  tabs.forEach((t) => {
+    const c = canonOf(t);
+    if (!c) { const n = (t.rows || []).length; skipped += n; skippedList.push({ source: String(t.source || '').slice(0, 60), rows: n, header: (t.header || []).slice(0, 4) }); return; }
+    used++;
+    const src = String(t.source || '').split(' / ')[0].slice(0, 46);
+    sources.add(src);
+    t.rows.forEach((r) => {
+      const o = c.cols.map((idx) => idx.map((i) => (r[i] != null ? String(r[i]).replace(/\s+/g, ' ').trim() : '')).filter(Boolean).join(' / '));
+      if (!o.some((x) => x)) return;
+      o.forEach((v, k) => { if (v) fill[k]++; });
+      rows.push([src, ...o]);
+    });
+  });
+  return { fields, rows, fill, used, skipped, skippedList, sources: [...sources] };
+}
+function renderCanon(tabs, note) {
+  const c = canonAll(tabs);
+  const el = $('#p6');
+  const head = ['来源公告', ...c.fields];
+  const seen = new Map(); const out = [];
+  for (const r of c.rows) {
+    const key = [r[2], r[3], r[4], r[6], r[7]].join('|').replace(/\|/g, '');
+    if (!key) { out.push(r); continue; }
+    if (seen.has(key)) continue;
+    seen.set(key, 1); out.push(r);
+  }
+  const pack = [['来源公告', ...c.fields], ...out];
+  window.__canon = pack;
+  setCnt({ 'p6': out.length });
+  el.innerHTML = `
+    <h3>跨公告统一表 · ${c.sources.length} 个来源 / ${c.used} 张表 / ${c.rows.length} 行</h3>
+    <div class="batchbar">
+      <span><b>${c.sources.length}</b> 个公告来源</span>
+      <span><b>${c.used}</b> 张表归一成功${c.skipped ? ` · <b>${c.skipped}</b> 行认不出表头，已跳过` : ''}</span>
+      <span><b>${c.rows.length}</b> 行 → 去重后 <b>${out.length}</b> 行</span>
+      ${note ? `<span class="state">${esc(note)}</span>` : ''}
+    </div>
+    <div class="row" style="margin:0 0 12px">
+      <button class="ghost" id="tcsv">导出统一表 CSV（${out.length} 行）</button>
+      <button class="ghost" id="tback">返回按形状看</button>
+      <span class="state">字段命中：${c.fields.map((f, i) => `${f} ${c.fill[i]}`).join(' · ')}</span>
+    </div>
+    <div class="tblwrap"><table><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead>
+      <tbody>${out.slice(0, 400).map((r) => `<tr><td class="src" title="${esc(r[0])}">${esc(r[0])}</td>${r.slice(1).map((v) => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    ${(() => {
+      const empt = c.fields.map((f, i) => [f, out.filter((r) => !r[i + 1]).length]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      const line = empt.length
+        ? `<b>空格是真情况，不补：</b>${empt.map(([f, n]) => `${f} 空 ${n.toLocaleString()} 行`).join('、')}——多为该公告没给这一列（如广东那份只有岗位代码与职责，没有岗位名称）。`
+        : '所有字段都填满，没有空格。';
+      const sk = (c.skippedList || []);
+      const skHtml = sk.length
+        ? `<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--dim2)">看跳过的 ${sk.length} 张表 / ${c.skipped} 行</summary><ul style="margin:8px 0 0 18px;color:var(--dim2);font-size:11.5px">${sk.slice(0, 8).map((s) => `<li>${esc(s.source)} — ${s.rows} 行，表头 ${esc((s.header || []).join(' | ') || '空')}</li>`).join('')}</ul><div style="color:var(--dim2);font-size:11px;margin-top:6px">这些是页面正文里的表单/导航表，不是岗位表，所以跳过。</div></details>`
+        : '';
+      return `<div class="cap" style="border:0;padding:8px 0">${line}${skHtml}</div>`;
+    })()}
+    <div class="cap" style="border:0;padding:0 0 8px">显示前 400 行；导出含全部 ${out.length} 行。</div>`;
+  $('#tcsv').onclick = () => downloadCsv('跨公告统一表.csv', pack);
+  $('#tback').onclick = () => { $('#p6').innerHTML = window.__batchHTML || ''; if (window.__bindBatch) window.__bindBatch(); };
+  finishTab();
+}
+
+/* ---------- 批次总表 ---------- */
+function collectTables(all) {
+  const tabs = [];
+  const push = (source, header, rows) => { if (rows && rows.length) tabs.push({ source, header, rows }); };
+  all.forEach((d) => {
+    const src = (d.title || d.url || '').slice(0, 60);
+    (d.tables || []).forEach((t, i) => push(src + ` / 表${i + 1}`, null, t));
+    (d.sheets || []).forEach((s) => s.sheets.forEach((sh) => push(src + ' / ' + s.file, sh.header, sh.rows)));
+    (d.pdfs || []).forEach((p) => push(src + ' / ' + p.file, p.header, p.rows));
+    (d.docs || []).forEach((x) => (x.tables || []).forEach((t, i) => push(src + ' / ' + x.file, null, t)));
+    (d.children || []).forEach((c) => {
+      const cs = (c.title || c.listTitle || c.url || '').slice(0, 40);
+      (c.tables || []).forEach((t, i) => push(cs + ` / 表${i + 1}`, null, t));
+      (c.sheets || []).forEach((s) => s.sheets.forEach((sh) => push(cs + ' / ' + s.file, sh.header, sh.rows)));
+      (c.pdfs || []).forEach((p) => push(cs + ' / ' + p.file, p.header, p.rows));
+      (c.docs || []).forEach((x) => (x.tables || []).forEach((t) => push(cs + ' / ' + x.file, null, t)));
+    });
+  });
+  return tabs;
+}
+function shapeOf(t) {
+  if (t.header && t.header.length >= 2) return t.header.length;
+  const freq = new Map();
+  t.rows.forEach((r) => freq.set(r.length, (freq.get(r.length) || 0) + 1));
+  let best = 0, bestN = -1;
+  freq.forEach((n, w) => { if (n > bestN || (n === bestN && w > best)) { best = w; bestN = n; } });
+  return best || 1;
+}
+function renderBatch(all, fails) {
+  const tabs = collectTables(all);
+  const el = $('#p6');
+  if (!tabs.length) {
+    window.__rows = null;
+    el.innerHTML = emptyHTML('本批没有解析出结构化表', `本批 ${all.length} 条页面都没有可解析的表。看看「附件」页是不是扫描件，或换一个带岗位表的公告。`, '', ICONS.grid);
+    setCnt({ 'p6': '' });
+    return;
+  }
+  const groups = new Map();
+  tabs.forEach((t) => { const w = shapeOf(t); if (!groups.has(w)) groups.set(w, { w, tabs: [] }); groups.get(w).tabs.push(t); });
+  const gRows = (g) => g.tabs.reduce((n, t) => n + t.rows.length, 0);
+  const gHead = (g) => (g.tabs.some((t) => t.header && t.header.length >= 2) ? 1 : 0);
+  /* 主表优先选「有真表头」的形状：列名是从 PDF 里认出来的，比行数更值钱。
+     同为有表头/无表头时，再比行数。 */
+  const sg = [...groups.values()].sort((a, b) => gHead(b) - gHead(a) || gRows(b) - gRows(a));
+  const main = sg[0], foreign = sg.slice(1);
+  const foreignRows = foreign.reduce((n, g) => n + gRows(g), 0);
+  const width = main.w;
+  const hd = main.tabs.filter((t) => t.header && t.header.length >= 2).sort((a, b) => b.rows.length - a.rows.length)[0];
+  const head = Array.from({ length: width }, (_, i) => (hd && hd.header[i]) || '列' + (i + 1));
+  const merged = main.tabs.flatMap((t) => t.rows.map((r) => [t.source, ...Array.from({ length: width }, (_, i) => r[i] == null ? '' : String(r[i]))]));
+  const seen = new Map(); const dedup = [];
+  for (const r of merged) {
+    const key = r.slice(1).map((c) => String(c).replace(/\s+/g, '').trim()).join('|');
+    if (!key.replace(/\|/g, '')) { dedup.push(r); continue; }
+    if (seen.has(key)) { seen.get(key).dupCount++; continue; }
+    const it = r.slice(); it.dupCount = 0; seen.set(key, it); dedup.push(it);
+  }
+  const dupN = merged.length - dedup.length;
+  const totalFiles = all.reduce((n, d) => n + (d.files || []).length, 0);
+  const totalMs = all.reduce((n, d) => n + (d.ms || 0), 0);
+  window.__rows = [['来源', ...head, '重复'], ...dedup];
+  setCnt({ 'p6': dedup.length });
+  el.innerHTML = `
+    <h3>本批汇总表 · ${all.length} 条页面 / ${tabs.length} 张表 / ${merged.length + foreignRows} 行</h3>
+    <div class="batchbar">
+      <span><b>${all.length}</b> 页面成功${fails && fails.length ? ` · <b style="color:var(--red)">${fails.length}</b> 失败` : ''}</span>
+      <span><b>${totalFiles}</b> 个附件</span>
+      <span><b>${merged.length}</b> 行原始 + <b>${foreignRows}</b> 其它形状</span>
+      <span>合计 <b>${merged.length + foreignRows}</b> 行</span>
+      <span><b>${dedup.length}</b> 行去重后${dupN ? `（合并 ${dupN}）` : ''}</span>
+      <span><b>${(totalMs / 1000).toFixed(0)}</b>s 总用时</span>
+    </div>
+    <div class="row" style="margin:0 0 12px">
+      <button class="ghost" id="bcsv">导出汇总表 CSV（${dedup.length} 行）</button>
+      <button class="ghost" id="bjson">导出 JSON</button>
+      <button class="ghost" id="bcanon">统一成一张表（跨公告）</button>
+      ${foreignRows ? `<button class="ghost" id="bcsv2">其它形状（${foreignRows} 行 / ${foreign.length} 种）</button>` : ''}
+      <span class="state">去重只比内容不比来源；末列是「这条在几处出现过」${foreignRows ? `；另有 ${foreignRows} 行列数不同，没混进来` : ''}</span>
+    </div>
+    <div class="tblwrap"><table><thead><tr>${['来源', ...head, '重复'].map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+      <tbody>${dedup.slice(0, 400).map((r) => `<tr><td class="src" title="${esc(r[0])}">${esc(r[0])}</td>
+        ${r.slice(1).map((c) => `<td>${esc(c)}</td>`).join('')}<td class="dup">${r.dupCount ? '×' + (r.dupCount + 1) : ''}</td></tr>`).join('')}</tbody></table></div>
+    <div class="cap" style="border:0;padding:8px 0">显示前 400 行；导出含全部 ${dedup.length} 行</div>`;
+  $('#bcsv').onclick = () => downloadCsv('批次汇总表.csv', [['来源', ...head, '重复'], ...dedup]);
+  $('#bjson').onclick = () => downloadJson('批次原始数据.json', all);
+  window.__batchHTML = el.innerHTML;
+  window.__bindBatch = () => {
+    $('#bcsv').onclick = () => downloadCsv('批次汇总表.csv', [['来源', ...head, '重复'], ...dedup]);
+    $('#bjson').onclick = () => downloadJson('批次原始数据.json', all);
+    $('#bcanon').onclick = () => renderCanon(tabs, '同一批里把不同公告的表头归一到 11 个字段');
+    if (foreignRows) $('#bcsv2').onclick = () => {
+      const rows = [];
+      foreign.forEach((g) => {
+        rows.push([`— 列数 ${g.w}（${g.tabs.length} 张表 / ${gRows(g)} 行）`]);
+        g.tabs.forEach((t) => { if (t.header && t.header.length) rows.push(t.header.map((c) => c == null ? '' : String(c))); t.rows.forEach((r) => rows.push(r.map((c) => c == null ? '' : String(c)))); });
+      });
+      downloadCsv('其它形状的表.csv', rows);
+    };
+  };
+  window.__bindBatch();
+};
+function downloadCsv(name, rows) {
+  const csv = rows.map((r) => r.map((c) => { const s = c == null ? '' : String(c); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = name; a.click();
+}
+function downloadJson(name, obj) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }));
+  a.download = name; a.click();
+}
+
+/* ---------- 历史 ---------- */
+async function renderHistory() {
+  const el = $('#p5');
+  el.innerHTML = emptyHTML('读取历史…', '正在从 runs/ 目录读取最近批次。', '', ICONS.clock);
+  try {
+    const j = await (await fetch('/api/runs')).json();
+    const items = j.items || [];
+    if (!items.length) { el.innerHTML = emptyHTML('还没有历史批次', '每跑一次采集都会自动留档，之后可以在这里回看。', '', ICONS.clock); return; }
+    el.innerHTML = `<h3>历史批次（${items.length}，最近 40 条）</h3>
+      <div class="cap" style="border:0;padding:0 0 10px">每次采集都会在 runs/ 落一份 JSON。可以单份「载入」回看，也可以勾几份「合并选中」——不同公告的表头会被归一到同一套字段。</div>
+      <div class="row" style="margin:0 0 10px">
+        <button class="ghost" id="mmerge">合并选中批次（统一字段）</button>
+        <span class="state" id="mhint">已选 0 份</span>
+      </div>
+      <div class="tblwrap"><table><thead><tr><th></th><th>时间</th><th>标题</th><th>引擎</th><th>附件</th><th>行数</th><th>用时</th><th></th></tr></thead>
+      <tbody>${items.map((it) => `<tr><td><input type="checkbox" class="rsel" data-f="${esc(it.file)}"></td><td>${esc(it.at)}</td><td>${esc((it.title || it.url || '').slice(0, 52))}</td>
+        <td>${esc(it.engine || '')}</td><td>${it.files || 0}</td><td>${it.rows || 0}</td><td>${((it.ms || 0) / 1000).toFixed(1)}s</td>
+        <td><button class="ghost" data-run="${esc(it.file)}">载入</button></td></tr>`).join('')}</tbody></table></div>`;
+    el.querySelectorAll('[data-run]').forEach((b) => { b.onclick = () => loadRun(b.dataset.run); });
+    const sel = new Set();
+    const hint = el.querySelector('#mhint');
+    el.querySelectorAll('.rsel').forEach((cb) => {
+      cb.onchange = () => {
+        if (cb.checked) sel.add(cb.dataset.f); else sel.delete(cb.dataset.f);
+        hint.textContent = `已选 ${sel.size} 份`;
+      };
+    });
+    el.querySelector('#mmerge').onclick = async () => {
+      if (sel.size < 2) { hint.textContent = '至少勾 2 份再合并'; return; }
+      hint.textContent = '合并中…';
+      const all = [];
+      for (const f of sel) {
+        try {
+          const j = await (await fetch('/api/runfile?f=' + encodeURIComponent(f))).json();
+          const arr = Array.isArray(j.data) ? j.data : (j.data ? [j.data] : []);
+          arr.forEach((d) => { d.__run = f; all.push(d); });
+        } catch (e) { /* 跳过坏档 */ }
+      }
+      if (!all.length) { hint.textContent = '这几份都读不出来'; return; }
+      switchTab('p6');
+      renderCanon(collectTables(all), `来自 ${sel.size} 个历史批次`);
+    };
+  } catch (e) { el.innerHTML = emptyHTML('读取历史失败', esc(e.message), '', ICONS.clock); }
+}
+async function loadRun(file) {
+  try {
+    const j = await (await fetch('/api/runfile?f=' + encodeURIComponent(file))).json();
+    if (Array.isArray(j.data)) {
+      renderBatch(j.data, j.fails || []);
+      if (j.data.length) render(j.data[0]);
+      finishTab();
+      return;
+    }
+    if (!j.data) throw new Error('这份记录没有 data');
+    render(j.data); renderBatch([j.data], j.data.failures || []); finishTab();
+  } catch (e) { addLog(now(), '载入历史失败：' + e.message, 'e'); }
+}
+
+/* ---------- 跑批 ---------- */
+function runOne(url) {
+  return fetch('/api/run', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url, engine: $('#engine').value, expand: $('#expand').checked }) })
+    .then((r) => r.json());
+}
+$('#clear').onclick = () => {
+  const hasInput = $('#urls').value.trim().length > 0;
+  if ((hasInput || CUR || window.__rows) && !confirm('将清空输入框与当前所有结果，确定吗？')) return;
+  $('#urls').value = '';
+  CUR = null; window.__rows = null;
+  resetPanes();
+  addLog(now(), '已清空');
+};
+$('#run').onclick = async () => {
+  const urls = $('#urls').value.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+  if (!urls.length) { addLog(now(), '先填地址', 'e'); return; }
+  $('#run').disabled = true;
+  setProg(2);
+  const t0 = Date.now();
+  const tick = setInterval(() => {
+    if ($('#run').disabled) $('#state').innerHTML = '<span class="dot busy"></span>采集中 · ' + urls.length + ' 条 · ' + ((Date.now() - t0) / 1000).toFixed(0) + 's';
+  }, 500);
+  $('#state').innerHTML = '<span class="dot busy"></span>采集中 · ' + urls.length + ' 条';
+  const all = [], fails = [];
+  for (let i = 0; i < urls.length; i++) {
+    addLog(now(), `[${i + 1}/${urls.length}] ${urls[i]}`);
+    try {
+      const j = await runOne(urls[i]);
+      if (j && j.ok && j.data) {
+        (j.logs || []).forEach((l) => addLog(l.t || now(), (l.m || '')));
+        all.push(j.data);
+        if (i === 0) render(j.data);
+      } else {
+        fails.push({ url: urls[i], error: (j && (j.error || (j.data && j.data.error))) || '未知错误' });
+        addLog(now(), '失败：' + fails[fails.length - 1].error, 'e');
+      }
+    } catch (e) { fails.push({ url: urls[i], error: e.message }); addLog(now(), '失败：' + e.message, 'e'); }
+    setProg(((i + 1) / urls.length) * 100);
+  }
+  clearInterval(tick);
+  addLog(now(), `全部完成：${all.length} 成功 / ${fails.length} 失败`, fails.length ? 'e' : 'ok');
+  renderBatch(all, fails);
+  $('#state').innerHTML = '<span class="dot"></span>待命 · 上次 ' + all.length + '/' + urls.length + ' 成功 · ' + ((Date.now() - t0) / 1000).toFixed(0) + 's';
+  $('#run').disabled = false;
+  setTimeout(() => setProg(0), 700);
+  finishTab();
+};
+
+/* 首屏：顺带把历史列表拉一下，切到「历史」就渲染 */
+document.querySelector('nav button[data-p="p5"]').addEventListener('click', renderHistory);
+</script>
+</body>
+</html>
