@@ -1,6 +1,19 @@
 # 岗位要求的地层 · 一次可回放的云端采样
 
 > **在线看：https://mikuascendlog.com/position-strata/**
+
+## 站点结构（GitHub Pages）
+
+| 路径 | 是什么 |
+| --- | --- |
+| `/` | **招聘工作台**（最新本地部署：index.html + assets/style.css·app.js·data.js） |
+| `/single.html` | 报告单文件版（1.54 MB，图片内嵌，双击即开） |
+| `/starta-workbench.html` | 工作台单文件版（169 KB，离线可开） |
+| `/report/` | 报告多文件版（index.html + assets/） |
+| `/data/` | 9,200 行岗位底表 CSV、会话台账 CSV |
+| `/source/` | 采集台源码（server.js、canon_stat.py、采集台界面.html） |
+| `/previews/` | 现场截图 |
+
 > Lexmount 云平台真实任务挑战 · 参赛作品材料包
 > 提交日期：2026-10-20
 

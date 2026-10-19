@@ -1,0 +1,3311 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>星他 · 招聘工作台</title>
+<style>
+  :root{
+    --fs:16px;
+    --bg:#F6F6F3; --panel:#FFFFFF; --rail:#FBFBF8; --ink:#111318; --ink2:#33373E;
+    /* 对 #FFF 5.2:1、对 --bg 4.8:1，满足 AA ≥4.5:1 */
+    --muted:#686D76; --line:#E6E6E0; --line2:#EFEFEA;
+    --accent:#C8451C; --accent-soft:rgba(200,69,28,.08); --accent-line:rgba(200,69,28,.32);
+    --ok:#1F8A57; --warn:#8A5A0F;   /* warn 对 #FFF 5.9:1、对 --bg 5.5:1，小字也达标 */
+    --mono:"IBM Plex Mono","JetBrains Mono",Consolas,"SF Mono",monospace;
+    --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --sh1:0 1px 2px rgba(17,19,24,.05);
+    --sh2:0 18px 40px -22px rgba(17,19,24,.34);
+    --r:10px;
+    color-scheme:light;
+  }
+  html[data-theme="dark"]{
+    --bg:#0B0D10; --panel:#12151A; --rail:#0E1114; --ink:#EDECE7; --ink2:#C6C8CE;
+    --muted:#8A9099; --line:#23272E; --line2:#1B1F25;
+    --accent:#F0653B; --accent-soft:rgba(240,101,59,.10); --accent-line:rgba(240,101,59,.34);
+    --ok:#4FBE8C; --warn:#E0A34F;
+    --sh1:0 1px 2px rgba(0,0,0,.5);
+    --sh2:0 24px 50px -24px rgba(0,0,0,.8);
+    color-scheme:dark;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{font-size:var(--fs);-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--sans);font-size:1rem;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4,p{margin:0}
+  button,input,select{font:inherit;color:inherit}
+  button{background:none;border:0;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  ul{margin:0;padding:0;list-style:none}
+  /* 键盘焦点：全局统一可见，不允许只写 outline:none */
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+  button:focus-visible,a:focus-visible,select:focus-visible,
+  .btn:focus-visible,.icobtn:focus-visible,.chip:focus-visible,.dbtn:focus-visible,
+  .go:focus-visible,.expbtn:focus-visible,.citem:focus-visible,.ucard:focus-visible,
+  .navi a:focus-visible,.mrel button:focus-visible,.fold:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px;
+  }
+  /* 行：焦点环画在内侧，避免被容器 overflow 裁掉 */
+  tbody tr:focus-visible,.table .row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:8px}
+  /* 输入框：搜索框在 label 内，给自身也留一圈可见焦点 */
+  .search input:focus-visible,.urlin:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:6px}
+  input[type="checkbox"]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  ::selection{background:var(--accent);color:#fff}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* ---------------- app frame ---------------- */
+  .app{
+    display:grid;grid-template-columns:236px minmax(0,1fr);
+    grid-template-rows:56px minmax(0,1fr) 34px;height:100vh;
+  }
+  .app > .rail{grid-row:1 / span 3;grid-column:1}
+  .app > .topbar{grid-row:1;grid-column:2}
+  .app > .main{grid-row:2;grid-column:2}
+  .app > .statusbar{grid-row:3;grid-column:2}
+
+  /* ---------------- rail ---------------- */
+  .rail{
+    background:var(--rail);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .logo{display:flex;align-items:center;gap:10px;height:56px;padding:0 18px;border-bottom:1px solid var(--line2);flex:none}
+  .logo .mark{
+    width:24px;height:24px;border-radius:7px;background:var(--accent);color:#fff;
+    display:grid;place-items:center;font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.02em;flex:none;
+  }
+  .logo b{font-size:.94rem;letter-spacing:.02em}
+  .logo small{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.09em;white-space:nowrap;color:var(--muted);margin-top:1px}
+  .rail-scroll{overflow:auto;padding:14px 10px;flex:1;min-height:0}
+  .rail-sec{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;color:var(--muted);padding:10px 8px 8px}
+  .navi{display:flex;flex-direction:column;gap:2px}
+  .navi a{
+    display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:8px;
+    color:var(--ink2);font-size:.9rem;transition:background .15s,color .15s;position:relative;
+  }
+  .navi a svg{flex:none;color:var(--muted);transition:color .15s}
+  .navi a:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+  .navi a[aria-current="page"]{background:var(--panel);color:var(--ink);box-shadow:var(--sh1);font-weight:600}
+  .navi a[aria-current="page"] svg{color:var(--accent)}
+  .navi a[aria-current="page"]::before{
+    content:"";position:absolute;left:-10px;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--accent);
+  }
+  .navi .ct{margin-left:auto;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  .navi a[aria-current="page"] .ct{color:var(--accent)}
+  .rail-foot{border-top:1px solid var(--line2);padding:10px;flex:none}
+  .user{display:flex;align-items:center;gap:10px;padding:6px;border-radius:8px}
+  .user .av{width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);display:grid;place-items:center;font-family:var(--mono);font-size:.72rem;flex:none}
+  .user .nm{font-size:.85rem;line-height:1.2}
+  .user .rl{font-family:var(--mono);font-size:.72rem;color:var(--muted);letter-spacing:.1em}
+
+  /* ---------------- topbar ---------------- */
+  .topbar{
+    display:flex;align-items:center;gap:14px;padding:0 20px;
+    background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:20;
+  }
+  .crumb{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--muted);white-space:nowrap}
+  .crumb b{color:var(--ink);font-weight:600}
+  .crumb i{font-style:normal;opacity:.5}
+  .search{
+    margin-left:auto;display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;
+    border:1px solid var(--line);border-radius:8px;background:var(--bg);min-width:240px;max-width:340px;flex:0 1 320px;
+    transition:border-color .15s,box-shadow .15s,background .15s;
+  }
+  .search:focus-within{background:var(--panel);border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+  .search svg{color:var(--muted);flex:none}
+  .search input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:.86rem}
+  /* 键盘焦点由 :focus-visible 单独给环，鼠标点击靠 .search:focus-within 的描边提示 */
+  .search kbd{
+    font-family:var(--mono);font-size:.66rem;color:var(--muted);border:1px solid var(--line);
+    border-radius:5px;padding:1px 5px;background:var(--panel);
+  }
+  .actions{display:flex;align-items:center;gap:6px;flex:none}
+  .icobtn{
+    width:34px;height:34px;display:grid;place-items:center;border-radius:8px;color:var(--ink2);
+    border:1px solid transparent;transition:background .15s,border-color .15s;
+  }
+  .icobtn:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);border-color:var(--line)}
+  .icobtn[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft);border-color:var(--accent-line)}
+  /* 字号两档按钮：贴成一个组，等宽、字号小，避免抢视觉 */
+  .fsgrp{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .fsgrp .icobtn{width:30px;height:32px;border:0;border-radius:0;font-family:var(--mono);
+    font-size:.78rem;letter-spacing:0;color:var(--ink2)}
+  .fsgrp .icobtn + .icobtn{border-left:1px solid var(--line)}
+  .fsgrp .icobtn:disabled{opacity:.38;cursor:not-allowed}
+  .fsgrp .icobtn:disabled:hover{background:transparent;border-color:transparent}
+  .divider{width:1px;height:20px;background:var(--line);margin:0 4px}
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:8px;
+    border:1px solid var(--line);background:var(--panel);font-size:.86rem;transition:background .15s,border-color .15s,transform .1s;
+  }
+  .btn:hover{background:color-mix(in srgb,var(--ink) 4%,transparent);border-color:color-mix(in srgb,var(--ink) 16%,var(--line))}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .btn.primary:hover{background:color-mix(in srgb,var(--accent) 88%,#000)}
+  /* 深色主题的 accent 更亮：白字只有 3.17:1，改用深墨字保证 ≥4.5:1
+     #F0653B 上的 #241008 ≈5.7:1，hover 压深后仍有 ≈4.5:1 */
+  html[data-theme="dark"] .btn.primary,
+  html[data-theme="dark"] .btn.primary:hover{color:#241008}
+  .btn.ghost{border-color:transparent;background:none;color:var(--ink2)}
+  .btn.ghost:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+  .btn[disabled]{opacity:.45;pointer-events:none}
+
+  /* ---------------- main ---------------- */
+  .main{overflow:auto;padding:22px 24px 22px;position:relative;min-height:0;display:flex;flex-direction:column}
+  .main::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(760px 220px at 78% -60px, var(--accent-soft), transparent 70%);
+  }
+  .main > *{position:relative;z-index:1}
+  .page{width:100%;max-width:1600px;margin:0 auto;display:flex;flex-direction:column;flex:1;min-height:0}
+  .page[hidden]{display:none!important}
+
+  .page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+  .page-head h1{font-size:1.5rem;letter-spacing:-.01em;line-height:1.2}
+  .page-head .sub{font-size:.86rem;color:var(--muted);margin-top:6px}
+  .page-head .sub b{color:var(--ink2);font-weight:600}
+  .page-head .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+  .kpi{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+    padding:14px 16px 15px;box-shadow:var(--sh1);position:relative;overflow:hidden;
+  }
+  .kpi::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent 65%);opacity:.55}
+  .kpi[role="button"]{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  .kpi[role="button"]:hover{border-color:var(--accent-line)}
+  .kpi[role="button"][aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-line),var(--sh1)}
+  .kpi[role="button"][aria-pressed="true"] .lb{color:var(--accent)}
+  .kpi[role="button"][aria-pressed="true"]::after{opacity:1}
+  .kpi .lb{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;color:var(--muted)}
+  .kpi .v{font-family:var(--mono);font-size:1.66rem;line-height:1.15;margin-top:8px;letter-spacing:-.02em;display:flex;align-items:baseline;gap:8px}
+  .kpi .v i{font-style:normal;font-size:.72rem;color:var(--muted);letter-spacing:.04em}
+  .kpi .ft{font-size:.78rem;color:var(--muted);margin-top:7px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--ok);flex:none}
+  .dot.warn{background:var(--warn)}
+
+  .panel{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh1);
+    overflow:hidden;display:flex;flex-direction:column;min-height:300px;flex:1;
+  }
+  .toolbar,.bulkbar{flex:none}
+  .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .chips{display:flex;gap:4px;padding:3px;border-radius:9px;background:var(--bg);border:1px solid var(--line);flex-wrap:wrap}
+  .chip{
+    height:26px;padding:0 10px;border-radius:6px;font-size:.82rem;color:var(--ink2);
+    display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s;
+  }
+  .chip:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+  .chip[aria-pressed="true"]{background:var(--panel);color:var(--ink);font-weight:600;box-shadow:var(--sh1)}
+  .chip .ct{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  .chip[aria-pressed="true"] .ct{color:var(--accent)}
+  .sel{position:relative}
+  .sel select{
+    appearance:none;-webkit-appearance:none;height:32px;padding:0 30px 0 10px;border:1px solid var(--line);
+    border-radius:8px;background:var(--panel);font-size:.84rem;cursor:pointer;
+  }
+  .sel::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;border-right:1.4px solid var(--muted);border-bottom:1.4px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+  .toolbar .sp{margin-left:auto}
+  .toolbar .meta{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em}
+
+  .bulkbar{
+    display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--accent-line);
+    background:var(--accent-soft);font-size:.84rem;
+  }
+  .bulkbar.on{display:flex}
+  .bulkbar b{font-family:var(--mono);color:var(--accent);font-weight:600}
+
+  .tablewrap{overflow:auto;min-height:0;flex:1}
+  .page-head,.kpis{flex:none}
+  table{width:100%;border-collapse:separate;border-spacing:0;min-width:1020px;table-layout:fixed}
+  thead th{
+    position:sticky;top:0;z-index:2;background:var(--panel);
+    font-family:var(--mono);font-size:.74rem;font-weight:400;letter-spacing:.12em;color:var(--muted);
+    text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  thead th.sortable{cursor:pointer;user-select:none}
+  thead th.sortable:hover{color:var(--ink2)}
+  thead th .srt{color:var(--accent);margin-left:4px}
+  tbody td{padding:0 12px;border-bottom:1px solid var(--line2);height:46px;vertical-align:middle}
+  tbody tr{transition:background .12s}
+  tbody tr:hover{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+  tbody tr.selected{background:var(--accent-soft)}
+  tbody tr.selected td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+  td.c-unit{font-weight:600;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  td.c-unit small{display:block;font-weight:400;font-size:.72rem;color:var(--muted);margin-top:1px}
+  td.c-city{color:var(--muted);font-size:.86rem;white-space:nowrap}
+  td.c-edu{font-size:.88rem;white-space:nowrap}
+  td.c-role{color:var(--accent);font-weight:600;white-space:nowrap}
+  td.c-major{color:var(--ink2);font-size:.9rem;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  td.c-dim{font-size:.9rem;color:var(--ink2);white-space:nowrap}
+  td.c-num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  td.c-due{font-family:var(--mono);font-size:.84rem;color:var(--ink2);white-space:nowrap}
+  td.c-due.soon{color:var(--warn)}
+  td.c-due small,.c-due small{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-left:6px;letter-spacing:0}
+  td.c-due small::before,.c-due small::before{content:"·";margin-right:5px;opacity:.6}
+  td.c-due.soon small{color:var(--warn);font-weight:600}
+  td.c-due.expired{color:var(--muted)}
+  td.c-due.expired small{color:var(--muted);text-decoration:none}
+  td.c-op{text-align:right;white-space:nowrap}
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:6px;
+    font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;white-space:nowrap;
+    border:1px solid var(--line);color:var(--ink2);background:var(--bg);
+  }
+  .tag::before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.7}
+  .tag[data-t="央企"]{color:#B4441F;border-color:rgba(200,69,28,.28);background:rgba(200,69,28,.07)}
+  html[data-theme="dark"] .tag[data-t="央企"]{color:#F0805A;border-color:rgba(240,101,59,.3);background:rgba(240,101,59,.1)}
+  .tag[data-t="公务员"]{color:#2C5D9E;border-color:rgba(44,93,158,.26);background:rgba(44,93,158,.06)}
+  html[data-theme="dark"] .tag[data-t="公务员"]{color:#88AEE0;border-color:rgba(136,174,224,.28);background:rgba(136,174,224,.1)}
+  .tag[data-t="外企"]{color:#5A4C8C;border-color:rgba(90,76,140,.24);background:rgba(90,76,140,.06)}
+  html[data-theme="dark"] .tag[data-t="外企"]{color:#AFA0DD;border-color:rgba(175,160,221,.26);background:rgba(175,160,221,.1)}
+  .go{
+    display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:6px;
+    font-size:.78rem;color:var(--ink2);border:1px solid var(--line);
+  }
+  .go:hover{border-color:var(--accent-line);color:var(--accent);background:var(--accent-soft)}
+  .go.star{width:26px;padding:0;justify-content:center;font-size:.82rem;line-height:1}
+  .go.star[aria-pressed="true"]{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+  td.c-op .go + .go{margin-left:5px}
+
+  /* 标注字号统一（16px 基准，最小约 12px） */
+  .kpi .lb,.rail-sec,.search kbd,.chip .ct{font-size:.72rem}
+  thead th,.tag,.statusbar,.c-unit small,.sect h3,.kv dt,.meter-lb,.toolbar .meta,.kpi .v i{font-size:.74rem}
+  .empty{padding:52px 20px;text-align:center;color:var(--muted)}
+  .empty b{display:block;color:var(--ink2);font-size:.95rem;margin-bottom:6px}
+
+  input[type="checkbox"]{
+    appearance:none;-webkit-appearance:none;width:15px;height:15px;border-radius:4px;
+    border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);background:var(--panel);
+    display:inline-grid;place-items:center;cursor:pointer;transition:background .12s,border-color .12s;vertical-align:-2px;
+  }
+  input[type="checkbox"]:hover{border-color:var(--accent)}
+  input[type="checkbox"]:checked{background:var(--accent);border-color:var(--accent)}
+  input[type="checkbox"]:checked::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:translateY(-1px) rotate(-45deg)}
+
+  /* ---------------- statusbar ---------------- */
+  .statusbar{
+    display:flex;align-items:center;gap:14px;padding:0 20px;
+    background:var(--panel);border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;color:var(--muted);white-space:nowrap;overflow:hidden;
+  }
+  .statusbar .sp{margin-left:auto}
+  .statusbar kbd{border:1px solid var(--line);border-radius:4px;padding:0 4px;font-family:inherit;font-size:.66rem;color:var(--ink2)}
+
+  /* ---------------- drawer ---------------- */
+  .scrim{
+    position:fixed;inset:0;background:rgba(12,14,18,.28);opacity:0;pointer-events:none;
+    transition:opacity .22s;z-index:40;backdrop-filter:blur(1.5px);
+  }
+  .scrim.on{opacity:1;pointer-events:auto}
+  .drawer{
+    position:fixed;top:0;right:0;bottom:0;width:440px;max-width:92vw;background:var(--panel);
+    border-left:1px solid var(--line);box-shadow:var(--sh2);z-index:41;
+    transform:translateX(102%);transition:transform .26s cubic-bezier(.22,.61,.36,1);
+    display:flex;flex-direction:column;
+  }
+  .drawer.on{transform:none}
+  .drawer-hd{padding:18px 20px 14px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+  .drawer-hd h2{font-size:1.12rem;letter-spacing:-.01em}
+  .drawer-hd .sub{font-size:.84rem;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .drawer-hd .x{margin-left:auto;flex:none}
+  .drawer-bd{overflow:auto;padding:16px 20px 24px;flex:1;min-height:0}
+  .drawer-ft{border-top:1px solid var(--line);padding:12px 20px;display:flex;gap:8px}
+  .drawer-ft .btn{flex:1;justify-content:center}
+  .kv{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px 14px;font-size:.87rem;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+  .kv dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;color:var(--muted);padding-top:3px}
+  .kv dd{color:var(--ink2)}
+  .sect{margin-top:20px}
+  .sect h3{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;color:var(--muted);margin-bottom:10px}
+  .sect p{font-size:.9rem;line-height:1.85;color:var(--ink2)}
+  .sect p + p{margin-top:8px}
+  .meter{height:6px;border-radius:6px;background:var(--line2);overflow:hidden;margin-top:8px}
+  .meter i{display:block;height:100%;background:var(--accent);border-radius:6px}
+  .meter-lb{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-top:8px}
+
+  /* ---------------- toast ---------------- */
+  .toast{
+    position:fixed;left:50%;bottom:52px;transform:translate(-50%,16px);z-index:60;
+    background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:9px;font-size:.85rem;
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:var(--sh2);
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+
+  /* ---------------- 密度 ---------------- */
+  .density{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .dbtn{border:0;background:transparent;font:inherit;font-size:.78rem;color:var(--muted);
+        padding:0 11px;height:30px;cursor:pointer;transition:background .15s,color .15s}
+  .dbtn:hover{color:var(--ink)}
+  .dbtn[aria-pressed="true"]{background:color-mix(in srgb,var(--ink) 9%,transparent);color:var(--ink);font-weight:600}
+  html[data-density="loose"] tbody td{height:56px}
+  /* 紧凑密度正文下限：.94rem ≈ 15.04px，不再掉到 14px 以下 */
+  html[data-density="tight"] tbody td{height:36px;font-size:.94rem}
+  html[data-density="tight"] .table .row{height:38px;font-size:.94rem}
+  html[data-density="tight"] .table .row .c-city,
+  html[data-density="tight"] .table .row .c-major,
+  html[data-density="tight"] .table .row .c-dim,
+  html[data-density="tight"] .table .row .c-due,
+  html[data-density="tight"] .table .row .c-role{font-size:.92rem}
+  html[data-density="tight"] thead th{padding:7px 12px}
+  html[data-density="tight"] .kpi{padding:12px 14px}
+  html[data-density="tight"] .kpi .v{font-size:24px}
+  html[data-density="tight"] .exp-in{padding:10px 18px 12px 58px}
+
+  /* ---------------- 行内展开 ---------------- */
+  tr.exp > td{padding:0;background:color-mix(in srgb,var(--accent) 4%,transparent)}
+  .exp-in{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;padding:15px 18px 17px 58px}
+  .exp-desc{font-size:.9rem;line-height:1.75;color:var(--ink2)}
+  .exp-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .exp-side{display:flex;flex-direction:column;gap:10px;font-size:.84rem;color:var(--ink2)}
+  .exp-side .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;color:var(--muted);margin-bottom:3px}
+  .exp-side b{font-weight:600;color:var(--ink)}
+  .expbtn{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);
+          background:transparent;color:var(--muted);cursor:pointer;transition:.15s}
+  .expbtn:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 5%,transparent)}
+  .expbtn svg{transition:transform .18s}
+  .expbtn[aria-expanded="true"]{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+  .expbtn[aria-expanded="true"] svg{transform:rotate(180deg)}
+
+  /* ---------------- 采集双栏 ---------------- */
+  .collect{display:grid;grid-template-columns:390px minmax(0,1fr);gap:16px;flex:1;min-height:0}
+  .collect .panel{min-height:0}
+  .clist{display:flex;flex-direction:column}
+  .crawlbar{padding:10px 12px;gap:8px;border-bottom:1px solid var(--line2)}
+  .findbar{padding:8px 12px;gap:10px;border-bottom:1px solid var(--line2)}
+  .urlin{flex:1;min-width:0;height:32px;padding:0 10px;border:1px solid var(--line);border-radius:7px;
+         background:transparent;color:inherit;font-family:var(--mono);font-size:.76rem}
+  .urlin::placeholder{color:var(--muted)}
+  .urlin:focus{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+  .urlin:focus:not(:focus-visible){outline:none}
+  .citems{overflow:auto;flex:1;min-height:0}
+  .citem{display:block;width:100%;text-align:left;background:none;border:0;
+         border-bottom:1px solid var(--line2);border-left:2px solid transparent;
+         padding:12px 14px;cursor:pointer;font-family:inherit;color:inherit}
+  .citem:hover{background:color-mix(in srgb,var(--ink) 3.5%,transparent)}
+  .citem[aria-current="true"]{background:var(--panel);border-left-color:var(--accent)}
+  .citem .t{font-size:.9rem;font-weight:600;line-height:1.45}
+  .citem .m{display:flex;gap:10px;align-items:center;margin-top:6px;
+            font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  .cinfo{padding:18px 22px 20px;overflow:auto;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+  .cinfo h2{font-size:1.08rem;line-height:1.5;letter-spacing:.01em;padding-right:40px}
+  .cinfo .src{font-family:var(--mono);font-size:.74rem;color:var(--muted);margin-top:8px;word-break:break-all}
+  .cinfo .sec{margin-top:22px}
+  .cinfo .sec>h3{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--muted);margin-bottom:10px}
+  .dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .dl div{border:1px solid var(--line2);border-radius:9px;padding:10px 12px}
+  .dl .k{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.1em}
+  .dl .v{font-size:.92rem;font-weight:600;margin-top:5px}
+  .files{display:flex;flex-wrap:wrap;gap:8px}
+  .file{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;
+        padding:7px 11px;font-family:var(--mono);font-size:.74rem;
+        background:color-mix(in srgb,var(--ink) 3%,transparent)}
+  .file svg{color:var(--muted);flex:none}
+  .mini{width:100%;min-width:0;table-layout:fixed;border-collapse:separate;border-spacing:0}
+  .mini th{font-family:var(--mono);font-size:.72rem;color:var(--muted);text-align:left;font-weight:500;
+           letter-spacing:.08em;padding:8px 10px;border-bottom:1px solid var(--line)}
+  .mini td{padding:9px 10px;border-bottom:1px solid var(--line2);font-size:.86rem}
+  .mini th,.mini td{white-space:normal;overflow-wrap:anywhere}
+  .mini th:nth-child(1),.mini td:nth-child(1){width:32%}
+  .mini th:nth-child(2),.mini td:nth-child(2){width:23%}
+  .mini th:nth-child(3),.mini td:nth-child(3){width:21%}
+  .mini th:nth-child(4),.mini td:nth-child(4){width:11%}
+  .mini th:nth-child(5),.mini td:nth-child(5){width:13%}
+  .mini tbody tr{cursor:pointer}
+  .mini tbody tr:hover td{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+  .mini tr:last-child td{border-bottom:0}
+  .cbar{display:flex;align-items:center;gap:10px;margin-top:auto;padding-top:16px;border-top:1px solid var(--line2)}
+  .cbar .sp{flex:1}
+  .cempty{padding:48px 20px;text-align:center;color:var(--muted);font-size:.9rem}
+  .mini thead th{background:color-mix(in srgb,var(--ink) 3.5%,transparent)}
+  .tl{list-style:none;margin:0;padding:2px 0 0 17px;position:relative}
+  .tl:before{content:"";position:absolute;left:4px;top:8px;bottom:10px;width:1px;background:var(--line)}
+  .tl li{position:relative;padding:0 0 13px;font-size:.85rem;line-height:1.55;color:var(--ink2)}
+  .tl li:before{content:"";position:absolute;left:-17px;top:6px;width:7px;height:7px;border-radius:50%;background:var(--panel);border:1.5px solid var(--line2);box-sizing:border-box}
+  .tl li.ok:before{background:var(--accent);border-color:var(--accent)}
+  .tl li.wait{color:var(--muted)}
+  .tl li span{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-right:9px}
+  .duo{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:30px;margin-top:24px}
+  .duo h3{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--muted);margin:0 0 10px}
+  .ex{margin:0;padding:0 0 0 14px;border-left:2px solid color-mix(in srgb,var(--accent) 55%,transparent);
+      font-size:.88rem;line-height:1.85;color:var(--ink2)}
+  .ex-empty{margin:0;font-size:.84rem;line-height:1.7;color:var(--muted)}
+  .mrel{display:flex;flex-direction:column}
+  .mrel button{display:flex;align-items:baseline;gap:12px;justify-content:space-between;width:100%;
+    text-align:left;background:none;border:0;border-bottom:1px dashed var(--line2);font:inherit;cursor:pointer;
+    padding:8px 0;font-size:.85rem;color:var(--ink2);line-height:1.5}
+  .mrel button:first-child{padding-top:0}
+  .mrel button:hover{color:var(--accent)}
+  .mrel button i{font-style:normal;font-family:var(--mono);font-size:.72rem;color:var(--muted);flex:none}
+  .fold{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:0;cursor:pointer;
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--muted);margin-bottom:10px;font-weight:400}
+  .fold:hover{color:var(--ink)}
+  .fold svg{transition:transform .18s;margin-top:1px}
+  .fold[aria-expanded="true"]{color:var(--ink2)}
+  .fold[aria-expanded="true"] svg{transform:rotate(180deg)}
+  .ugrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+  .ucard{text-align:left;background:color-mix(in srgb,var(--panel) 70%,transparent);border:1px solid var(--line2);
+    border-radius:10px;padding:11px 13px 12px;font:inherit;cursor:pointer;transition:border-color .16s,background .16s}
+  .ucard:hover{border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 4%,var(--panel))}
+  .ucard .ut{font-size:.92rem;font-weight:600;letter-spacing:.01em}
+  .ucard .um{font-size:.78rem;color:var(--muted);margin-top:5px;font-family:var(--mono)}
+  .ucard .ud{font-size:.74rem;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+  .ucard .ud span{opacity:.5}
+  .st{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  .st i{width:6px;height:6px;border-radius:50%;background:currentColor;display:block}
+  .st.ok{color:var(--ok)}
+  .st.wait{color:var(--warn)}
+
+  /* ---------------- 新视图页头补充（单位库 / 我的投递 / 技能剖面） ---------------- */
+  .lede{font-size:.88rem;line-height:1.7;color:var(--muted);margin-top:6px;max-width:80ch}
+  .grow{flex:1 1 auto}
+  .tnums{font-family:var(--mono);font-size:.76rem;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+  .tnums b{font-family:var(--mono);font-size:1rem;color:var(--ink);margin-right:2px}
+  .head-side{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+  /* ---------------- div 数据表（单位库 / 我的投递） ----------------
+     与岗位库 <table> 视觉对齐：粘性表头 + 46px 行 + 同色分隔线 */
+  .table{display:flex;flex-direction:column;width:100%;min-width:0}
+  .table .thead{
+    display:grid;align-items:center;flex:none;
+    position:sticky;top:0;z-index:2;background:var(--panel);
+    height:38px;padding:0 14px;border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:.74rem;font-weight:400;letter-spacing:.12em;color:var(--muted);
+  }
+  .table .thead > *{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .table .rows{display:flex;flex-direction:column;min-width:0}
+  .table .row{
+    display:grid;align-items:center;height:46px;padding:0 14px;
+    border-bottom:1px solid var(--line2);transition:background .12s;
+  }
+  .table .row:hover{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+  .table .row.selected{background:var(--accent-soft);box-shadow:inset 2px 0 0 var(--accent)}
+  .table .row > *{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .table .row > .c-unit{font-weight:600;letter-spacing:.01em}
+  .table .row > .c-role{color:var(--accent);font-weight:600}
+  .table .row > .c-city{color:var(--muted);font-size:.86rem}
+  /* 单位库首列里的城市小字：弱化、等宽、小一号、不换行（HTML 自带 " · " 分隔） */
+  .u-city{font-family:var(--mono);font-size:.72rem;font-weight:400;letter-spacing:.02em;color:var(--muted);white-space:nowrap;margin-left:.15em}
+  .table .row > .c-major{color:var(--ink2);font-size:.9rem}
+  .table .row > .c-dim,.table .row > .c-edu{color:var(--ink2);font-size:.9rem}
+  .table .row > .c-num,.table .row > .c-cnt{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+  /* 单位库：岗位数居中，避免与「最近截止」的数字挨在一起看成一组 */
+  #view-units .table.u .row > .c-cnt{text-align:center;color:var(--ink2)}
+  /* 技能剖面底部一句话读法 */
+  .sk-note{margin-top:18px;padding-top:14px;border-top:1px solid var(--line2);
+    font-size:.86rem;line-height:1.9;color:var(--muted);max-width:62em}
+  .sk-note b{color:var(--ink2);font-weight:600}
+  .table .row > .c-due{font-family:var(--mono);font-size:.84rem;color:var(--ink2)}
+  .table .row > .c-due.soon{color:var(--warn)}
+  .table .row > .c-op{display:flex;align-items:center;justify-content:flex-end;gap:6px;overflow:visible}
+  .table .row > .c-check{display:flex;align-items:center;overflow:visible}
+
+  /* 单位库 6 列：单位（城市并入首列）/ 性质 / 岗位数 / 最近截止 / 在招岗位 / 操作
+     首列与在招岗位列给 minmax，1081–1180 这段也不会撑出横向滚动 */
+  #view-units .table.u .thead,
+  #view-units .table.u .row{
+    grid-template-columns:minmax(150px,220px) 76px 84px 104px minmax(120px,.9fr) 116px;
+    gap:12px;
+  }
+  /* 我的投递沿用岗位库 10 列 */
+  #view-mine .table.m .thead,
+  #view-mine .table.m .row{
+    grid-template-columns:36px minmax(120px,1.35fr) minmax(150px,168px) 84px 88px minmax(110px,1.15fr) 124px 74px 104px 120px;
+    gap:12px;
+  }
+  /* 10 列在桌面放不下时由 .tablewrap 统一横滚，行宽保持一致 */
+  @media (min-width:1081px){
+    #view-mine .table.m{min-width:1146px}
+  }
+  html[data-density="loose"] .table .row{height:56px}
+  /* 空态：div 表里也保留上下留白，不贴边 */
+  .table .rows > .empty{padding:52px 20px;border-bottom:0}
+
+  /* ---------------- 技能剖面 ---------------- */
+  #view-skill .panel{flex:0 0 auto}
+  #view-skill .skillwrap{padding:20px 22px 26px;overflow:auto;min-height:0;flex:0 0 auto}
+  #skillBars{display:flex;flex-direction:column;gap:16px;max-width:960px;width:100%}
+  /* 按单位性质切一刀的小 chip 条，跟岗位库 typebar 同款 */
+  #skillTypes{margin:0 0 18px;padding-bottom:16px;border-bottom:1px solid var(--line2);max-width:960px}
+  /* 技能剖面的分组小标题（div.sk-h），等宽小字 + 宽字距 */
+  .sk-h{font-family:var(--mono);font-size:.72rem;font-weight:400;letter-spacing:.14em;color:var(--muted);margin:8px 0 2px}
+  #skillBars > .sk-h:first-child{margin-top:0}
+  .bar-row{
+    display:grid;grid-template-columns:minmax(104px,180px) minmax(0,1fr) 66px;
+    align-items:center;gap:14px;position:relative;
+  }
+  .bar-label{font-size:.94rem;line-height:1.4;color:var(--ink2);overflow-wrap:anywhere}
+  .bar-val{font-family:var(--mono);font-size:.86rem;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
+  /* 轨道：伪元素占中间列，填充条叠在上面，不需要额外 DOM */
+  .bar-row::before{
+    content:"";grid-column:2;grid-row:1;height:10px;border-radius:6px;
+    background:var(--line2);border:1px solid var(--line);
+  }
+  .bar-fill{
+    grid-column:2;grid-row:1;position:relative;z-index:1;display:block;
+    height:10px;min-width:3px;border-radius:6px;
+    background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 74%,#000));
+    transition:width .45s cubic-bezier(.22,.61,.36,1);
+  }
+  html[data-theme="dark"] .bar-row::before{background:color-mix(in srgb,var(--ink) 12%,var(--panel))}
+  /* 兼容 app 若额外包一层 .bar 轨道 */
+  .bar{position:relative;height:10px;border-radius:6px;background:var(--line2);border:1px solid var(--line);overflow:hidden}
+  .bar .bar-fill{display:block;height:100%;border-radius:5px}
+  .bar-row .bar{grid-column:2;grid-row:1;z-index:1}
+
+  /* ---------------- 响应式 ----------------
+     1180 KPI 两列；1080 表格卡片化；960 侧栏图标态；900 采集单栏；
+     760 抽屉全宽；680 顶栏搜索整行 + 卡片三列 */
+  @media (max-width:1500px){
+    /* 中等宽度：工具栏分两行——第一行分类 chips，第二行筛选/密度/计数/重置，
+       避免「重置」被挤到第三行单独成行 */
+    .toolbar{row-gap:8px}
+    .toolbar .chips{flex:1 1 100%}
+    .toolbar .sp{margin-left:auto}
+  }
+
+  @media (max-width:1180px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+  @media (max-width:1080px){
+    /* 不靠横向滚动兜底：岗位库 table 变卡片；别波及 .mini 等内嵌小表 */
+    .tablewrap{overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .tablewrap > table{display:block;min-width:0;width:100%;table-layout:auto}
+    .tablewrap > table thead{display:none}
+    .tablewrap > table tbody{display:block}
+
+    /* 岗位库：按 勾选/单位(含地区·阶段)/岗位/性质/专业/学历·经验/名额/截止/操作 重排 */
+    tbody tr[data-i]{
+      display:grid;margin:0 12px 10px;padding:12px 12px 12px 10px;height:auto;
+      border:1px solid var(--line);border-radius:10px;
+      background:color-mix(in srgb,var(--panel) 52%,var(--bg));
+      gap:6px 12px;
+      grid-template-columns:22px minmax(0,1.3fr) minmax(0,1fr) 96px;
+      grid-template-areas:
+        "chk unit role op"
+        "chk type major op"
+        "chk dim  due  op"
+        "chk num  num  op";
+    }
+    tbody tr[data-i]:first-child{margin-top:12px}
+    tbody tr[data-i] > td{height:auto;padding:0;border:0;white-space:normal;overflow-wrap:anywhere}
+    /* 空态行（无 data-i 的 tr）也铺满一行，不做匿名表格缩排 */
+    .tablewrap > table tbody tr:not([data-i]):not(.exp){display:block}
+    .tablewrap > table tbody tr:not([data-i]):not(.exp) > td{display:block;width:100%;padding:0;border:0}
+    tbody tr[data-i] > td:nth-child(1){grid-area:chk;display:flex;align-items:flex-start;padding-top:4px}
+    tbody tr[data-i] > td:nth-child(2){grid-area:unit}
+    tbody tr[data-i] > td:nth-child(3){grid-area:role}
+    tbody tr[data-i] > td:nth-child(4){grid-area:type}
+    tbody tr[data-i] > td:nth-child(5){grid-area:major}
+    tbody tr[data-i] > td:nth-child(6){grid-area:dim}
+    tbody tr[data-i] > td:nth-child(7){grid-area:num}
+    tbody tr[data-i] > td:nth-child(8){grid-area:due}
+    tbody tr[data-i] > td:nth-child(9){grid-area:op}
+    tbody tr[data-i] .c-unit{font-size:.98rem;white-space:normal}
+    tbody tr[data-i] .c-role{font-size:.92rem;white-space:normal}
+    tbody tr[data-i] .c-major{max-width:none;white-space:normal}
+    tbody tr[data-i] .c-city{white-space:normal}
+    tbody tr[data-i] .c-op{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:6px}
+    tbody tr[data-i].selected{background:var(--accent-soft);border-color:var(--accent-line);box-shadow:0 0 0 1px var(--accent-line)}
+    tbody tr[data-i].selected > td:first-child{box-shadow:none}
+
+    /* 行内展开跟着卡片走 */
+    tbody tr.exp{display:block;margin:-10px 12px 10px;border:1px solid var(--line);border-top:0;
+      border-radius:0 0 10px 10px;background:var(--panel);overflow:hidden}
+    tbody tr.exp > td{display:block;padding:0;border:0}
+    .exp-in{grid-template-columns:minmax(0,1fr);gap:12px;padding:14px}
+    html[data-density="tight"] .exp-in{padding:14px}
+
+    /* div 表（单位库 / 我的投递）：同样的卡片语义 */
+    .table .thead{display:none}
+    .table .row{
+      display:grid;height:auto;margin:0 12px 10px;padding:12px;
+      border:1px solid var(--line);border-radius:10px;
+      background:color-mix(in srgb,var(--panel) 52%,var(--bg));
+      gap:6px 12px;
+      grid-template-columns:22px minmax(0,1.3fr) minmax(0,1fr) 96px;
+      grid-template-areas:
+        "chk unit role op"
+        "chk type major op"
+        "chk dim  due  op"
+        "chk city num  op";
+    }
+    .table .row:first-child{margin-top:12px}
+    /* 卡片高度由内容决定，覆盖密度档的固定行高 */
+    tbody tr[data-i]{height:auto}
+    html[data-density="loose"] .table .row,
+    html[data-density="tight"] .table .row{height:auto}
+    .table .row > *{white-space:normal;overflow-wrap:anywhere;overflow:visible;text-overflow:clip}
+    /* 单位库无勾选列：单位(含城市) / 性质 / 岗位数 / 最近截止 / 在招岗位 / 操作 */
+    #view-units .table.u .row{
+      grid-template-columns:minmax(0,1fr) auto;
+      grid-template-areas:
+        "unit  op"
+        "type  cnt"
+        "due   due"
+        "major major";
+    }
+    #view-units .table.u .row > .c-num,
+    #view-units .table.u .row > .c-cnt{grid-area:cnt}
+    #view-units .table.u .row > .c-major{grid-area:major}
+    #view-units .table.u .row > .c-due{grid-area:due}
+    #view-units .table.u .row > .c-op{grid-area:op}
+    /* 我的投递沿用 10 列语义，按 cell 类名落位 */
+    .table .row > .c-check,.table .row > input[type="checkbox"]{grid-area:chk;align-self:start;margin-top:4px}
+    .table .row > .c-unit{grid-area:unit}
+    .table .row > .c-role{grid-area:role}
+    .table .row > .c-city{grid-area:city}
+    .table .row > .c-type,.table .row > .tag{grid-area:type}
+    .table .row > .c-major{grid-area:major}
+    .table .row > .c-dim,.table .row > .c-edu{grid-area:dim}
+    .table .row > .c-num,.table .row > .c-cnt{grid-area:num}
+    .table .row > .c-due{grid-area:due}
+    .table .row > .c-op{grid-area:op;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:6px}
+
+    /* 卡片模式下给次要字段补小标签（仅窄屏出现） */
+    tbody tr[data-i] td.c-major::before,
+    tbody tr[data-i] td.c-dim::before,
+    tbody tr[data-i] td.c-num::before,
+    tbody tr[data-i] td.c-due::before,
+    tbody tr[data-i] td.c-city::before,
+    .table .row > .c-major::before,
+    .table .row > .c-dim::before,
+    .table .row > .c-num::before,
+    .table .row > .c-due::before,
+    .table .row > .c-city::before{
+      display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--muted);
+      margin-bottom:2px;
+    }
+    tbody tr[data-i] td.c-major::before,.table .row > .c-major::before{content:"专业"}
+    tbody tr[data-i] td.c-dim::before,.table .row > .c-dim::before{content:"学历 / 经验"}
+    tbody tr[data-i] td.c-num::before,.table .row > .c-num::before{content:"名额"}
+    tbody tr[data-i] td.c-due::before,.table .row > .c-due::before{content:"截止"}
+    tbody tr[data-i] td.c-city::before,.table .row > .c-city::before{content:"地区"}
+    /* 单位库的标签与岗位库语义不同，按 6 列覆盖 */
+    #view-units .table.u .row > .c-cnt::before,
+    #view-units .table.u .row > .c-major::before,
+    #view-units .table.u .row > .c-due::before{
+      display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--muted);margin-bottom:2px;
+    }
+    #view-units .table.u .row > .c-cnt::before{content:"岗位数"}
+    #view-units .table.u .row > .c-major::before{content:"在招岗位"}
+    #view-units .table.u .row > .c-due::before{content:"最近截止"}
+  }
+
+  @media (max-width:960px){
+    .app{grid-template-columns:64px minmax(0,1fr)}
+    .rail{position:relative;z-index:31;transition:width .18s ease}
+    .logo{justify-content:center;padding:0}
+    .logo b,.logo small{display:none}
+    .rail-scroll{padding:12px 8px}
+    .navi a{justify-content:center;padding:0;height:40px}
+    .navi a span,.navi .ct,.rail-sec,.user .nm,.user .rl{display:none}
+    .navi a[aria-current="page"]::before{display:none}
+    /* 图标态仍可用：悬停或键盘聚焦时侧栏横向展开，露出文字 */
+    .rail:hover,.rail:focus-within{width:236px;box-shadow:var(--sh2)}
+    .rail:hover .logo,.rail:focus-within .logo{justify-content:flex-start;padding:0 18px}
+    .rail:hover .logo b,.rail:focus-within .logo b,
+    .rail:hover .logo small,.rail:focus-within .logo small{display:block}
+    .rail:hover .rail-scroll,.rail:focus-within .rail-scroll{padding:14px 10px}
+    .rail:hover .navi a,.rail:focus-within .navi a{justify-content:flex-start;padding:0 10px}
+    .rail:hover .navi a span,.rail:focus-within .navi a span,
+    .rail:hover .navi .ct,.rail:focus-within .navi .ct{display:inline}
+    .rail:hover .user .nm,.rail:focus-within .user .nm,
+    .rail:hover .user .rl,.rail:focus-within .user .rl{display:block}
+    .search{min-width:0;flex:1 1 auto}
+    .search kbd{display:none}
+    .crumb{display:none}
+  }
+
+  /* 采集双栏在平板上先纵向堆叠，避免左栏被挤扁 */
+  @media (max-width:900px){
+    .collect{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto}
+    .clist .citems{max-height:38vh}
+    .cinfo{min-height:360px;overflow:visible}
+  }
+
+  @media (max-width:760px){
+    /* 抽屉全宽、内部可滚、关闭按钮 ≥40px */
+    .drawer{width:100%;max-width:none;border-left:0}
+    .drawer-hd{padding:16px 16px 12px;gap:10px}
+    .drawer-hd .x{width:40px;height:40px;min-width:40px;margin:-4px -4px 0 auto;
+      border:1px solid var(--line);border-radius:10px;display:grid;place-items:center}
+    .drawer-bd{padding:14px 16px 22px;overscroll-behavior:contain}
+    .drawer-ft{padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));gap:10px}
+    .drawer-ft .btn{height:42px}
+    .kv{grid-template-columns:72px minmax(0,1fr);font-size:.88rem}
+    .cinfo{padding:16px 16px 18px}
+    /* 采集在 492px 实测必须单栏：列表/详情各自满宽，详情不再被挤成细条 */
+    .collect{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto}
+    .collect > *{min-width:0}
+    .collect .cinfo{min-width:0;width:100%}
+    /* 采集详情内的小表不再继承岗位表的 1100px 最小宽 */
+    .duo{grid-template-columns:minmax(0,1fr);gap:18px}
+    .mini{min-width:0;table-layout:fixed}
+    .mini th,.mini td{white-space:normal;overflow-wrap:anywhere;padding:7px 6px}
+    .mini th:nth-child(1),.mini td:nth-child(1){width:32%}
+    .mini th:nth-child(2),.mini td:nth-child(2){width:23%}
+    .mini th:nth-child(3),.mini td:nth-child(3){width:21%}
+    .mini th:nth-child(4),.mini td:nth-child(4){width:11%}
+    .mini th:nth-child(5),.mini td:nth-child(5){width:13%}
+  }
+
+  @media (max-width:680px){
+    /* 顶栏两行：第一行操作，第二行搜索占满；只作用于 .topbar 内，
+       公告采集的 .search/#cq 不受影响（样式表没有把 .search 整体隐藏的规则） */
+    .app{grid-template-rows:auto minmax(0,1fr) 34px}
+    .topbar{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 12px;gap:8px 10px}
+    .topbar .search{order:5;flex:1 1 100%;max-width:none;min-width:0;margin-left:0;height:38px}
+    .topbar .search input{font-size:.95rem}
+    .topbar .search kbd{display:none}
+    .actions{margin-left:auto}
+    .main{padding:16px 12px}
+    .page-head{gap:10px;margin-bottom:14px}
+    .page-head h1{font-size:1.24rem}
+    .page-head .right,.head-side{margin-left:0;width:100%}
+    .kpis{grid-template-columns:1fr 1fr;gap:8px}
+    .statusbar .hideSm{display:none}
+    .statusbar > span:first-child{display:none}
+    .toolbar{padding:10px 12px;gap:6px}
+    .chips{width:100%}
+    .bulkbar{flex-wrap:wrap}
+
+    /* 卡片改三列：单位/岗位/性质在左，截止/名额在右，操作贴右上 */
+    tbody tr[data-i],.table .row{
+      grid-template-columns:22px minmax(0,1fr) auto;
+      grid-template-areas:
+        "chk unit  op"
+        "chk role  op"
+        "chk type  due"
+        "major major major"
+        "dim   dim   num"
+        "city  city  city";
+    }
+    #view-units .table.u .row{
+      grid-template-columns:minmax(0,1fr) auto;
+      grid-template-areas:
+        "unit  op"
+        "type  cnt"
+        "due   due"
+        "major major";
+    }
+    #view-units .table.u .row > .c-num,
+    #view-units .table.u .row > .c-cnt{grid-area:cnt}
+    tbody tr[data-i] .c-op,.table .row > .c-op{
+      flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-self:start;
+    }
+    /* 技能条：标签与数值一行，轨道独占下一行 */
+    #view-skill .skillwrap{padding:16px 14px 20px}
+    .bar-row{grid-template-columns:minmax(0,1fr) 58px;gap:6px 10px}
+    .bar-label{grid-column:1;grid-row:1}
+    .bar-val{grid-column:2;grid-row:1}
+    .bar-row::before{grid-column:1 / -1;grid-row:2}
+    .bar-fill{grid-column:1 / -1;grid-row:2}
+    .bar-row .bar{grid-column:1 / -1;grid-row:2}
+  }
+
+/* ================= 投递阶段（跟进清单） ================= */
+/* 阶段 chips：岗位展开行与详情抽屉共用 */
+.stchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+.stchip{
+  font-size:.76rem;line-height:1;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink2);
+  transition:border-color .15s,color .15s,background .15s;
+}
+.stchip:hover{border-color:var(--accent-line);color:var(--accent)}
+.stchip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.st-at{font-size:.74rem;color:var(--muted);margin-left:auto}
+.st-note{font-size:.74rem;color:var(--muted);margin:8px 0 0}
+
+/* 我的投递：阶段胶囊，点一下推进一档 */
+.stpill{
+  font-size:.74rem;line-height:1;padding:5px 9px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink2);
+  display:inline-flex;align-items:center;gap:5px;
+  transition:border-color .15s,color .15s;
+}
+.stpill::after{content:"›";font-size:.86em;color:var(--muted);margin-left:1px}
+.stpill:hover{border-color:var(--accent-line);color:var(--accent)}
+.stpill[data-st="saved"]{color:var(--muted)}
+.stpill[data-st="applied"]{color:#2C5D9E;border-color:color-mix(in srgb,#2C5D9E 40%,transparent)}
+.stpill[data-st="written"]{color:#6B4FA8;border-color:color-mix(in srgb,#6B4FA8 40%,transparent)}
+.stpill[data-st="interview"]{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.stpill[data-st="result"]{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+html[data-theme="dark"] .stpill[data-st="applied"]{color:#7FA8DC}
+html[data-theme="dark"] .stpill[data-st="written"]{color:#A98CE6}
+
+/* 我的投递：阶段漏斗 */
+.funnel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 14px}
+.funnel[hidden]{display:none}
+.fstage{
+  position:relative;display:flex;flex-direction:column;gap:6px;text-align:left;
+  padding:11px 13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);
+  transition:border-color .15s,box-shadow .15s;
+}
+.fstage:hover{border-color:var(--accent-line)}
+.fstage.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-line)}
+.fst-l{font-size:.74rem;color:var(--muted)}
+.fstage.on .fst-l{color:var(--accent)}
+.fst-n{font-family:var(--mono);font-size:1.16rem;font-weight:600;color:var(--ink);line-height:1}
+.fst-bar{display:block;height:3px;border-radius:2px;background:var(--line2);overflow:hidden;margin-top:3px}
+.fst-bar i{display:block;height:100%;background:var(--accent);border-radius:2px;transition:width .2s}
+.fstage[data-mst="applied"] .fst-bar i{background:#2C5D9E}
+.fstage[data-mst="written"] .fst-bar i{background:#6B4FA8}
+.fstage[data-mst="interview"] .fst-bar i{background:var(--warn)}
+.fstage[data-mst="result"] .fst-bar i{background:var(--ok)}
+
+/* 我的投递：10 列换掉地区/性质，加阶段/停留 */
+#view-mine .table.m .thead,
+#view-mine .table.m .row{
+  grid-template-columns:36px minmax(120px,1.3fr) minmax(140px,160px) 96px 76px 104px minmax(100px,1.05fr) 124px 74px 120px;
+  gap:12px;
+}
+@media (min-width:1081px){ #view-mine .table.m{min-width:1120px} }
+.c-stage,.c-age{white-space:nowrap}
+
+@media (max-width:1080px){
+  #view-mine .table.m .row{
+    grid-template-columns:22px minmax(0,1.3fr) minmax(0,1fr) 92px;
+    grid-template-areas:
+      "chk unit role stage"
+      "chk age  major op"
+      "chk dim  due  op"
+      "chk num  num  op";
+  }
+  #view-mine .table.m .row > .c-stage{grid-area:stage}
+  #view-mine .table.m .row > .c-age{grid-area:age}
+  #view-mine .table.m .row > .c-stage::before,
+  #view-mine .table.m .row > .c-age::before{
+    display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;
+    color:var(--muted);margin-bottom:2px;
+  }
+  #view-mine .table.m .row > .c-stage::before{content:"阶段"}
+  #view-mine .table.m .row > .c-age::before{content:"停留"}
+  .funnel{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .fstage{flex-direction:row;align-items:center;gap:8px;padding:9px 11px 15px}
+  .fst-bar{position:absolute;left:11px;right:11px;bottom:7px;margin:0}
+  .st-at{margin-left:0;flex-basis:100%}
+}
+
+/* ---------------- 岗位库：单位副行（地区 · 投递阶段） ---------------- */
+td.c-unit .u-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.c-unit small.u-meta{
+  display:flex;align-items:center;gap:7px;
+  font-weight:400;font-size:.72rem;color:var(--muted);
+  margin-top:1px;line-height:1.2;overflow:hidden;white-space:nowrap;
+}
+td.c-unit .u-meta > span:first-child{overflow:hidden;text-overflow:ellipsis}
+.c-unit .st{
+  flex:none;display:inline-flex;align-items:center;gap:4px;
+  font-size:.68rem;line-height:1;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);background:transparent;letter-spacing:0;
+}
+.c-unit .st i{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+.c-unit .st[data-st="saved"]{color:var(--muted)}
+.c-unit .st[data-st="applied"]{color:#2C5D9E;border-color:color-mix(in srgb,#2C5D9E 34%,transparent);background:color-mix(in srgb,#2C5D9E 7%,transparent)}
+.c-unit .st[data-st="written"]{color:#6B4FA8;border-color:color-mix(in srgb,#6B4FA8 34%,transparent);background:color-mix(in srgb,#6B4FA8 7%,transparent)}
+.c-unit .st[data-st="interview"]{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 34%,transparent);background:color-mix(in srgb,var(--warn) 8%,transparent)}
+.c-unit .st[data-st="result"]{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 34%,transparent);background:color-mix(in srgb,var(--ok) 8%,transparent)}
+html[data-theme="dark"] .c-unit .st[data-st="applied"]{color:#7FA8DC;border-color:color-mix(in srgb,#7FA8DC 40%,transparent)}
+html[data-theme="dark"] .c-unit .st[data-st="written"]{color:#A98CE6;border-color:color-mix(in srgb,#A98CE6 40%,transparent)}
+html[data-density="tight"] td.c-unit small.u-meta{font-size:.66rem;margin-top:0}
+html[data-density="tight"] td.c-unit .u-name{font-size:.92rem}
+@media (max-width:1080px){
+  tbody tr[data-i] td.c-unit .u-name{display:inline}
+  tbody tr[data-i] td.c-unit small.u-meta{margin-top:3px;font-size:.76rem}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ 侧边栏 ============ -->
+  <aside class="rail">
+    <div class="logo">
+      <span class="mark">ST</span>
+      <div><b>星他</b><small>STARTA · RECRUIT OPS</small></div>
+    </div>
+    <div class="rail-scroll">
+      <div class="rail-sec">工作区</div>
+      <nav class="navi" aria-label="主导航">
+        <a href="#" data-view="lib" data-nav="岗位库" aria-label="岗位库" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>岗位库</span><span class="ct" id="ctJobs">24</span></a>
+        <a href="#" data-view="collect" data-nav="公告采集" aria-label="公告采集"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span>公告采集</span><span class="ct" id="ctNotices">13</span></a>
+        <a href="#" data-view="units" data-nav="单位库" aria-label="单位库"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-5h6v5"/></svg><span>单位库</span><span class="ct" id="ctUnits">18</span></a>
+        <a href="#" data-view="mine" data-nav="我的投递" aria-label="我的投递"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m8 12 3 3 5-6"/></svg><span>我的投递</span><span class="ct" id="ctMine">0</span></a>
+        <a href="#" data-view="skill" data-nav="技能剖面" aria-label="技能剖面"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>技能剖面</span></a>
+      </nav>
+          </div>
+    <div class="rail-foot">
+      <div class="user">
+        <span class="av">HR</span>
+        <div><div class="nm">陈晓</div><div class="rl">管理员</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ 顶栏 ============ -->
+  <header class="topbar">
+    <div class="crumb"><span>工作区</span><i>/</i><b>岗位库</b></div>
+    <label class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      <input id="q" type="search" placeholder="搜索单位、岗位或专业…" aria-label="搜索单位、岗位或专业" autocomplete="off">
+      <kbd>Ctrl K</kbd>
+    </label>
+    <div class="actions">
+      <button class="icobtn" id="themeBtn" aria-pressed="false" title="切换明暗" aria-label="切换明暗">
+        <svg class="i-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/></svg>
+      </button>
+      <span class="fsgrp" role="group" aria-label="字号">
+        <button class="icobtn" id="fsMinus" title="缩小字号" aria-label="缩小字号">A−</button>
+        <button class="icobtn" id="fsPlus" title="放大字号" aria-label="放大字号">A+</button>
+      </span>
+      <button class="icobtn" id="bellBtn" title="通知（示例）" aria-label="通知">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></svg>
+      </button>
+      <span class="divider"></span>
+      <button class="btn" id="exportBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>导出</button>
+      <button class="btn primary" id="newBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新建采集</button>
+    </div>
+  </header>
+
+  <!-- ============ 主区 ============ -->
+  <main class="main">
+    <div class="page" id="view-lib">
+      <div class="page-head">
+        <div>
+          <h1>岗位库</h1>
+          <p class="sub">从 <b>13 份公告</b> 拆出的 <b>24 个在招岗位</b>，全库共 <b>147</b> 个，按单位性质、专业、学历分好类——找得到，才投得了。</p>
+        </div>
+        <div class="right">
+          <span class="tag" style="height:26px;border-style:dashed">数据源 13 份公告</span>
+          <span class="tag" style="height:26px"><span class="dot"></span>示例数据</span>
+        </div>
+      </div>
+
+      <section class="kpis" aria-label="关键指标（可点，点了就筛）">
+        <div class="kpi" role="button" tabindex="0" data-quick="all" aria-pressed="true" aria-label="全部在招岗位"><div class="lb">在招岗位 / POSITIONS</div><div class="v num"><span id="kpiOpen">24</span><i>个</i></div><div class="ft"><span class="dot"></span>本周新增 <span id="kpiWeekNew">5</span> · 点此看全部</div></div>
+        <div class="kpi" role="button" tabindex="0" data-goview="units" aria-label="覆盖单位，跳转单位库"><div class="lb">覆盖单位 / UNITS</div><div class="v num"><span id="kpiUnits">18</span><i>家</i></div><div class="ft"><span class="dot"></span><span id="kpiTypes">6</span> 类性质 · 去单位库 →</div></div>
+        <div class="kpi" role="button" tabindex="0" data-quick="urgent" aria-pressed="false" aria-label="只看 7 天内截止的岗位"><div class="lb">7 天内截止 / URGENT</div><div class="v num"><span id="kpiUrgent">3</span><i>个</i></div><div class="ft"><span class="dot warn"></span>最早 <span id="kpiEarliest">10-23</span> · 点此只筛这些</div></div>
+        <div class="kpi" role="button" tabindex="0" data-quick="saved" aria-pressed="false" aria-label="只看已收藏的岗位"><div class="lb">已收藏 / SAVED</div><div class="v num"><span id="kpiSaved">0</span><i>个</i></div><div class="ft"><span class="dot"></span>点星标即收藏</div></div>
+      </section>
+
+      <section class="panel">
+        <div class="toolbar">
+          <div class="chips" id="typebar" role="group" aria-label="按单位性质筛选">
+            <button class="chip" data-type="全部" aria-pressed="true">全部<span class="ct">24</span></button>
+            <button class="chip" data-type="央企" aria-pressed="false">央企<span class="ct">7</span></button>
+            <button class="chip" data-type="国企" aria-pressed="false">国企<span class="ct">3</span></button>
+            <button class="chip" data-type="事业单位" aria-pressed="false">事业单位<span class="ct">8</span></button>
+            <button class="chip" data-type="公务员" aria-pressed="false">公务员<span class="ct">2</span></button>
+            <button class="chip" data-type="民营" aria-pressed="false">民营<span class="ct">2</span></button>
+            <button class="chip" data-type="外企" aria-pressed="false">外企<span class="ct">2</span></button>
+          </div>
+          <span class="sel"><select id="major" aria-label="专业方向"></select></span>
+          <span class="sel"><select id="edu" aria-label="学历"></select></span>
+          <span class="sel"><select id="sort" aria-label="排序">
+            <option value="due">按截止排序</option>
+            <option value="n">按名额排序</option>
+            <option value="unit">按单位排序</option>
+          </select></span>
+          <div class="sp"></div>
+          <span class="density" role="group" aria-label="行密度">
+            <button class="dbtn" data-den="loose" aria-pressed="true" title="宽松行高，读起来轻松">宽松</button>
+            <button class="dbtn" data-den="tight" aria-pressed="false" title="一屏看更多">紧凑</button>
+          </span>
+          <span class="meta" id="count">24 / 147</span>
+          <button class="btn ghost" id="resetBtn">重置</button>
+        </div>
+
+        <div class="bulkbar" id="bulkbar">
+          <b id="bulkNum">0</b><span>条已选</span>
+          <button class="btn ghost" id="saveSel">批量收藏</button>
+          <button class="btn ghost" id="copySel">复制报名入口</button>
+          <div class="sp"></div>
+          <button class="btn ghost" id="clearSel">取消选择</button>
+        </div>
+
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:36px"><input type="checkbox" id="checkAll" aria-label="全选"></th>
+                <th>单位</th>
+                <th style="width:170px">岗位</th>
+                <th style="width:100px">性质</th>
+                <th>专业</th>
+                <th style="width:124px">学历 / 经验</th>
+                <th style="width:74px;text-align:right" class="sortable" data-sort="n" tabindex="0" aria-label="按名额排序" aria-sort="none">名额<span class="srt" data-arrow="n"></span></th>
+                <th style="width:116px" class="sortable" data-sort="due" tabindex="0" aria-label="按截止日期排序" aria-sort="ascending">截止<span class="srt" data-arrow="due"></span></th>
+                <th style="width:132px"></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ 视图二：公告采集 ============ -->
+    <div class="page" id="view-collect" hidden>
+      <div class="page-head">
+        <div>
+          <h1>公告采集</h1>
+          <p class="sub">粘公告地址 → 抓附件 → 抽岗位表。<b>左选右看</b>，解析完的岗位直接进岗位库。</p>
+        </div>
+        <div class="right">
+          <span class="tag" style="height:26px"><span class="dot"></span>抓取代理正常</span>
+          <span class="tag" style="height:26px;border-style:dashed">13 来源 · 12 已解析</span>
+        </div>
+      </div>
+
+      <div class="collect">
+        <section class="panel clist" aria-label="公告来源">
+          <div class="toolbar crawlbar">
+            <input id="curl" class="urlin" placeholder="粘贴公告地址 https://…" aria-label="公告地址" autocomplete="off">
+            <button class="btn primary" id="crawlBtn">采集</button>
+          </div>
+          <div class="toolbar findbar">
+            <label class="search" style="flex:1">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+              <input id="cq" type="search" placeholder="搜索标题或单位…" aria-label="搜索标题或单位" autocomplete="off">
+            </label>
+            <span class="meta" id="cCount" aria-live="polite">13</span>
+          </div>
+          <div class="citems" id="citems" role="listbox" aria-label="公告列表"></div>
+        </section>
+
+        <section class="panel cinfo" id="cinfo" aria-label="公告详情"></section>
+      </div>
+    </div>
+    <div class="page" id="view-units" hidden>
+      <div class="page-head">
+        <div>
+          <h1>单位库</h1>
+          <p class="lede">按单位聚合：一家单位几条在招、什么性质、最新截止。点单位看它的全部岗位。</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="toolbar">
+          <div class="chips" id="unitchips" role="group" aria-label="按性质筛选单位"></div>
+          <span class="grow"></span>
+          <span class="tnums"><b id="uCount">0</b> 家</span>
+        </div>
+        <div class="tablewrap"><div class="table u"><div class="thead" id="uhead"></div><div class="rows" id="urows"></div></div></div>
+      </div>
+    </div>
+
+    <div class="page" id="view-mine" hidden>
+      <div class="page-head">
+        <div>
+          <h1>我的投递</h1>
+          <p class="lede">不是收藏夹，是跟进清单——每条岗位标到「已投 / 笔试 / 面试 / 结果」，并记下最后一次改动是哪天。</p>
+        </div>
+        <div class="head-side">
+          <button class="btn" id="mineExport">导出投递清单</button>
+        </div>
+      </div>
+      <div class="funnel" id="mfunnel" role="group" aria-label="按投递阶段筛选" hidden></div>
+      <div class="panel">
+        <div class="tablewrap"><div class="table m"><div class="thead" id="mhead"></div><div class="rows" id="mrows"></div></div></div>
+      </div>
+    </div>
+
+    <div class="page" id="view-skill" hidden>
+      <div class="page-head">
+        <div>
+          <h1>技能剖面</h1>
+          <p class="lede">当前库里的要求在哪儿扎堆、在哪儿断掉。数字由岗位表现算，改数据就会变。</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="skillwrap"><div class="chips sk-types" id="skillTypes" role="group" aria-label="按单位性质切分技能口径"></div><div id="skillBars"></div></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============ 状态栏 ============ -->
+  <footer class="statusbar">
+    <span>星他 工作台 v0.9</span>
+    <span class="hideSm">·</span>
+    <span id="statusMeta">数据源 13 份公告 · 示例数据</span>
+    <span class="sp"></span>
+    <span class="hideSm">Ctrl K 搜索</span>
+    <span class="hideSm">Esc 关闭</span>
+    <span id="statusCount" role="status" aria-live="polite" aria-atomic="true">显示 24 / 147 条</span>
+  </footer>
+</div>
+
+<!-- ============ 详情抽屉 ============ -->
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="岗位详情" inert>
+  <div class="drawer-hd">
+    <div>
+      <h2 id="dwRole">岗位</h2>
+      <div class="sub"><span id="dwUnit">单位</span><span class="tag" id="dwType">类型</span></div>
+    </div>
+    <button class="icobtn x" id="dwClose" aria-label="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-bd">
+    <dl class="kv" id="dwKv"></dl>
+    <div class="sect">
+      <h3>要求摘要</h3>
+      <p id="dwDesc"></p>
+    </div>
+    <div class="sect">
+      <h3>投递进度</h3>
+      <div class="stchips" id="dwStages" role="group" aria-label="设置投递进度"></div>
+      <p class="st-note" id="dwStageNote"></p>
+    </div>
+    <div class="sect">
+      <h3>报名窗口</h3>
+      <div class="meter"><i id="dwMeter" style="width:0%"></i></div>
+      <div class="meter-lb"><span id="dwAxis">距截止日</span><span id="dwPct">—</span></div>
+    </div>
+  </div>
+  <div class="drawer-ft">
+    <button class="btn" id="dwSave">收藏</button>
+    <button class="btn primary" id="dwGo">前往报名</button>
+  </div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   数据层：示例数据 + 口径派生（由 assets/data.js 提供）
+   ---------------------------------------------------------------------
+   window.STARTA = {
+     DATA, NOTICES, NOTICE_ROLES, TYPES, META,
+     today(), daysLeft(str), kpis(), unitsOf(), majors(), edus(), skillStats()
+   }
+
+   口径说明：
+   - META.totalJobs = 147 是「库里总量」；META.sample = 24 是页面展示的样本行数，
+     也就是 DATA.length。kpis() 用 open(=DATA.length, 24) 与 total(=147) 两个字段
+     把「样本 / 全库」这层差异表达出来，页面上应显示成「显示 24 / 147」。
+   - META.snapshot 是示例库的快照标识，只作文案展示，**不参与**天数计算；
+     所有「剩几天」一律相对 today()（真实当天 00:00）。
+   - 紧迫截止行与 added 字段以加载当天为基准生成（仍输出 MM-DD），
+     这样 urgent7 / weekNew 不会随着运行日期漂移失效。
+   ===================================================================== */
+window.STARTA = (function(){
+  const META = { snapshot:"2026-11-02", totalJobs:147, sample:24 };
+
+  /* ---------- 日期口径 ---------- */
+  /* 真实当天 00:00（本地时区），不再写死 2026-11-02 */
+  function today(){
+    const n = new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  }
+  function pad2(n){ return String(n).padStart(2, "0"); }
+  /* 以今天为基准偏移 offset 天，输出 MM-DD */
+  function md(offset){
+    const t = today();
+    t.setDate(t.getDate() + offset);
+    return pad2(t.getMonth() + 1) + "-" + pad2(t.getDate());
+  }
+  /* 把 MM-DD 落到「离今天最近的那一年」，跨年（12 月 ↔ 1 月）也不会算反 */
+  function mdToDate(str){
+    const m = /(\d{1,2})-(\d{1,2})/.exec(str ? String(str) : "");
+    if (!m) return null;
+    const base = today();
+    const y = base.getFullYear();
+    let d = new Date(y, Number(m[1]) - 1, Number(m[2]));
+    const gap = Math.round((d - base) / 86400000);
+    if (gap > 183) d = new Date(y - 1, Number(m[1]) - 1, Number(m[2]));
+    else if (gap < -183) d = new Date(y + 1, Number(m[1]) - 1, Number(m[2]));
+    return d;
+  }
+  /* 距 today 的天数；「长期」或无日期 → null */
+  function daysLeft(str){
+    const d = mdToDate(str);
+    if (!d) return null;
+    return Math.round((d - today()) / 86400000);
+  }
+
+  /* ---------- 岗位样本（24 条） ----------
+     字段：t 性质 / u 单位 / r 岗位 / m 专业 / mf 专业大类 / e 学历 / x 经验 /
+           n 名额 / d 截止 / w 报名入口 / city 城市 / desc 岗位要求 / added 入库日
+     d 说明：普通行是示例库里的固定截止日；下面 3 条标了「紧迫截止」的行用
+           md(+3/+5/+6) 生成，保证 urgent7 恒为 3（公务员岗位不动）。 */
+  const DATA = [
+  {t:"央企",u:"国家电网",r:"变电运维",m:"电气工程及自动化",mf:"电气",e:"本科",x:"应届",n:12,d:"11-28",w:"国聘网 · 校招",city:"全国",added:md(-20),desc:"负责 220kV 及以下变电站设备巡视、倒闸操作与缺陷记录；需懂继电保护基础，接受轮班与驻站。"},
+  {t:"央企",u:"中国石油",r:"财务核算",m:"会计学 / 财务管理",mf:"财会",e:"本科",x:"1-3 年",n:4,d:md(3),w:"官网 · 社招",city:"北京",added:md(-6),desc:"集团合并报表与成本核算，需熟悉新收入准则；有事务所经验优先，要求 CPA 科目通过。"},
+  {t:"央企",u:"中国移动",r:"数据分析",m:"统计学 / 计算机",mf:"计算机",e:"硕士",x:"应届",n:6,d:"11-30",w:"国聘网 · 校招",city:"杭州",added:md(-18),desc:"经营分析与用户增长建模，SQL 与 Python 为硬门槛，需能独立产出归因报告。"},
+  {t:"央企",u:"中建三局",r:"土建工程师",m:"土木工程",mf:"土木",e:"本科",x:"3-5 年",n:5,d:"12-12",w:"官网 · 社招",city:"武汉",added:md(-26),desc:"房建项目现场技术管理，需有一级建造师或同岗经验，能接受项目地调动。"},
+  {t:"央企",u:"国家能源",r:"集控运行",m:"热能与动力工程",mf:"能源",e:"本科",x:"应届",n:10,d:"11-29",w:"国聘网 · 校招",city:"银川",added:md(-30),desc:"火电机组集控巡检与运行调整，四班三倒；热动、自动化专业优先。"},
+  {t:"事业单位",u:"市第一人民医院",r:"临床医师",m:"临床医学",mf:"医学",e:"硕士",x:"应届",n:25,d:"11-25",w:"市卫健委 · 统考",city:"本地",added:md(-22),desc:"住院医师规范化培训合格者优先；岗位表与专业限制写在公告 XLSX 附件里，需逐条核对。"},
+  {t:"事业单位",u:"省属高校",r:"专职辅导员",m:"不限（中共党员）",mf:"不限",e:"硕士",x:"应届",n:8,d:"12-01",w:"人事考试网",city:"省会",added:md(-3),desc:"负责学生日常管理与思政工作，须为中共党员，需住校值班。"},
+  {t:"事业单位",u:"市疾控中心",r:"检验技师",m:"医学检验技术",mf:"医学",e:"本科",x:"1-3 年",n:5,d:"12-09",w:"人事考试网",city:"本地",added:md(-19),desc:"理化与微生物检验，需持检验技师资格证；有 PCR 实验室经验优先。"},
+  {t:"事业单位",u:"市图书馆",r:"读者服务",m:"图书馆学 / 汉语言",mf:"文科",e:"本科",x:"不限",n:3,d:md(5),w:"人事考试网",city:"本地",added:md(-28),desc:"借阅服务与阅读推广，需轮班含周末；有活动策划经验者优先。"},
+  {t:"国企",u:"市城投集团",r:"投融资专员",m:"金融学 / 经济学",mf:"金融",e:"硕士",x:"3-5 年",n:2,d:"12-08",w:"市国资委官网",city:"本地",added:md(-24),desc:"负责债券发行与项目融资测算，需熟悉地方政府投融资平台监管口径。"},
+  {t:"国企",u:"地铁集团",r:"运营调度",m:"交通运输",mf:"交通",e:"本科",x:"应届",n:15,d:"11-26",w:"官网 · 校招",city:"本地",added:md(-5),desc:"行车调度与应急指挥，需通过体检与心理测评，倒班制。"},
+  {t:"国企",u:"交投集团",r:"法务岗",m:"法学（过法考）",mf:"法学",e:"本科",x:"1-3 年",n:1,d:"12-03",w:"官网 · 社招",city:"本地",added:md(-27),desc:"合同审核与诉讼管理，须通过法律职业资格考试；党员优先。"},
+  {t:"民营",u:"新能源科技",r:"算法工程师",m:"计算机 / 自动化",mf:"计算机",e:"硕士",x:"1-3 年",n:5,d:"长期",w:"官网 · 招聘平台",city:"深圳",added:md(-1),desc:"储能 BMS 算法与数据建模，要求有落地项目；薪资区间写在 JD 正文，常年开放。"},
+  {t:"民营",u:"智能制造",r:"供应链计划",m:"物流管理 / 工业工程",mf:"管理",e:"本科",x:"3-5 年",n:2,d:"长期",w:"官网",city:"苏州",added:md(-32),desc:"主生产计划与物料齐套，需熟练 ERP；制造业计划岗 3 年以上经验。"},
+  {t:"公务员",u:"区市场监管局",r:"行政执法",m:"法学 / 食品科学",mf:"法学",e:"本科",x:"不限",n:3,d:"11-20",w:"国家公务员局",city:"本地",added:md(-14),desc:"基层执法岗位，需通过体能测试；专业限制写在职位表备注栏，报名窗口极短。"},
+  {t:"公务员",u:"税务局",r:"一级行政执法员",m:"财会 / 审计",mf:"财会",e:"本科",x:"不限",n:12,d:"11-20",w:"国考专题页",city:"全国",added:md(-13),desc:"税收征管一线岗位，需参加国考笔试与面试；应届与在职均可，专业以职位表为准。"},
+  {t:"外企",u:"汽车零部件",r:"质量工程师",m:"机械 / 材料",mf:"机械",e:"本科",x:"3-5 年",n:2,d:md(6),w:"LinkedIn",city:"上海",added:md(-2),desc:"IATF 16949 体系维护与客户质量投诉处理，英语可作为工作语言。"},
+  {t:"外企",u:"医疗器械",r:"注册专员",m:"生物医学工程",mf:"医学",e:"本科",x:"1-3 年",n:1,d:"12-10",w:"官网",city:"北京",added:md(-21),desc:"NMPA 注册资料撰写与审评沟通，需熟悉二类器械注册流程，英语读写熟练。"},
+  {t:"央企",u:"国家电网",r:"调度运行",m:"电气工程及自动化",mf:"电气",e:"本科",x:"应届",n:6,d:"11-28",w:"国聘网 · 校招",city:"全国",added:md(-11),desc:"省级调度中心值班岗，需掌握电网潮流计算与继电保护，四班三倒。"},
+  {t:"央企",u:"国家电网",r:"信息通信",m:"通信工程 / 计算机",mf:"计算机",e:"本科",x:"应届",n:4,d:"12-05",w:"国聘网 · 校招",city:"全国",added:md(-9),desc:"电力通信网运维与网络安全，需熟悉 SDH 传输与调度数据网。"},
+  {t:"事业单位",u:"市第一人民医院",r:"护理",m:"护理学",mf:"医学",e:"专科",x:"应届",n:30,d:"12-09",w:"市卫健委 · 统考",city:"本地",added:md(-17),desc:"临床护理岗，合同制不占编制，需已取得或当年通过护士执业资格。"},
+  {t:"事业单位",u:"市第一人民医院",r:"医学检验",m:"医学检验技术",mf:"医学",e:"本科",x:"1-3 年",n:6,d:"12-10",w:"市卫健委 · 统考",city:"本地",added:md(-16),desc:"检验科常规与生化检验，需持检验技师资格证，能独立值班。"},
+  {t:"事业单位",u:"省属高校",r:"专任教师（计算机）",m:"计算机科学与技术",mf:"计算机",e:"博士",x:"不限",n:5,d:"12-15",w:"人事考试网",city:"省会",added:md(-23),desc:"教学科研岗，博士学历可免笔试直接面试，需有 SCI 或 CCF 论文。"},
+  {t:"事业单位",u:"省属高校",r:"实验技术",m:"材料 / 化学",mf:"理科",e:"硕士",x:"应届",n:3,d:"12-08",w:"人事考试网",city:"省会",added:md(-25),desc:"实验室仪器管理与实验课支撑，需熟悉 SEM、XRD 等设备操作。"}
+  ];
+
+  /* ---------- 公告（13 条）与岗位映射 ----------
+     发布日期同样以 today() 为基准生成（最近一条 = 今天），避免出现「已同步日期早于公告发布日期」的穿越感；
+     页面渲染时由 app.js 拼接当年年份，所以这里只输出 MM-DD。 */
+  const NOTICES = [
+  {id:"n1",u:"国家电网",title:"2026 年第二批高校毕业生招聘公告",src:"zhaopin.sgcc.com.cn/notice/2026-1102.html",date:md(0),st:"parsed",files:2,
+    sum:"本次招聘面向 2026 届高校毕业生，开放变电运维、信息通信等专业方向共 16 个名额。统一网上报名，笔试为全国机考，面试由各省公司分别组织，录用后签订正式劳动合同。"},
+  {id:"n2",u:"市第一人民医院",title:"2026 年公开招聘工作人员（编制）公告",src:"wjw.example.gov.cn/2026/1101.html",date:md(-1),st:"parsed",files:3,
+    sum:"市卫健委统一组织，招聘临床医师、医技等岗位，纳入事业编制管理。报名后需参加公共科目笔试与专业技能测试，面试按 1:3 比例确定人选。"},
+  {id:"n3",u:"省属高校",title:"专职辅导员公开招聘（第二批）",src:"hrd.example.gov.cn/2026/1031.html",date:md(-2),st:"parsed",files:1,
+    sum:"面向硕士研究生招聘专职辅导员 8 名，要求中共党员（含预备党员）。考试分为笔试、面试与心理测评，录用后纳入事业单位人事管理。"},
+  {id:"n4",u:"税务局",title:"2027 年度考试录用公务员职位表",src:"scs.gov.cn/2026/1029.html",date:md(-4),st:"parsed",files:1,
+    sum:"国考职位表，本岗位属行政执法类，限财会、审计相关专业，本科及以上。报名期窗口固定，只有一次机会，错过只能等下一年度。"},
+  {id:"n5",u:"中国移动",title:"2027 届秋季校园招聘启动",src:"job.10086.cn/2026/1028.html",date:md(-5),st:"parsed",files:1,
+    sum:"秋招提前批，面向统计、计算机类专业招聘数据分析岗，硕士优先。流程为网申、线上笔试、两轮面试，offer 集中在 12 月发放。"},
+  {id:"n6",u:"市城投集团",title:"2026 年社会化公开招聘简章",src:"gzw.example.gov.cn/2026/1027.html",date:md(-6),st:"parsed",files:2,
+    sum:"市属国企平台公司招聘投融资相关岗位，要求 3–5 年相关经验。笔试考公共基础与专业知识，面试采用结构化形式。"},
+  {id:"n7",u:"地铁集团",title:"运营分公司招聘（调度、站务）",src:"metro.example.cn/2026/1026.html",date:md(-7),st:"parsed",files:1,
+    sum:"运营分公司补员招聘，调度岗需交通运输类专业。需通过体检与安全背景审查，录用后倒班作业。"},
+  {id:"n8",u:"新能源科技",title:"储能算法与数据团队常年招聘",src:"careers.example.com/2026/1025.html",date:md(-8),st:"parsed",files:0,
+    sum:"民营企业常年滚动招聘，算法工程师要求计算机、自动化相关专业，1–3 年经验。流程快，技术面两轮即可定薪，长期在线接收简历。"},
+  {id:"n9",u:"市疾控中心",title:"2026 年检验技师招聘公告",src:"wsjkw.example.gov.cn/2026/1024.html",date:md(-9),st:"parsed",files:2,
+    sum:"疾控中心招聘检验技师 5 名，医学检验技术专业本科及以上。考试含专业笔试与实操考核，需具备相应资格证书。"},
+  {id:"n10",u:"中国石油",title:"财务共享中心社会招聘",src:"hr.cnpc.com.cn/2026/1023.html",date:md(-10),st:"pending",files:0,
+    sum:""},
+  {id:"n11",u:"国家电网",title:"2027 届校园招聘提前批（电工类）",src:"zhaopin.sgcc.com.cn/notice/2026-1021.html",date:md(-12),st:"parsed",files:2,
+    sum:"提前批只面向电工类专业，名额比统招少但流程快。笔试提前到 12 月，签约后不再参加春季批次。"},
+  {id:"n12",u:"市第一人民医院",title:"2026 年护理人员招聘（合同制）",src:"wjw.example.gov.cn/2026/1018.html",date:md(-15),st:"parsed",files:1,
+    sum:"合同制护理岗位，招聘 30 人，专科及以上可报。只考专业实操与面试，录用后与医院直签，不占编制。"},
+  {id:"n13",u:"省属高校",title:"2027 年教师岗位公开招聘预告",src:"hrd.example.gov.cn/2026/1015.html",date:md(-18),st:"parsed",files:1,
+    sum:"预告性质，正式公告预计 12 月发布。博士学历可直接进入面试环节，硕士需先通过统一笔试。岗位与截止以正式公告为准。"}
+  ];
+
+  /* 公告 → 该公告点名的岗位（必须能在 DATA 里按「单位 + 岗位名」找到）。
+     没列到的公告会兜底成该单位的全部岗位，所以这里只写公告明确提到的。 */
+  const NOTICE_ROLES = {
+  n1:["变电运维","信息通信"],
+  n2:["临床医师","医学检验"],
+  n3:["专职辅导员"],
+  n4:["一级行政执法员"],
+  n5:["数据分析"],
+  n6:["投融资专员"],
+  n7:["运营调度"],
+  n8:["算法工程师"],
+  n9:["检验技师"],
+  n10:["财务核算"],
+  n11:["调度运行"],
+  n12:["护理"],
+  n13:["专任教师（计算机）","实验技术"]
+  };
+
+  /* ---------- 维度 ---------- */
+  /* 单位性质；首项「全部」供筛选条直接用 */
+  const TYPES = ["全部","央企","国企","事业单位","公务员","民营","外企"];
+
+  /* 学历排序权重，筛选下拉按这个顺序展示 */
+  const EDU_ORDER = ["专科","本科","硕士","博士","不限"];
+
+  /* ---------- 派生口径 ---------- */
+  /* KPI：open 是「页面样本在招数」，total 是「库里总量」，两者差异必须在 UI 上体现 */
+  function kpis(){
+    const units = new Set(DATA.map(d => d.u)).size;
+    const urgent7 = DATA.filter(d => {
+      const left = daysLeft(d.d);
+      return left !== null && left >= 0 && left <= 7;
+    }).length;
+    const weekNew = DATA.filter(d => {
+      const age = daysLeft(d.added);
+      return age !== null && age >= -7 && age <= 0;
+    }).length;
+    return { open:DATA.length, total:META.totalJobs, units, urgent7, weekNew };
+  }
+
+  /* 单位聚合，按岗位数降序；一家单位一条 */
+  function unitsOf(){
+    const map = new Map();
+    DATA.forEach(d => {
+      if (!map.has(d.u)) map.set(d.u, { u:d.u, t:d.t, city:d.city, n:0, roles:[] });
+      const row = map.get(d.u);
+      row.n += 1;
+      row.roles.push(d.r);
+    });
+    return Array.from(map.values()).sort((a, b) => b.n - a.n || a.u.localeCompare(b.u, "zh"));
+  }
+
+  /* 专业大类去重，首项为「全部专业」哨兵，可直接灌进筛选下拉 */
+  function majors(){
+    const seen = [];
+    DATA.forEach(d => { if (!seen.includes(d.mf)) seen.push(d.mf); });
+    return ["全部专业"].concat(seen);
+  }
+
+  /* 学历去重，按 专科 → 本科 → 硕士 → 博士 排序，首项为「全部学历」哨兵 */
+  function edus(){
+    const seen = new Set(DATA.map(d => d.e));
+    return ["全部学历"].concat(EDU_ORDER.filter(e => seen.has(e)));
+  }
+
+  /* 技能剖面口径：v = 24 条样本里命中该规则的岗位数（不是全库 147 的推算值）。
+     改 DATA 会跟着变，页面上的占比由 app.js 用 v / META.sample 或 v / 最大值画条。 */
+  const SKILL_RULES = [
+  { k:"SQL / 数据分析", re:/sql|python|数据分析|统计|建模|归因|经营分析/i },
+  { k:"电气 / 能源调度", re:/电气|电网|变电|继电|潮流|调度|通信|机组|集控|sdh/i },
+  { k:"财务 / 投融资", re:/财务|会计|审计|核算|报表|税务|融资|cpa/i },
+  { k:"临床 / 护理医技", re:/临床|护理|医师|检验|药学|药师|pcr|影像/i },
+  { k:"法律 / 合规风控", re:/法学|法务|法律|诉讼|法考|合规/i },
+  { k:"机械 / 材料质量", re:/机械|材料|质量|iatf|sem|xrd/i },
+  { k:"硕士及以上", field:"e", re:/^(硕士|博士)$/ },
+  { k:"党员要求", re:/党员/ },
+  { k:"应届可投", field:"x", re:/^应届$/ }
+  ];
+
+  function skillStats(list){
+    const src = Array.isArray(list) ? list : DATA;
+    return SKILL_RULES.map(rule => ({
+      k:rule.k,
+      v:src.filter(d => {
+        if (rule.field === "e") return rule.re.test(d.e);
+        if (rule.field === "x") return rule.re.test(d.x);
+        const hay = `${d.r} ${d.m} ${d.mf} ${d.desc} ${d.x}`;
+        return rule.re.test(hay);
+      }).length
+    }));
+  }
+
+  return { DATA, NOTICES, NOTICE_ROLES, TYPES, META, today, daysLeft, kpis, unitsOf, majors, edus, skillStats };
+})();
+</script>
+<script>
+/* ======================================================================
+   星他（STARTA）招聘工作台 · assets/app.js
+   渲染与交互层：岗位库 / 公告采集 / 单位库 / 我的投递 / 技能剖面。
+   数据全部来自 window.STARTA（assets/data.js）；字段缺失一律本地兜底。
+   ====================================================================== */
+
+/* ---------------- 数据层兼容层 ---------------- */
+const S = window.STARTA || {};
+const DATA = Array.isArray(S.DATA) ? S.DATA : [];
+const NOTICES = Array.isArray(S.NOTICES) ? S.NOTICES : [];
+const NOTICE_ROLES = S.NOTICE_ROLES && typeof S.NOTICE_ROLES === "object" ? S.NOTICE_ROLES : {};
+const FALLBACK_TYPES = ["央企", "国企", "事业单位", "公务员", "民营", "外企"];
+let TYPES = Array.isArray(S.TYPES) ? S.TYPES.filter(t => typeof t === "string" && t !== "全部") : [];
+if (!TYPES.length) TYPES = FALLBACK_TYPES.slice();
+
+/* ---------------- 小工具 ---------------- */
+const $ = s => document.querySelector(s);
+const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+const on = (sel, ev, fn, opt) => {
+  const el = typeof sel === "string" ? $(sel) : sel;
+  if (el) el.addEventListener(ev, fn, opt);
+  return el;
+};
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pad2 = n => (n < 10 ? "0" : "") + n;
+const setText = (sel, v) => { const el = typeof sel === "string" ? $(sel) : sel; if (el) el.textContent = v; return el; };
+const uniq = arr => Array.from(new Set(arr.filter(Boolean)));
+
+const LS = {
+  theme: "strata-wb-theme",
+  density: "strata-wb-density",
+  fs: "strata-wb-fs",
+  saved: "strata-wb-saved",
+  filters: "strata-wb-filters"
+};
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 隐私模式忽略 */ } }
+
+/* ---------------- 日期（一律来自 data.js 的真实当天，不写死快照日） ---------------- */
+function todayDate() {
+  if (typeof S.today === "function") {
+    try {
+      const t = S.today();
+      if (t instanceof Date && !isNaN(t.getTime())) return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    } catch (e) { /* 兜底 */ }
+  }
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+const TODAY_DATE = todayDate();
+const TODAY = pad2(TODAY_DATE.getMonth() + 1) + "-" + pad2(TODAY_DATE.getDate());
+
+function daysLeft(dstr) {
+  if (typeof S.daysLeft === "function") {
+    try { const v = S.daysLeft(dstr); if (typeof v === "number" && isFinite(v)) return v; } catch (e) { /* 走本地兜底 */ }
+  }
+  const m = /(\d{1,2})-(\d{1,2})/.exec(String(dstr || ""));
+  if (!m) return null;
+  // 用最近年份解析：跨年时自动落到去年 / 明年
+  let t = new Date(TODAY_DATE.getFullYear(), +m[1] - 1, +m[2]);
+  let diff = Math.round((t - TODAY_DATE) / 86400000);
+  if (diff < -180) { t = new Date(TODAY_DATE.getFullYear() + 1, +m[1] - 1, +m[2]); diff = Math.round((t - TODAY_DATE) / 86400000); }
+  else if (diff > 180) { t = new Date(TODAY_DATE.getFullYear() - 1, +m[1] - 1, +m[2]); diff = Math.round((t - TODAY_DATE) / 86400000); }
+  return diff;
+}
+function addDaysDate(days) {
+  const t = new Date(TODAY_DATE.getTime() + days * 86400000);
+  return pad2(t.getMonth() + 1) + "-" + pad2(t.getDate());
+}
+function dueRank(s) {
+  const m = /(\d{1,2})-(\d{1,2})/.exec(String(s || ""));
+  if (!m) return 9999;
+  return Number(m[1]) * 100 + Number(m[2]);
+}
+/* 排序键走 daysLeft：它已经处理跨年，长期开放（null）恒排最后，不随升/降序翻转 */
+function dueCompare(a, b) {
+  const la = daysLeft(a.d), lb = daysLeft(b.d);
+  if (la === null || lb === null) {
+    if (la === null && lb === null) return 0;
+    return la === null ? 1 : -1;
+  }
+  return la - lb;
+}
+function isSoon(dstr) {
+  const left = daysLeft(dstr);
+  return left !== null && left >= 0 && left <= 7;
+}
+
+/* ---------------- 全局状态 ---------------- */
+const state = {
+  type: "全部",
+  major: "全部专业",
+  edu: "全部学历",
+  q: "",
+  sort: "due",
+  dir: 1,
+  sel: new Set(),
+  saved: new Set(),
+  exp: new Set(),
+  uType: "全部",
+  skillType: "全部",
+  view: "lib",
+  quick: null, /* null | "urgent" | "saved"：点 KPI 卡进来的快捷筛选 */
+  prog: {}, /* i -> { st, at }：投递阶段 + 最后一次改动日期 */
+  mineSt: null /* 我的投递页的阶段筛选 */
+};
+
+/* ---------------- 投递阶段 ----------------
+   收藏 ≠ 投递。进了清单的岗位都带一个阶段，和「最后一次动它」的日期。 */
+const STAGES = [
+  { k: "saved",     lb: "待投", hint: "收进来了，还没投",   color: "muted" },
+  { k: "applied",   lb: "已投", hint: "报名已交，等回音",   color: "#2C5D9E" },
+  { k: "written",   lb: "笔试", hint: "笔试 / 测评阶段",    color: "#6B4FA8" },
+  { k: "interview", lb: "面试", hint: "面谈环节",           color: "warn" },
+  { k: "result",    lb: "结果", hint: "等结果 / 已出",       color: "ok" }
+];
+const STAGE_I = {};
+STAGES.forEach((s, n) => { STAGE_I[s.k] = Object.assign({ n }, s); });
+function stageOf(i) { return STAGE_I[(state.prog[i] || {}).st] || STAGE_I.saved; }
+function stageChip(i) {
+  const st = stageOf(i);
+  return `<span class="st" data-st="${st.k}" title="${esc(st.hint)} · ${esc((state.prog[i] || {}).at || "")}"><i></i>${esc(st.lb)}</span>`;
+}
+
+/* ---------------- 持久化 ---------------- */
+function persistSaved() {
+  lsSet(LS.saved, JSON.stringify({
+    list: Array.from(state.saved).sort((a, b) => a - b),
+    prog: state.prog
+  }));
+}
+function persistFilters() {
+  lsSet(LS.filters, JSON.stringify({
+    type: state.type, major: state.major, edu: state.edu, q: state.q,
+    sort: state.sort, dir: state.dir, quick: state.quick
+  }));
+}
+function restoreSaved() {
+  try {
+    const raw = JSON.parse(lsGet(LS.saved, "[]") || "[]");
+    /* 兼容两种存储：旧格式 [3,7] / 新格式 { list:[3,7], prog:{3:{st,at}} } */
+    const list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.list) ? raw.list : []);
+    const prog = (raw && !Array.isArray(raw) && raw.prog) || {};
+    list.forEach(v => {
+      const i = Number(v);
+      if (!Number.isFinite(i) || !DATA[i]) return;
+      state.saved.add(i);
+      const p = prog[i];
+      state.prog[i] = (p && STAGE_I[p.st])
+        ? { st: p.st, at: typeof p.at === "string" && p.at ? p.at : TODAY }
+        : { st: "saved", at: TODAY };
+    });
+  } catch (e) { /* 坏数据直接忽略 */ }
+}
+function restoreFilters() {
+  try {
+    const f = JSON.parse(lsGet(LS.filters, "null") || "null");
+    if (f && typeof f === "object") {
+      if (typeof f.type === "string" && (f.type === "全部" || TYPES.indexOf(f.type) >= 0)) state.type = f.type;
+      if (typeof f.major === "string") state.major = f.major;
+      if (typeof f.edu === "string") state.edu = f.edu;
+      if (typeof f.q === "string") state.q = f.q;
+      if (typeof f.sort === "string" && ["due", "n", "unit", "role", "type"].indexOf(f.sort) >= 0) state.sort = f.sort;
+      if (f.dir === 1 || f.dir === -1) state.dir = f.dir;
+      if (f.quick === null || f.quick === "urgent" || f.quick === "saved") state.quick = f.quick;
+    }
+  } catch (e) { /* 坏数据直接忽略 */ }
+}
+
+/* ---------------- 索引与筛选选项 ---------------- */
+let byId = new Map();
+
+/* data.js 的 majors()/edus() 首项就是「全部…」哨兵，这里统一去掉，由 mountFilters 补 */
+function majorOptions() {
+  let list = [];
+  if (typeof S.majors === "function") {
+    try {
+      const a = S.majors();
+      if (Array.isArray(a)) list = a.map(x => typeof x === "string" ? x : (x && (x.mf || x.m || x.label || x.name)) || "").filter(Boolean);
+    } catch (e) { /* 兜底 */ }
+  }
+  if (!list.length) list = DATA.map(d => d && d.mf);
+  return uniq(list.filter(x => x && x !== "全部专业"));
+}
+function eduOptions() {
+  let list = [];
+  if (typeof S.edus === "function") {
+    try {
+      const a = S.edus();
+      if (Array.isArray(a)) list = a.map(x => typeof x === "string" ? x : (x && (x.e || x.label || x.name)) || "").filter(Boolean);
+    } catch (e) { /* 兜底 */ }
+  }
+  if (!list.length) list = DATA.map(d => d && d.e);
+  return uniq(list.filter(x => x && x !== "全部学历"));
+}
+function mountFilters() {
+  const majors = ["全部专业"].concat(majorOptions());
+  const edus = ["全部学历"].concat(eduOptions());
+  if (majors.indexOf(state.major) < 0) state.major = "全部专业";
+  if (edus.indexOf(state.edu) < 0) state.edu = "全部学历";
+  const mEl = $("#major"), eEl = $("#edu");
+  if (mEl) { mEl.innerHTML = majors.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join(""); mEl.value = state.major; }
+  if (eEl) { eEl.innerHTML = edus.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join(""); eEl.value = state.edu; }
+}
+function mountTypebar() {
+  const box = $("#typebar");
+  if (!box) return;
+  box.innerHTML = ["全部"].concat(TYPES).map(t =>
+    `<button class="chip" data-type="${esc(t)}" aria-pressed="${String(state.type === t)}">${esc(t)}<span class="ct">0</span></button>`
+  ).join("");
+}
+function reindex() {
+  byId = new Map(DATA.map((d, i) => [i, d]));
+  mountFilters();
+}
+
+/* ---------------- KPI 口径 ---------------- */
+/* 库容 = 公告声明的 totalJobs + 采集新增条数（DATA.length 超过样本 sample 的部分），
+   保证采集后分子/分母口径一致（初始 24/147 → 采集 3 条后 27/150） */
+function libTotal() {
+  const meta = S.META || {};
+  const declared = Number(meta.totalJobs) || 0;
+  const sample = Number(meta.sample) || 0;
+  return Math.max(declared, DATA.length) + Math.max(0, DATA.length - sample);
+}
+/* data.js 没到位时的兜底口径：与 data.js 的 kpis() 保持同一套算法 */
+function fallbackKpis() {
+  const units = new Set();
+  let urgent7 = 0;
+  let weekNew = 0;
+  DATA.forEach(d => {
+    if (!d) return;
+    if (d.u) units.add(d.u);
+    const left = daysLeft(d.d);
+    if (left !== null && left >= 0 && left <= 7) urgent7++;
+    const age = daysLeft(d.added);
+    if (age !== null && age >= -7 && age <= 0) weekNew++;
+  });
+  return {
+    open: DATA.length,
+    /* 库容 = 公告声明的 147 + 采集新增条数（DATA.length 超过样本 24 的部分），
+       避免出现分子 27 > 分母 26 的尴尬，也让采集后「27 / 150」口径正确 */
+    total: libTotal(),
+    units: units.size,
+    urgent7,
+    weekNew
+  };
+}
+function KPIS() {
+  const base = fallbackKpis();
+  if (typeof S.kpis === "function") {
+    try {
+      const k = S.kpis();
+      if (k && typeof k === "object") {
+        const out = Object.assign({}, base);
+        ["open", "total", "units", "urgent7", "weekNew"].forEach(key => {
+          const v = Number(k[key]);
+          if (isFinite(v)) out[key] = v;
+        });
+        out.total = libTotal();
+        return out;
+      }
+    } catch (e) { /* 兜底 */ }
+  }
+  return base;
+}
+
+/* ---------------- 筛选 / 排序 ---------------- */
+function filtered() {
+  const q = state.q.toLowerCase();
+  const list = [];
+  DATA.forEach((d, i) => {
+    if (!d) return;
+    if (state.type !== "全部" && d.t !== state.type) return;
+    if (state.quick === "urgent" && !isSoon(d.d)) return;
+    if (state.quick === "saved" && !state.saved.has(i)) return;
+    if (state.major !== "全部专业" && d.mf !== state.major) return;
+    if (state.edu !== "全部学历" && d.e !== state.edu) return;
+    if (q) {
+      const hay = `${d.u || ""} ${d.r || ""} ${d.m || ""} ${d.t || ""} ${d.city || ""} ${d.w || ""}`.toLowerCase();
+      if (hay.indexOf(q) < 0) return;
+    }
+    list.push(Object.assign({}, d, { i }));
+  });
+  const key = state.sort;
+  const dir = state.dir < 0 ? -1 : 1;
+  list.sort((a, b) => {
+    if (key === "n") return ((Number(a.n) || 0) - (Number(b.n) || 0)) * dir;
+    if (key === "unit") {
+      const u = String(a.u || "").localeCompare(String(b.u || ""), "zh");
+      return u ? u * dir : dueCompare(a, b);
+    }
+    const dv = dueCompare(a, b);
+    return dv ? dv * dir : (Number(b.n) || 0) - (Number(a.n) || 0);
+  });
+  return list;
+}
+
+/* 勾选与筛选一致：不可见的选中项立即移出 */
+function pruneSel(list) {
+  const visible = new Set((list || filtered()).map(d => d.i));
+  let dropped = 0;
+  state.sel.forEach(i => { if (!visible.has(i)) { state.sel.delete(i); dropped++; } });
+  return dropped;
+}
+function visibleSelected() {
+  return filtered().filter(d => state.sel.has(d.i));
+}
+function setSort(key, dir) {
+  if (state.sort === key) state.dir = dir != null ? dir : -state.dir;
+  else { state.sort = key; state.dir = dir != null ? dir : 1; }
+  if (state.dir !== 1 && state.dir !== -1) state.dir = 1;
+  const sel = $("#sort");
+  if (sel && sel.value !== key) sel.value = key;
+  persistFilters();
+  render();
+}
+
+/* ---------------- 表格渲染 ---------------- */
+/* 截止列：日期后面跟相对天数，省掉「还有几天」的心算；过期项弱化但不隐藏 */
+function dueCell(d) {
+  const left = daysLeft(d.d);
+  if (left === null) return `<td class="c-due" title="长期开放">${esc(d.d)}<small>长期</small></td>`;
+  if (left < 0) return `<td class="c-due expired" title="已过截止日">${esc(d.d)}<small>已过</small></td>`;
+  const soon = left <= 7;
+  const label = left === 0 ? "今天" : left + " 天";
+  const tip = left === 0 ? "今天截止，别拖" : left <= 7 ? `距截止 ${left} 天，先处理` : `距截止 ${left} 天`;
+  return `<td class="c-due${soon ? " soon" : ""}" title="${tip}">${esc(d.d)}<small>${label}</small></td>`;
+}
+function rowHtml(d) {
+  const open = state.exp.has(d.i);
+  const saved = state.saved.has(d.i);
+  const main = `<tr data-i="${d.i}" tabindex="-1" class="${state.sel.has(d.i) ? "selected" : ""}${open ? " opened" : ""}">
+    <td><input type="checkbox" ${state.sel.has(d.i) ? "checked" : ""} aria-label="选择 ${esc(d.u)} ${esc(d.r)}"></td>
+    <td class="c-unit" title="${esc(d.u)}${d.city ? " · " + esc(d.city) : ""}"><span class="u-name">${esc(d.u)}</span><small class="u-meta"><span>${esc(d.city || "—")}</span>${state.saved.has(d.i) ? stageChip(d.i) : ""}</small></td>
+    <td class="c-role">${esc(d.r)}</td>
+    <td><span class="tag" data-t="${esc(d.t)}">${esc(d.t)}</span></td>
+    <td class="c-major">${esc(d.m)}</td>
+    <td class="c-dim c-edu">${esc(d.e)} · ${esc(d.x)}</td>
+    <td class="c-num">${d.n} 人</td>
+    ${dueCell(d)}
+    <td class="c-op"><button class="go star" data-save="${d.i}" data-name="${esc(d.r)}" aria-pressed="${saved}" aria-label="${saved ? "取消收藏" : "收藏"} ${esc(d.r)}">${saved ? "★" : "☆"}</button><button class="expbtn" data-exp="${d.i}" aria-expanded="${open}" aria-label="展开 ${esc(d.r)} 的要求" title="展开要求"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><button class="go" data-open="${d.i}">详情</button></td>
+  </tr>`;
+  return open ? main + expandRow(d) : main;
+}
+function expandRow(d) {
+  const left = daysLeft(d.d);
+  const win = left === null ? "长期开放，随到随投" : left < 0 ? "已截止" : left === 0 ? "今天截止" : `剩 ${left} 天`;
+  return `<tr class="exp"><td colspan="9"><div class="exp-in">
+    <div>
+      <div class="exp-desc">${esc(d.desc)}</div>
+      <div class="exp-actions">
+        <button class="btn ghost" data-save="${d.i}">${state.saved.has(d.i) ? "★ 已收藏" : "☆ 收藏"}</button>
+        <button class="btn ghost" data-copy="${d.i}">复制报名入口</button>
+        <button class="btn ghost" data-open="${d.i}">看完整详情</button>
+      </div>
+      <div class="stchips" role="group" aria-label="设置 ${esc(d.r)} 的投递进度">
+        ${STAGES.map(s => `<button class="stchip" data-stage="${d.i}" data-st="${s.k}" aria-pressed="${stageOf(d.i).k === s.k}" title="${esc(s.hint)}">${esc(s.lb)}</button>`).join("")}
+        <span class="st-at">${state.saved.has(d.i) ? "上次更新 " + esc((state.prog[d.i] || {}).at || "—") : "选一个阶段即加入投递清单"}</span>
+      </div>
+    </div>
+    <div class="exp-side">
+      <div><div class="k">报名入口</div><b>${esc(d.w)}</b></div>
+      <div><div class="k">报名窗口</div><b>${win}</b><span style="color:var(--muted);font-size:.78rem"> · 截止 ${esc(d.d)}</span></div>
+      <div><div class="k">门槛</div>${esc(d.e)} · ${esc(d.x)} · 招 ${d.n} 人</div>
+    </div>
+  </div></td></tr>`;
+}
+function emptyJobsHtml() {
+  if (state.quick === "saved") return `<b>还没有收藏的岗位</b>在列表里点一下 ☆ 收几个进来；或者点「在招岗位」卡回到全量。`;
+  if (state.quick === "urgent") return `<b>眼下没有 7 天内截止的岗位</b>点「在招岗位」卡回到全量，或者按截止日期慢慢挑。`;
+  return `<b>没有匹配的岗位</b>换个单位性质、专业或学历，或清空关键词、点「重置」再试。`;
+}
+function paintRows(list) {
+  const rows = $("#rows");
+  if (!rows) return;
+  rows.innerHTML = list.length
+    ? list.map(rowHtml).join("")
+    : `<tr><td colspan="9"><div class="empty">${emptyJobsHtml()}</div></td></tr>`;
+}
+function syncSortUI() {
+  $$("th.sortable").forEach(th => {
+    const k = th.dataset.sort;
+    const active = state.sort === k;
+    const srt = th.querySelector(".srt");
+    if (srt) srt.textContent = active ? (state.dir > 0 ? "↑" : "↓") : "";
+    th.setAttribute("aria-sort", active ? (state.dir > 0 ? "ascending" : "descending") : "none");
+  });
+  const sel = $("#sort");
+  if (sel && sel.value !== state.sort && $$("#sort option").some(o => o.value === state.sort)) sel.value = state.sort;
+}
+function syncTypebarCounts() {
+  const counts = new Map();
+  DATA.forEach(d => { if (d && d.t) counts.set(d.t, (counts.get(d.t) || 0) + 1); });
+  $$("#typebar .chip").forEach(c => {
+    const ct = c.querySelector(".ct");
+    if (!ct) return;
+    const t = c.dataset.type;
+    ct.textContent = t === "全部" ? DATA.length : (counts.get(t) || 0);
+    c.setAttribute("aria-pressed", String(state.type === t));
+  });
+}
+function syncFiltersUI() {
+  const m = $("#major"); if (m && m.value !== state.major) m.value = state.major;
+  const e = $("#edu"); if (e && e.value !== state.edu) e.value = state.edu;
+}
+function syncBulk(list) {
+  const vis = list || filtered();
+  const ids = vis.map(d => d.i);
+  const nSel = ids.filter(i => state.sel.has(i)).length;
+  const bar = $("#bulkbar");
+  if (bar) bar.classList.toggle("on", nSel > 0);
+  setText("#bulkNum", nSel);
+  const all = $("#checkAll");
+  if (all) {
+    all.checked = ids.length > 0 && nSel === ids.length;
+    all.indeterminate = nSel > 0 && nSel < ids.length;
+  }
+  $$("#rows tr[data-i]").forEach(tr => {
+    const i = Number(tr.dataset.i);
+    tr.classList.toggle("selected", state.sel.has(i));
+    const cb = tr.querySelector("input[type=checkbox]");
+    if (cb) cb.checked = state.sel.has(i);
+  });
+}
+function syncCountText(list) {
+  const total = KPIS().total;
+  setText("#count", `${list.length} / ${total}`);
+  /* 状态栏是「当前视图」的口径：岗位库才写「显示 N / M 条」，
+     其余视图由 syncStatusText() 负责，免得 render() 一跑就把别的视图文案冲掉 */
+  if (state.view === "lib") setText("#statusCount", `显示 ${list.length} / ${total} 条`);
+}
+/* 我的投递：跟进 N 条 · 已投出 M 条 */
+function mineStatus() {
+  let act = 0;
+  state.saved.forEach(i => { if (stageOf(i).k !== "saved") act++; });
+  return state.saved.size ? `跟进 ${state.saved.size} 条 · 已投出 ${act} 条` : "跟进 0 条";
+}
+/* 按当前视图刷新状态栏（视图切换、阶段推进、漏斗筛选后都调它） */
+function syncStatusText() {
+  const v = state.view;
+  if (v === "lib") { const list = filtered(); setText("#statusCount", `显示 ${list.length} / ${KPIS().total} 条`); }
+  else if (v === "collect") setText("#statusCount", `采集 ${NOTICES.length} 条公告`);
+  else if (v === "units") setText("#statusCount", `聚合 ${typeof S.unitsOf === "function" ? (S.unitsOf() || []).length : new Set(DATA.map(d => d.u)).size} 家单位`);
+  else if (v === "mine") setText("#statusCount", mineStatus());
+  else if (v === "skill") {
+    const sr = skillRows(state.skillType === "全部" ? DATA : DATA.filter(d => d && d.t === state.skillType));
+    setText("#statusCount", `技能口径 ${sr.rows.length} 项 · 样本 ${sr.sample} 条`);
+  }
+}
+
+/* ---------------- KPI / 徽标同步（只写 #kpiXxx 数字位，不重建卡片） ---------------- */
+function earliestLabel() {
+  const list = DATA.filter(Boolean)
+    .map(d => ({ d: d.d, left: daysLeft(d.d) }))
+    .filter(x => x.left !== null && x.left >= 0)
+    .sort((a, b) => a.left - b.left);
+  return list.length ? list[0].d : "—";
+}
+function syncNoticeTag() {
+  const tags = $$("#view-collect .page-head .right .tag");
+  const tag = tags[1];
+  if (tag) tag.textContent = `${NOTICES.length} 来源 · ${NOTICES.filter(n => stOf(n) === "ok").length} 已解析`;
+}
+function syncKPI() {
+  const k = KPIS();
+  setText("#kpiOpen", k.open);
+  setText("#kpiWeekNew", k.weekNew);
+  setText("#kpiUnits", k.units);
+  setText("#kpiTypes", uniq(DATA.map(d => d && d.t)).length);
+  setText("#kpiUrgent", k.urgent7);
+  setText("#kpiEarliest", earliestLabel());
+  setText("#kpiSaved", state.saved.size);
+
+  // 已收藏卡片的脚注跟随数量变化
+  const savedNum = $("#kpiSaved");
+  const savedCard = savedNum && savedNum.closest ? savedNum.closest(".kpi") : null;
+  const savedFt = savedCard ? savedCard.querySelector(".ft") : null;
+  if (savedFt) {
+    const cnt = {};
+    STAGES.forEach(s => { cnt[s.k] = 0; });
+    state.saved.forEach(i => { cnt[stageOf(i).k]++; });
+    const parts = STAGES.filter(s => s.k !== "saved" && cnt[s.k]).map(s => `${s.lb} ${cnt[s.k]}`);
+    savedFt.innerHTML = `<span class="dot"></span>${state.saved.size
+      ? (parts.length ? parts.join(" · ") : `待投 ${cnt.saved}`)
+      : "点星标即收藏"}`;
+    savedFt.title = state.saved.size ? "点此只看已收藏的岗位" : "";
+  }
+
+  /* 卡片高亮 = 当前正被它筛着，点一下就知道自己在看什么 */
+  $$(".kpi[data-quick]").forEach(card => {
+    const on = card.dataset.quick === "all" ? state.quick === null : card.dataset.quick === state.quick;
+    card.setAttribute("aria-pressed", String(on));
+  });
+
+  setText("#ctJobs", String(k.open));
+  setText("#ctNotices", String(NOTICES.length));
+  setText("#ctUnits", String(k.units));
+  setText("#ctMine", String(state.saved.size));
+
+  const sub = $("#view-lib .page-head .sub");
+  if (sub) {
+    const soonN = k.urgent7, savedN = state.saved.size;
+    sub.innerHTML = soonN
+      ? `现在有 <b>${soonN} 个</b> 岗位 7 天内截止，最早 <b>${earliestLabel()}</b> —— 先处理它们。本周新增 <b>${k.weekNew}</b> 个，你已收藏 <b>${savedN}</b> 个。`
+      : `眼下没有 7 天内截止的岗位，可以从本周新增的 <b>${k.weekNew} 个</b> 里慢慢挑。你已收藏 <b>${savedN}</b> 个，全库共 <b>${k.total}</b> 个。`;
+  }
+  const tags = $$("#view-lib .page-head .right .tag");
+  if (tags[0]) tags[0].innerHTML = `数据源 ${NOTICES.length} 份公告`;
+  if (tags[1]) tags[1].innerHTML = `<span class="dot"></span>${TODAY} 已同步`;
+  setText("#statusMeta", `数据源 ${NOTICES.length} 份公告 · 示例数据`);
+  syncNoticeTag();
+}
+
+/* ---------------- 收藏 / 投递进度 ---------------- */
+function paintDwStages() {
+  const box = $("#dwStages"), note = $("#dwStageNote");
+  if (!box) return;
+  if (dwIndex == null) { box.innerHTML = ""; if (note) note.textContent = ""; return; }
+  const cur = stageOf(dwIndex);
+  const saved = state.saved.has(dwIndex);
+  box.innerHTML = STAGES.map(s => `<button class="stchip" data-stage="${dwIndex}" data-st="${s.k}" aria-pressed="${cur.k === s.k}" title="${esc(s.hint)}">${esc(s.lb)}</button>`).join("");
+  if (note) note.textContent = saved
+    ? `当前：${cur.lb} · 上次更新 ${(state.prog[dwIndex] || {}).at || "—"}`
+    : "还没进清单，点任意阶段即加入。";
+}
+function paintDwSave() {
+  const b = $("#dwSave");
+  if (!b) return;
+  const saved = dwIndex != null && state.saved.has(dwIndex);
+  b.setAttribute("aria-pressed", String(saved));
+  b.textContent = saved ? "★ 已收藏" : "☆ 收藏";
+  paintDwStages();
+}
+function syncSaveUI() {
+  $$("[data-save]").forEach(b => {
+    const i = Number(b.dataset.save);
+    const saved = state.saved.has(i);
+    b.setAttribute("aria-pressed", String(saved));
+    const nm = b.dataset.name || "";
+    if (b.classList.contains("star")) {
+      b.textContent = saved ? "★" : "☆";
+      b.setAttribute("aria-label", (saved ? "取消收藏" : "收藏") + (nm ? " " + nm : ""));
+    } else {
+      b.textContent = saved ? "★ 已收藏" : "☆ 收藏";
+    }
+  });
+  paintDwSave();
+}
+function setSaved(i, on) {
+  if (i == null || !byId.has(i)) return false;
+  const next = on == null ? !state.saved.has(i) : !!on;
+  if (next === state.saved.has(i)) { syncSaveUI(); return next; }
+  if (next) {
+    state.saved.add(i);
+    if (!state.prog[i]) state.prog[i] = { st: "saved", at: TODAY };
+  } else {
+    state.saved.delete(i);
+    delete state.prog[i];
+  }
+  persistSaved();
+  syncSaveUI();
+  syncKPI();
+  if (state.view === "mine") renderMine();
+  return next;
+}
+/* 推进 / 回退阶段。没在清单里的岗位，点阶段等于「收进来 + 定阶段」。 */
+function setStage(i, st) {
+  if (i == null || !byId.has(i) || !STAGE_I[st]) return false;
+  const had = state.saved.has(i);
+  const cur = state.prog[i];
+  if (had && cur && cur.st === st) return false;
+  state.saved.add(i);
+  state.prog[i] = { st, at: TODAY };
+  persistSaved();
+  syncSaveUI();
+  syncKPI();
+  render();
+  if (state.view === "mine") { renderMine(); syncStatusText(); }
+  const d = byId.get(i);
+  toast(`${d ? d.r : "岗位"} → ${STAGE_I[st].lb}${had ? "" : "（已加入投递清单）"}`);
+  return true;
+}
+function setSavedMany(list, on) {
+  if (!list.length) return 0;
+  list.forEach(d => {
+    if (on) {
+      state.saved.add(d.i);
+      if (!state.prog[d.i]) state.prog[d.i] = { st: "saved", at: TODAY };
+    } else {
+      state.saved.delete(d.i);
+      delete state.prog[d.i];
+    }
+  });
+  persistSaved();
+  syncSaveUI();
+  syncKPI();
+  if (state.view === "mine") renderMine();
+  return list.length;
+}
+
+/* ---------------- toast ---------------- */
+function toast(msg) {
+  const el = $("#toast");
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add("on");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("on"), 2200);
+}
+
+/* ---------------- 剪贴板 ---------------- */
+function legacyCopy(text) {
+  let ok = false;
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  ta.style.top = "0";
+  document.body.appendChild(ta);
+  try { ta.select(); ta.setSelectionRange(0, ta.value.length); ok = document.execCommand("copy"); }
+  catch (e) { ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+async function writeClipboard(text) {
+  const t = String(text == null ? "" : text);
+  if (!t) return false;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try { await navigator.clipboard.writeText(t); return true; } catch (e) { /* 回退 */ }
+  }
+  return legacyCopy(t);
+}
+async function copyAndToast(text, okMsg, failMsg) {
+  const ok = await writeClipboard(text);
+  toast(ok ? (okMsg || "已复制") : (failMsg || "复制失败：浏览器拒绝了剪贴板权限，请手动选中复制"));
+  return ok;
+}
+function withScheme(s) {
+  const v = String(s == null ? "" : s).trim();
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^[\w.-]+\.[a-z]{2,}([/:?#]|$)/i.test(v)) return "https://" + v.replace(/^\/+/, "");
+  return "";
+}
+function noticeUrl(n) {
+  if (!n) return "";
+  return withScheme(n.url) || withScheme(n.src);
+}
+function directJobUrl(d) {
+  if (!d) return "";
+  if (d.url) return withScheme(d.url);
+  if (d.w && /^https?:\/\//i.test(d.w)) return withScheme(d.w);
+  return "";
+}
+function jobUrl(d) {
+  if (!d) return "";
+  if (d.url) { const u = withScheme(d.url); if (u) return u; }
+  if (d.w && /^https?:\/\//i.test(d.w)) return d.w;
+  const n = NOTICES.filter(x => x.u === d.u).map(x => noticeUrl(x)).filter(Boolean)[0];
+  return n || "";
+}
+function copyTarget(d) {
+  return jobUrl(d) || d.w || `${d.u || ""} ${d.r || ""}`.trim();
+}
+
+/* ---------------- CSV ---------------- */
+function csvDownload(head, rows, filename) {
+  const body = rows.map(r => r.map(v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`).join(","));
+  const blob = new Blob(["\ufeff" + [head.join(",")].concat(body).join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return rows.length;
+}
+function exportCsv() {
+  const list = filtered();
+  if (!list.length) { toast("当前筛选下没有岗位可导出"); return; }
+  const n = csvDownload(
+    ["单位", "岗位", "性质", "专业", "学历", "经验", "名额", "截止", "报名入口", "城市"],
+    list.map(d => [d.u, d.r, d.t, d.m, d.e, d.x, d.n, d.d, d.w, d.city]),
+    `starta-岗位库-${list.length}条.csv`
+  );
+  toast(`已导出 ${n} 条岗位 CSV`);
+}
+
+/* ---------------- 抽屉 ---------------- */
+let dwIndex = null;
+let dwReturn = null;
+
+function openDrawer(i, trigger) {
+  const d = byId.get(i);
+  if (!d) return;
+  dwIndex = i;
+  dwReturn = trigger && trigger.focus ? trigger : document.activeElement;
+  setText("#dwRole", d.r);
+  setText("#dwUnit", `${d.u} · ${d.city}`);
+  setText("#dwType", d.t);
+  const tag = $("#dwType");
+  if (tag) tag.dataset.t = d.t || "";
+  const kv = $("#dwKv");
+  if (kv) kv.innerHTML = [
+    ["专业", d.m], ["学历", d.e], ["经验", d.x], ["名额", `${d.n} 人`],
+    ["截止", d.d], ["报名入口", d.w]
+  ].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  setText("#dwDesc", d.desc);
+  const left = daysLeft(d.d);
+  const meter = $("#dwMeter");
+  if (meter) {
+    if (left === null) {
+      meter.style.width = "100%"; meter.style.opacity = ".3";
+      setText("#dwAxis", "长期开放，随到随投"); setText("#dwPct", "开放");
+    } else if (left <= 0) {
+      meter.style.width = "100%"; meter.style.opacity = ".3";
+      setText("#dwAxis", "报名窗口已关闭"); setText("#dwPct", "已截止");
+    } else {
+      meter.style.opacity = "1";
+      meter.style.width = Math.max(6, Math.min(100, Math.round(left / 30 * 100))) + "%";
+      setText("#dwAxis", "距截止日"); setText("#dwPct", `剩 ${left} 天`);
+    }
+  }
+  paintDwSave();
+  const go = $("#dwGo");
+  if (go) go.textContent = directJobUrl(d) ? "前往报名" : "查看公告原文";
+  const drawer = $("#drawer");
+  if (drawer) { drawer.inert = false; drawer.classList.add("on"); drawer.setAttribute("aria-hidden", "false"); }
+  const scrim = $("#scrim");
+  if (scrim) scrim.classList.add("on");
+  const close = $("#dwClose");
+  if (close) close.focus({ preventScroll: true });
+}
+function closeDrawer() {
+  const drawer = $("#drawer");
+  if (!drawer || !drawer.classList.contains("on")) return;
+  drawer.classList.remove("on");
+  drawer.setAttribute("aria-hidden", "true");
+  drawer.inert = true;
+  const scrim = $("#scrim");
+  if (scrim) scrim.classList.remove("on");
+  dwIndex = null;
+  const back = dwReturn;
+  dwReturn = null;
+  if (back) {
+    requestAnimationFrame(() => {
+      if (back.isConnected) { try { back.focus({ preventScroll: true }); } catch (e) { /* 忽略 */ } }
+    });
+  }
+}
+function openJobUrl(d) {
+  const u = jobUrl(d);
+  if (!u) { toast("这条岗位没有可打开的公告或报名地址"); return; }
+  window.open(u, "_blank", "noopener");
+}
+
+/* ---------------- 视图切换 ---------------- */
+const VIEW_LABEL = { lib: "岗位库", collect: "公告采集", units: "单位库", mine: "我的投递", skill: "技能剖面" };
+function setView(v, opts) {
+  if (!VIEW_LABEL[v]) v = "lib";
+  state.view = v;
+  $$(".main .page").forEach(el => { el.hidden = el.id !== "view-" + v; });
+  $$(".navi a").forEach(a => {
+    if (a.dataset.view === v) a.setAttribute("aria-current", "page");
+    else if (a.dataset.view) a.removeAttribute("aria-current");
+  });
+  setText(".topbar .crumb b", VIEW_LABEL[v]);
+  /* 状态栏跟着当前视图走，别让技能剖面底下还留着「显示 7 / 147 条」 */
+  if (v === "lib") syncCountText(filtered());
+  else if (v === "collect") setText("#statusCount", `采集 ${NOTICES.length} 条公告`);
+  else if (v === "units") setText("#statusCount", `聚合 ${typeof S.unitsOf === "function" ? (S.unitsOf() || []).length : new Set(DATA.map(d => d.u)).size} 家单位`);
+  else if (v === "mine") setText("#statusCount", mineStatus());
+  else if (v === "skill") {
+    const sr = skillRows(state.skillType === "全部" ? DATA : DATA.filter(d => d && d.t === state.skillType));
+    setText("#statusCount", `技能口径 ${sr.rows.length} 项 · 样本 ${sr.sample} 条`);
+  }
+  if (v === "collect") { renderCitems(); renderCinfo(); }
+  else if (v === "units") renderUnits();
+  else if (v === "mine") renderMine();
+  else if (v === "skill") renderSkill();
+  if (!(opts && opts.silent)) {
+    try {
+      const u = new URL(location.href);
+      u.searchParams.set("view", v);
+      history.replaceState(null, "", u.href);
+    } catch (e) { /* file:// 或权限受限时忽略 */ }
+  }
+}
+function viewFromUrl() {
+  try {
+    const v = new URLSearchParams(location.search).get("view");
+    return VIEW_LABEL[v] ? v : "lib";
+  } catch (e) { return "lib"; }
+}
+
+/* ---------------- 单位库 ---------------- */
+function unitDue(u) {
+  const ds = DATA.filter(d => d && d.u === u && dueRank(d.d) < 9999)
+    .map(d => d.d).sort((a, b) => dueRank(a) - dueRank(b));
+  return ds[0] || "";
+}
+function normUnit(x) {
+  const u = x.u || x.unit || x.name || "";
+  const roles = Array.isArray(x.roles)
+    ? x.roles.map(r => typeof r === "string" ? r : (r && (r.r || r.name)) || "").filter(Boolean)
+    : [];
+  const nRaw = Number(x.n);
+  return {
+    u,
+    t: x.t || x.type || "",
+    city: x.city || "",
+    n: isFinite(nRaw) ? nRaw : (roles.length || DATA.filter(d => d && d.u === u).length),
+    roles,
+    due: x.due || x.d || unitDue(u)
+  };
+}
+function unitGroups() {
+  let arr = [];
+  if (typeof S.unitsOf === "function") {
+    try {
+      const u = S.unitsOf();
+      if (Array.isArray(u) && u.length) arr = u.map(normUnit);
+    } catch (e) { /* 兜底 */ }
+  }
+  if (!arr.length) {
+    const map = new Map();
+    DATA.forEach(d => {
+      if (!d || !d.u) return;
+      if (!map.has(d.u)) map.set(d.u, { u: d.u, t: d.t || "", city: d.city || "", n: 0, roles: [], due: "" });
+      const g = map.get(d.u);
+      g.n++;
+      if (d.r) g.roles.push(d.r);
+      if (dueRank(d.d) < dueRank(g.due)) g.due = d.d;
+    });
+    arr = Array.from(map.values());
+  }
+  arr.forEach(g => { if (!g.due) g.due = unitDue(g.u); });
+  return arr;
+}
+function renderUnits() {
+  const head = $("#uhead"), box = $("#urows");
+  if (!head || !box) return;
+  const groups = unitGroups();
+  const typeCount = new Map();
+  groups.forEach(g => typeCount.set(g.t, (typeCount.get(g.t) || 0) + 1));
+  const chipBox = $("#unitchips");
+  if (chipBox) {
+    chipBox.innerHTML = ["全部"].concat(TYPES).map(t => {
+      const n = t === "全部" ? groups.length : (typeCount.get(t) || 0);
+      return `<button class="chip" data-utype="${esc(t)}" aria-pressed="${String(state.uType === t)}">${esc(t)}<span class="ct">${n}</span></button>`;
+    }).join("");
+  }
+  const list = groups
+    .filter(g => state.uType === "全部" || g.t === state.uType)
+    .sort((a, b) => b.n - a.n || String(a.u).localeCompare(String(b.u), "zh"));
+  setText("#uCount", list.length);
+  // 6 列：单位（含城市）/ 性质 / 岗位数 / 最近截止 / 在招岗位 / 操作
+  // 顺序按 styles.css 里 #view-units 的列宽模板（200/110/96/88/1fr/116）排，
+  // 让「截止」拿窄列、「岗位」拿 1fr，避免岗位名被压成 88px 截断。
+  head.innerHTML = [
+    ["c-unit", "单位 / 城市"],
+    ["c-type", "性质"],
+    ["c-cnt", "岗位数"],
+    ["c-due", "最近截止"],
+    ["c-major", "在招岗位"],
+    ["c-op", "操作"]
+  ].map(h => `<span class="${h[0]}">${esc(h[1])}</span>`).join("");
+  box.innerHTML = list.length ? list.map(g => {
+    const roles = g.roles || [];
+    const roleText = roles.length ? roles.slice(0, 3).join("、") + (roles.length > 3 ? ` 等 ${roles.length} 个` : "") : "—";
+    return `<div class="row" data-unit="${esc(g.u)}">
+      <span class="c c-unit" title="${esc(g.u)}${g.city ? " · " + esc(g.city) : ""}">${esc(g.u)}<small class="u-city"> · ${esc(g.city || "—")}</small></span>
+      <span class="c c-type">${g.t ? `<span class="tag" data-t="${esc(g.t)}">${esc(g.t)}</span>` : "—"}</span>
+      <span class="c c-cnt">${g.n}</span>
+      <span class="c c-due ${isSoon(g.due) ? "soon" : ""}">${esc(g.due || "—")}</span>
+      <span class="c c-major" title="${esc(roleText)}">${esc(roleText)}</span>
+      <span class="c c-op"><button class="go" data-unit-go="${esc(g.u)}">看岗位</button></span>
+    </div>`;
+  }).join("")
+    : `<div class="empty"><b>这个性质下还没有单位</b>换一个筛选试试。</div>`;
+}
+function gotoUnit(u) {
+  state.type = "全部";
+  state.major = "全部专业";
+  state.edu = "全部学历";
+  state.q = u || "";
+  const q = $("#q"); if (q) q.value = state.q;
+  mountFilters();
+  persistFilters();
+  setView("lib");
+  render();
+  toast(`已筛选「${u}」的全部岗位`);
+}
+
+/* ---------------- 我的投递 ---------------- */
+function savedJobs() {
+  const list = [];
+  DATA.forEach((d, i) => { if (d && state.saved.has(i)) list.push(Object.assign({}, d, { i })); });
+  if (list.length !== state.saved.size) {
+    const valid = new Set(list.map(d => d.i));
+    state.saved.forEach(i => { if (!valid.has(i)) state.saved.delete(i); });
+    persistSaved();
+    syncKPI();
+  }
+  return list;
+}
+/* 距离「上次更新」过了几天；at 与 TODAY 同为 MM-DD */
+function ageOf(i) {
+  const at = (state.prog[i] || {}).at;
+  if (!at) return null;
+  const l = daysLeft(at);
+  return l == null ? null : Math.max(0, -l);
+}
+function renderMine() {
+  const head = $("#mhead"), box = $("#mrows"), fun = $("#mfunnel");
+  if (!head || !box) return;
+  // 跟进清单：勾选 / 单位 / 岗位 / 阶段 / 停留 / 截止 / 专业 / 学历·经验 / 名额 / 操作
+  head.innerHTML = [
+    ["c-check", ""],
+    ["c-unit", "单位"],
+    ["c-role", "岗位"],
+    ["c-stage", "阶段"],
+    ["c-age", "停留"],
+    ["c-due", "截止"],
+    ["c-major", "专业"],
+    ["c-dim c-edu", "学历 / 经验"],
+    ["c-num", "名额"],
+    ["c-op", "操作"]
+  ].map(h => `<span class="${h[0]}">${esc(h[1])}</span>`).join("");
+
+  const list = savedJobs();
+
+  /* 漏斗：五档各多少条，点一次筛，再点取消 */
+  if (fun) {
+    fun.hidden = !list.length;
+    if (!list.length) { fun.innerHTML = ""; }
+    else {
+      const n = {};
+      STAGES.forEach(s => { n[s.k] = 0; });
+      list.forEach(d => { n[stageOf(d.i).k]++; });
+      fun.innerHTML = STAGES.map(s => {
+        const on = state.mineSt === s.k;
+        const w = Math.round(n[s.k] / list.length * 100);
+        return `<button class="fstage${on ? " on" : ""}" data-mst="${s.k}" aria-pressed="${on}" title="${esc(s.hint)}">
+          <span class="fst-l">${esc(s.lb)}</span>
+          <span class="fst-n">${n[s.k]}</span>
+          <span class="fst-bar"><i style="width:${w}%"></i></span>
+        </button>`;
+      }).join("");
+    }
+  }
+
+  const shown = state.mineSt ? list.filter(d => stageOf(d.i).k === state.mineSt) : list;
+  box.innerHTML = shown.length ? shown.map(d => {
+    const st = stageOf(d.i), age = ageOf(d.i), left = daysLeft(d.d);
+    const ageTxt = age == null ? "—" : age === 0 ? "今天" : age + " 天前";
+    const dueCls = left == null ? "" : left < 0 ? " expired" : left <= 7 ? " soon" : "";
+    const dueTxt = left == null ? `${esc(d.d)}<small>长期</small>`
+      : left < 0 ? `${esc(d.d)}<small>已过</small>`
+        : left === 0 ? `${esc(d.d)}<small>今天</small>`
+          : `${esc(d.d)}<small>${left} 天</small>`;
+    return `<div class="row" data-i="${d.i}">
+      <span class="c c-check"><input type="checkbox" data-check="${d.i}" ${state.sel.has(d.i) ? "checked" : ""} aria-label="选择 ${esc(d.u)} ${esc(d.r)}"></span>
+      <span class="c c-unit" title="${esc(d.u)}">${esc(d.u)}</span>
+      <span class="c c-role">${esc(d.r)}</span>
+      <span class="c c-stage"><button class="stpill" data-adv="${d.i}" data-st="${st.k}" title="${esc(st.hint)} · 点一下推进到下一档">${esc(st.lb)}</button></span>
+      <span class="c c-age" title="上次更新 ${esc((state.prog[d.i] || {}).at || "—")}">${ageTxt}</span>
+      <span class="c c-due${dueCls}">${dueTxt}</span>
+      <span class="c c-major">${esc(d.m)}</span>
+      <span class="c c-dim c-edu">${esc(d.e)} · ${esc(d.x)}</span>
+      <span class="c c-num">${d.n} 人</span>
+      <span class="c c-op"><button class="go" data-open="${d.i}">详情</button><button class="go star" data-save="${d.i}" data-name="${esc(d.r)}" aria-pressed="true" aria-label="取消收藏 ${esc(d.r)}">★</button></span>
+    </div>`;
+  }).join("")
+    : (state.mineSt
+      ? `<div class="empty"><b>「${esc(STAGE_I[state.mineSt].lb)}」这一档还没有岗位</b>点上面亮着的阶段卡回到全部，或者去岗位库把新岗位收进来。</div>`
+      : `<div class="empty"><b>还没有收藏的岗位</b>去岗位库点一下 ☆，或者在任意岗位的展开行里点一个投递阶段，收进来的岗位会存在本地，刷新也不丢。</div>`);
+}
+function exportMine() {
+  const list = savedJobs();
+  if (!list.length) { toast("还没有收藏的岗位，先去岗位库点个星"); return; }
+  const n = csvDownload(
+    ["单位", "岗位", "投递阶段", "上次更新", "停留天数", "性质", "专业", "学历", "经验", "名额", "截止", "报名入口", "城市"],
+    list.map(d => {
+      const age = ageOf(d.i);
+      return [d.u, d.r, stageOf(d.i).lb, (state.prog[d.i] || {}).at || "", age == null ? "" : age,
+        d.t, d.m, d.e, d.x, d.n, d.d, d.w, d.city];
+    }),
+    `starta-我的投递-${list.length}条.csv`
+  );
+  toast(`已导出投递清单 ${n} 条`);
+}
+
+/* ---------------- 技能剖面 ---------------- */
+function countBy(getKey) {
+  const m = new Map();
+  DATA.forEach(d => {
+    if (!d) return;
+    const k = getKey(d);
+    if (!k) return;
+    m.set(k, (m.get(k) || 0) + 1);
+  });
+  return Array.from(m, ([label, n]) => ({ label, n })).sort((a, b) => b.n - a.n);
+}
+/* skillStats() 兼容数组 [{k,v}] / 对象 {k:v} / 二元组数组；宽度按样本总量算百分比 */
+function skillRows(list) {
+  const src = Array.isArray(list) ? list : DATA;
+  const toRow = x => {
+    if (Array.isArray(x)) return { label: String(x[0] == null ? "" : x[0]), n: Number(x[1]) || 0 };
+    if (x && typeof x === "object") {
+      const label = x.label || x.name || x.k || x.mf || x.key || "";
+      const n = x.n != null ? x.n : x.count != null ? x.count : x.value != null ? x.value : x.v;
+      return { label: String(label), n: Number(n) || 0 };
+    }
+    return null;
+  };
+  let rows = [];
+  if (typeof S.skillStats === "function") {
+    try {
+      const ss = S.skillStats(src);
+      if (Array.isArray(ss)) rows = ss.map(toRow).filter(r => r && r.label);
+      else if (ss && typeof ss === "object") rows = Object.keys(ss).map(k => ({ label: k, n: Number(ss[k]) || 0 })).filter(r => r.label);
+    } catch (e) { /* 兜底 */ }
+  }
+  if (!rows.length) {
+    const m = new Map();
+    src.forEach(d => { if (d && d.mf) m.set(d.mf, (m.get(d.mf) || 0) + 1); });
+    rows = Array.from(m, ([label, n]) => ({ label, n }));
+  }
+  rows = rows.filter(r => r.n > 0);
+  rows.sort((a, b) => b.n - a.n);
+  const sample = src.length || (S.META && Number(S.META.sample)) || rows.reduce((m, r) => Math.max(m, r.n), 1);
+  return {
+    sample,
+    rows: rows.map(r => Object.assign({}, r, {
+      pct: Math.max(r.n > 0 ? 3 : 0, Math.round(r.n / Math.max(sample, 1) * 100))
+    }))
+  };
+}
+/* 技能剖面：按单位性质切一刀，看同一份要求在不同体制里的密度 */
+function skillTypeList() { return ["全部"].concat(TYPES); }
+function renderSkill() {
+  const box = $("#skillBars");
+  if (!box) return;
+  const types = skillTypeList();
+  const cur = types.indexOf(state.skillType) >= 0 ? state.skillType : "全部";
+  state.skillType = cur;
+  const base = cur === "全部" ? DATA : DATA.filter(d => d && d.t === cur);
+  const data = skillRows(base);
+  const tb = $("#skillTypes");
+  if (tb) {
+    tb.innerHTML = types.map(t => {
+      const n = t === "全部" ? DATA.length : DATA.filter(d => d && d.t === t).length;
+      return `<button class="chip" data-stype="${esc(t)}" aria-pressed="${t === cur}">${esc(t)}<span class="ct">${n}</span></button>`;
+    }).join("");
+  }
+  const top = data.rows.slice(0, 3);
+  const tight = data.rows[data.rows.length - 1];
+  let note = "";
+  if (data.rows.length >= 3) {
+    note = `<p class="sk-note">看两条边：<b>${esc(top.map(r => r.label).join("、"))}</b> 是最硬的几条门槛（各命中 ${top.map(r => r.n).join("、")} 条）；<b>${esc(tight.label)}</b> 只有 ${tight.n} 条，属于加分项而非门槛。${cur === "全部" ? "" : `这是 ${esc(cur)} 的口径，换一类会发现扎堆的地方不一样。`}</p>`;
+  } else if (data.rows.length) {
+    note = `<p class="sk-note">${esc(cur)} 样本只有 ${data.sample} 条，最常出现的是 <b>${esc(top[0].label)}</b>（${top[0].n} 条），样本小，别当结论用。</p>`;
+  }
+  box.innerHTML = `<div class="sk-h">技能命中分布 · ${cur === "全部" ? "全部性质" : esc(cur)} · 样本 ${data.sample} 条</div>` + (data.rows.length
+    ? data.rows.map(r => `<div class="bar-row" title="${esc(r.label)}：命中 ${r.n} / ${data.sample}（${r.pct}%）">
+      <span class="bar-label">${esc(r.label)}</span><i class="bar-fill" style="width:${r.pct}%"></i><span class="bar-val">${r.n}</span>
+    </div>`).join("") + note
+    : `<div class="empty"><b>这一类还没有样本</b>换一类，或者先去岗位库补几条再看。</div>`);
+}
+
+/* ---------------- 总渲染 ---------------- */
+function render() {
+  const list = filtered();
+  pruneSel(list);
+  paintRows(list);
+  syncCountText(list);
+  syncTypebarCounts();
+  syncSortUI();
+  syncFiltersUI();
+  syncBulk(list);
+  syncKPI();
+  if (state.view === "units") renderUnits();
+  else if (state.view === "mine") renderMine();
+  else if (state.view === "skill") renderSkill();
+}
+
+/* ======================================================================
+   公告采集状态机
+   st: pending → parsing(约 1.2s，列表项显示进度) → ok / error(原因 + 重试)
+   ====================================================================== */
+let curNotice = NOTICES.length ? (NOTICES[0] && NOTICES[0].id) : null;
+let cq = "";
+let exOpen = false;
+let noticeSeq = 100;
+const crawlTimers = new Map();
+
+function stOf(n) {
+  const s = n && n.st;
+  if (s === "parsed") return "ok";
+  if (s === "ok" || s === "parsing" || s === "pending" || s === "error") return s;
+  return "pending";
+}
+function statusInfo(n) {
+  const st = stOf(n);
+  if (st === "ok") return { cls: "ok", text: "已解析" };
+  if (st === "parsing") return { cls: "wait", text: `解析中 ${n.prog || 0}%` };
+  if (st === "error") return { cls: "wait", text: "解析失败" };
+  return { cls: "wait", text: "排队中" };
+}
+function currentNotice() {
+  let n = NOTICES.filter(x => x.id === curNotice)[0];
+  if (!n) { n = NOTICES[0]; if (n) curNotice = n.id; }
+  return n || null;
+}
+function unitRoles(n) {
+  if (!n) return [];
+  return DATA.map((d, i) => Object.assign({}, d, { i })).filter(d => d.u === n.u);
+}
+function rolesOfNotice(n) {
+  const all = DATA.map((d, i) => Object.assign({}, d, { i }));
+  const want = NOTICE_ROLES[n.id];
+  const mine = all.filter(d => d._n === n.id);
+  if (Array.isArray(want)) {
+    // 公告映射的岗位 + 后来真正解析并入的岗位取并集，避免重新解析后导出漏行
+    const mapped = all.filter(d => d.u === n.u && want.indexOf(d.r) >= 0);
+    const seen = new Set(mapped.map(d => d.i));
+    return mapped.concat(mine.filter(d => !seen.has(d.i)));
+  }
+  if (mine.length) return mine;
+  return all.filter(d => d.u === n.u);
+}
+function filesHtml(n) {
+  const names = [`${n.u}-岗位表.xlsx`, `${n.u}-报名登记表.docx`, `${n.u}-公告原文.html`].slice(0, Math.max(0, Number(n.files) || 0));
+  if (!names.length) return "";
+  return names.map(x => `<span class="file"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>${esc(x)}</span>`).join("");
+}
+function citemInner(n) {
+  const info = statusInfo(n);
+  const st = stOf(n);
+  const prog = st === "parsing" || st === "pending"
+    ? `<div class="meter" style="margin-top:7px"><i style="width:${st === "parsing" ? (n.prog || 0) : 4}%"></i></div>`
+    : "";
+  const err = st === "error"
+    ? `<div style="margin-top:6px;font-size:.76rem;line-height:1.5;color:var(--accent)">${esc(n.reason || "未知原因")}</div>`
+    : "";
+  return `<div class="t">${esc(n.title)}</div>
+    <div class="m"><span>${esc(n.u)}</span><span>${esc(n.date)}</span>
+      <span class="st ${info.cls}"${st === "error" ? ' style="color:var(--accent)"' : ""}><i></i>${esc(info.text)}</span></div>${prog}${err}`;
+}
+function renderCitems() {
+  const box = $("#citems");
+  if (!box) return;
+  const kw = cq.toLowerCase();
+  const items = NOTICES.filter(n => !kw || `${n.u || ""} ${n.title || ""}`.toLowerCase().indexOf(kw) >= 0);
+  box.innerHTML = items.length
+    ? items.map(n => `<button class="citem" data-n="${esc(n.id)}" data-st="${stOf(n)}" aria-current="${n.id === curNotice ? "true" : "false"}" aria-selected="${n.id === curNotice ? "true" : "false"}" role="option">${citemInner(n)}</button>`).join("")
+    : `<div class="cempty">没有匹配的公告</div>`;
+  setText("#cCount", `${items.length} / ${NOTICES.length}`);
+  syncNoticeTag();
+  // 公告数量变化时，侧栏徽标与 KPI 一起刷新（采集状态机 ok / 失败都会走这里）
+  syncKPI();
+}
+function paintNotice(n) {
+  const b = document.querySelector(`#citems .citem[data-n="${n.id}"]`);
+  if (!b) { renderCitems(); return; }
+  b.setAttribute("data-st", stOf(n));
+  b.innerHTML = citemInner(n);
+}
+function noticeLogs(n, roles) {
+  const st = stOf(n);
+  if (st === "ok") return `<ol class="tl">
+    <li class="ok"><span>${esc(n.date)}</span>抓取公告页 · 200 OK</li>
+    <li class="ok"><span>${esc(n.date)}</span>下载附件 ${Number(n.files) || 0} 个 → ${Number(n.files) ? esc(`${n.u}-岗位表.xlsx`) : "无附件"}</li>
+    <li class="ok"><span>${esc(n.date)}</span>解析岗位表 · 提取 ${roles.length} 条岗位 · 去重 0 条</li>
+    <li class="ok"><span>${esc(n.date)}</span>写入岗位库 · 已可在「岗位库」检索</li>
+  </ol>`;
+  if (st === "error") return `<ol class="tl">
+    <li class="wait"><span>—</span>抓取任务已终止</li>
+    <li class="wait" style="color:var(--accent)"><span>!</span>${esc(n.reason || "未知原因")}</li>
+    <li class="wait"><span>—</span>修正地址后可点「重试」重新走一遍</li>
+  </ol>`;
+  if (st === "parsing") return `<ol class="tl">
+    <li class="ok"><span>—</span>抓取公告页 · 进行中</li>
+    <li class="ok"><span>—</span>解析岗位表 · 进度 ${n.prog || 0}%</li>
+    <li class="wait"><span>—</span>解析完成后自动写入岗位库</li>
+  </ol>`;
+  return `<ol class="tl">
+    <li class="ok"><span>—</span>已加入采集队列 · 排队第 1 位</li>
+    <li class="wait"><span>—</span>等待抓取线程领取任务</li>
+    <li class="wait"><span>—</span>解析完成后自动写入岗位库</li>
+  </ol>`;
+}
+function renderCinfo() {
+  const box = $("#cinfo");
+  if (!box) return;
+  const n = currentNotice();
+  if (!n) {
+    box.innerHTML = `<div class="cempty">还没有公告。粘一条地址，点「采集」开始。</div>`;
+    return;
+  }
+  const st = stOf(n);
+  const busy = st === "parsing" || st === "pending";
+  const roles = st === "ok" ? rolesOfNotice(n) : [];
+  const rel = NOTICES.filter(x => x.u === n.u && x.id !== n.id);
+  const others = st === "ok" ? unitRoles(n).filter(o => !roles.some(r => r.i === o.i)) : [];
+  const url = noticeUrl(n);
+  const info = statusInfo(n);
+
+  const rolesBlock = st === "ok"
+    ? (roles.length
+      ? `<table class="mini"><thead><tr><th>岗位</th><th>专业</th><th>学历 / 经验</th><th>名额</th><th>截止</th></tr></thead><tbody>
+          ${roles.map(r => `<tr data-open="${r.i}"><td>${esc(r.r)}</td><td>${esc(r.m)}</td><td>${esc(r.e)} · ${esc(r.x)}</td><td>${r.n} 人</td><td>${esc(r.d)}</td></tr>`).join("")}
+        </tbody></table>`
+      : `<div class="cempty">解析完成，但没提取到岗位。检查一下原文的岗位表是不是扫描件。</div>`)
+    : st === "error"
+      ? `<div class="cempty" style="color:var(--accent);padding:36px 20px">${esc(n.reason || "未知原因")}</div>`
+      : `<div class="cempty" style="padding:30px 20px">
+          <div>正在抓取与解析，进度 <b class="num cprog-lb" style="color:var(--accent);font-weight:600">${n.prog || 0}%</b></div>
+          <div class="meter cprogress" style="margin:12px auto 0;max-width:320px"><i style="width:${n.prog || 0}%"></i></div>
+        </div>`;
+
+  box.innerHTML = `
+    <h2>${esc(n.title)}</h2>
+    <div class="src">${esc(n.src || url)}</div>
+    <div class="sec"><div class="dl">
+      <div><div class="k">来源单位</div><div class="v">${esc(n.u)}</div></div>
+      <div><div class="k">发布日期</div><div class="v">${TODAY_DATE.getFullYear()}-${esc(n.date)}</div></div>
+      <div><div class="k">提取岗位</div><div class="v">${st === "ok" ? `${roles.length} 个` : "—"}</div></div>
+      <div><div class="k">采集状态</div><div class="v"><span class="st ${info.cls}"${st === "error" ? ' style="color:var(--accent)"' : ""}><i></i>${esc(info.text)}</span></div></div>
+    </div></div>
+    <div class="sec"><h3>附件 / FILES · ${Number(n.files) || 0} 个</h3>
+      <div class="files">${Number(n.files) ? filesHtml(n) : `<span class="st wait"><i></i>${st === "ok" ? "这条公告没有附件" : "尚未下载附件，等待解析"}</span>`}</div>
+    </div>
+    <div class="sec"><h3>提取出的岗位 / ROLES</h3>${rolesBlock}</div>
+    <div class="sec"><h3>采集日志 / LOG</h3>${noticeLogs(n, roles)}</div>
+    <div class="duo">
+      <div>
+        <button class="fold" data-fold type="button" aria-expanded="${exOpen}">
+          <span>原文摘要 / EXCERPT</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="exwrap" ${exOpen ? "" : "hidden"}>
+          ${n.sum ? `<blockquote class="ex">${esc(n.sum)}</blockquote>` : `<p class="ex-empty">${st === "ok" ? "这条公告没有摘要。" : "待解析，摘要生成后会显示在这里。"}</p>`}
+        </div>
+      </div>
+      <div>
+        <h3>同单位其他公告 / MORE</h3>
+        ${rel.length ? `<div class="mrel">${rel.slice(0, 4).map(r => `<button data-n="${esc(r.id)}" type="button"><span>${esc(r.title)}</span><i>${esc(r.date)}</i></button>`).join("")}</div>`
+          : `<p class="ex-empty">该单位只有这一条公告。采集到新的会自动出现在这里。</p>`}
+      </div>
+    </div>
+    ${others.length ? `<div class="sec">
+      <h3>该单位其他岗位 / UNIT ROLES · ${others.length}</h3>
+      <div class="ugrid">
+        ${others.slice(0, 6).map(o => `<button class="ucard" data-open="${o.i}" type="button">
+          <div class="ut">${esc(o.r)}</div>
+          <div class="um">${esc(o.e)} · ${esc(o.x)} · 招 ${o.n} 人</div>
+          <div class="ud">截止 ${esc(o.d)} <span>·</span> ${esc(o.w)}</div>
+        </button>`).join("")}
+      </div>
+    </div>` : ""}
+    <div class="cbar">
+      <button class="btn" id="reparse"${busy ? " disabled" : ""}>${st === "error" ? "重试" : busy ? "解析中…" : "重新解析"}</button>
+      <button class="btn ghost" id="expNotice"${st === "ok" ? "" : " disabled"}>导出岗位</button>
+      <span class="sp"></span>
+      <button class="btn primary" id="openSrc"${url ? "" : " disabled"}>打开原文</button>
+    </div>`;
+}
+
+/* ---- 采集：创建 / 状态机 ---- */
+function hashStr(s) {
+  let h = 0;
+  const str = String(s || "");
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+function createNotice(url) {
+  const title = (() => {
+    try {
+      const u = new URL(url);
+      const seg = u.pathname.split("/").filter(Boolean).pop() || "";
+      const tail = seg ? decodeURIComponent(seg).replace(/\.html?$/i, "") : "";
+      return `${u.hostname}${tail ? " / " + tail : ""} 公告`;
+    } catch (e) {
+      return "新采集任务 · " + url.slice(0, 40);
+    }
+  })();
+  const n = {
+    id: "x" + (++noticeSeq),
+    u: "待识别单位",
+    title,
+    src: url,
+    url,
+    date: TODAY,
+    st: "pending",
+    files: 0,
+    prog: 0,
+    reason: "",
+    sum: ""
+  };
+  NOTICES.unshift(n);
+  return n;
+}
+function clearCrawlTimers(id) {
+  const timers = crawlTimers.get(id) || [];
+  timers.forEach(t => { clearTimeout(t); clearInterval(t); });
+  crawlTimers.delete(id);
+}
+function runParse(n) {
+  clearCrawlTimers(n.id);
+  // 地址仍不合法时不做无意义的「假装解析」，直接停在失败态等用户换地址
+  if (!withScheme(n.url || n.src)) {
+    n.st = "error";
+    n.prog = 0;
+    n.reason = "地址无效：必须以 http:// 或 https:// 开头，请重新粘一条公告地址。";
+    paintNotice(n);
+    if (n.id === curNotice) renderCinfo();
+    toast("这条公告的地址仍然无效，请重新采集");
+    return;
+  }
+  n.st = "pending";
+  n.prog = 0;
+  n.reason = "";
+  paintNotice(n);
+  if (n.id === curNotice) renderCinfo();
+  const timers = [];
+  timers.push(setTimeout(() => {
+    if (stOf(n) !== "pending") return;
+    n.st = "parsing";
+    n.prog = 8;
+    paintNotice(n);
+    if (n.id === curNotice) renderCinfo();
+    const tick = setInterval(() => {
+      if (stOf(n) !== "parsing") { clearInterval(tick); return; }
+      n.prog = Math.min(96, n.prog + 9);
+      paintNotice(n);
+      if (n.id === curNotice) {
+        const lb = document.querySelector("#cinfo .cprog-lb");
+        if (lb) lb.textContent = (n.prog || 0) + "%";
+        const bar = document.querySelector("#cinfo .cprogress i");
+        if (bar) bar.style.width = (n.prog || 0) + "%";
+        /* 徽标也要跟着走，别停在进入 parsing 时的 8% */
+        const st = document.querySelector("#cinfo .st");
+        if (st) st.textContent = "解析中 " + (n.prog || 0) + "%";
+      }
+    }, 110);
+    timers.push(tick);
+    timers.push(setTimeout(() => {
+      clearInterval(tick);
+      n.prog = 100;
+      finishParse(n);
+    }, 1200));
+  }, 240));
+  crawlTimers.set(n.id, timers);
+}
+function guessUnit(n) {
+  if (n.u && n.u !== "待识别单位") return n.u;
+  const raw = String(n.url || n.src || "");
+  const map = [
+    [/sgcc|state-?grid/i, "国家电网"],
+    [/10086|chinamobile/i, "中国移动"],
+    [/cnpc|petrochina/i, "中国石油"],
+    [/sinopec/i, "中国石化"],
+    [/metro|subway|rail/i, "地铁集团"],
+    [/hospital|wjw|wsjkw|health/i, "市卫生健康系统"],
+    [/edu\.cn|university|college/i, "省属高校"],
+    [/gzw|sasac/i, "市属国企"],
+    [/bank/i, "市属银行"],
+    [/power|energy/i, "能源集团"],
+    [/gov\.cn/i, "市属事业单位"]
+  ];
+  for (let k = 0; k < map.length; k++) if (map[k][0].test(raw)) return map[k][1];
+  try { return new URL(withScheme(raw)).hostname.replace(/^www\./, ""); } catch (e) { return "新采集单位"; }
+}
+const CRAWL_ROLES = [
+  { r: "综合管理岗", m: "不限专业", mf: "不限", e: "本科", x: "不限", n: 2, city: "本地", desc: "负责综合事务、材料撰写与对外协调，专业不限，需通过统一笔试与面试。" },
+  { r: "信息化技术岗", m: "计算机 / 软件工程", mf: "计算机", e: "本科", x: "1-3 年", n: 3, city: "本地", desc: "负责业务系统运维与数据接口开发，熟悉 SQL 与至少一门后端语言。" },
+  { r: "财务审计岗", m: "会计学 / 财务管理", mf: "财会", e: "本科", x: "应届", n: 1, city: "本地", desc: "负责账务处理与内部审计配合，需熟悉企业会计准则，CPA 科目通过者优先。" },
+  { r: "专业技术岗", m: "电气 / 自动化", mf: "电气", e: "本科", x: "应届", n: 4, city: "全国", desc: "一线技术岗位，接受轮班与项目地派驻，需通过体检与安全背景审查。" }
+];
+function pickRoles(n, unit) {
+  const h = hashStr(n.url || n.src || n.id);
+  const count = 2 + (h % 2);
+  const start = h % CRAWL_ROLES.length;
+  // 已有单位沿用它的性质，避免采集进来的岗位全变成「事业单位」
+  const known = DATA.filter(x => x && x.u === unit)[0];
+  const type = (known && known.t) || "事业单位";
+  const out = [];
+  for (let k = 0; k < count; k++) {
+    const base = CRAWL_ROLES[(start + k) % CRAWL_ROLES.length];
+    out.push(Object.assign({}, base, {
+      t: type,
+      u: unit,
+      d: addDaysDate(30 + (h % 40) + k * 5),
+      w: "公告原文 · 在线报名",
+      n: base.n + (h % 3)
+    }));
+  }
+  return out;
+}
+function mergeRoles(n) {
+  const unit = guessUnit(n);
+  n.u = unit;
+  const roles = pickRoles(n, unit);
+  // 这条公告上次解析出来的行 / 库里已有的「单位 + 岗位」都算重复，避免重复叠加
+  const prev = [];
+  const exists = new Map();
+  DATA.forEach((d, i) => {
+    if (!d) return;
+    if (d._n === n.id) prev.push(i);
+    if (d.u && d.r && !exists.has(d.u + "\u0000" + d.r)) exists.set(d.u + "\u0000" + d.r, i);
+  });
+  let added = 0;
+  roles.forEach((r, k) => {
+    const key = unit + "\u0000" + r.r;
+    if (prev[k] != null) {
+      Object.assign(DATA[prev[k]], r, { u: unit, _n: n.id });
+    } else if (exists.has(key)) {
+      // 该岗位已在库里，只标记归属，不新增行
+      DATA[exists.get(key)]._n = DATA[exists.get(key)]._n || n.id;
+    } else {
+      const i = DATA.push(Object.assign({}, r, { _n: n.id })) - 1;
+      exists.set(key, i);
+      prev.push(i);
+      added++;
+    }
+  });
+  reindex();
+  return { unit, added, total: roles.length };
+}
+function finishParse(n) {
+  clearCrawlTimers(n.id); /* 解析收尾：定时器一并销账，别让 crawlTimers 只增不减 */
+  n.st = "ok";
+  n.prog = 100;
+  n.reason = "";
+  n.files = Math.max(1, hashStr(n.url || n.id) % 3);
+  const merged = mergeRoles(n);
+  n.sum = n.sum || `${merged.unit} 于 ${n.date} 发布的招聘公告，已抓取原文并抽取 ${merged.total} 条岗位；岗位要求与报名入口以公告原文为准。`;
+  if (n.id === curNotice) renderCinfo();
+  renderCitems();
+  render();
+  syncKPI();
+  syncStatusText();
+  toast(merged.added ? `解析完成：并入 ${merged.added} 个新岗位` : `解析完成：${merged.total} 个岗位均已在库中，已刷新要求`);
+}
+function startCrawl(raw) {
+  const url = String(raw == null ? "" : raw).trim();
+  if (!url) {
+    toast("先粘一个公告地址，再点采集");
+    const inp = $("#curl");
+    if (inp) inp.focus();
+    return null;
+  }
+  const n = createNotice(url);
+  curNotice = n.id;
+  const valid = /^https?:\/\/[^\s]+$/i.test(url);
+  if (!valid) {
+    n.st = "error";
+    n.reason = /^https?:\/\//i.test(url) ? "地址里有空格或非法字符，请检查后重试" : "地址必须以 http:// 或 https:// 开头";
+    renderCitems();
+    renderCinfo();
+    toast("采集失败：" + n.reason);
+    const inp = $("#curl");
+    if (inp) { inp.focus(); inp.select(); }
+    return n;
+  }
+  const inp = $("#curl");
+  if (inp) inp.value = "";
+  renderCitems();
+  runParse(n);
+  toast("已受理，正在抓取公告…");
+  return n;
+}
+function exportNoticeCsv(n) {
+  if (!n) return;
+  if (stOf(n) !== "ok") { toast("先解析成功，再导出岗位"); return; }
+  const roles = rolesOfNotice(n);
+  if (!roles.length) { toast("这条公告没有解析出岗位"); return; }
+  const num = csvDownload(
+    ["岗位", "专业", "学历", "经验", "名额", "截止", "城市", "报名入口"],
+    roles.map(r => [r.r, r.m, r.e, r.x, r.n, r.d, r.city, noticeUrl(n)]),
+    `starta-${n.u || "公告"}-岗位-${roles.length}条.csv`
+  );
+  toast(`已导出 ${num} 条岗位 CSV`);
+}
+
+/* ---------------- 事件绑定 ---------------- */
+function bindEvents() {
+  /* 岗位库筛选 */
+  on("#typebar", "click", e => {
+    const b = e.target.closest(".chip");
+    if (!b) return;
+    state.type = b.dataset.type;
+    persistFilters();
+    render();
+  });
+  on("#skillTypes", "click", e => {
+    const b = e.target.closest(".chip");
+    if (!b) return;
+    state.skillType = b.dataset.stype;
+    renderSkill();
+    const sr = skillRows(state.skillType === "全部" ? DATA : DATA.filter(d => d && d.t === state.skillType));
+    setText("#statusCount", `技能口径 ${sr.rows.length} 项 · 样本 ${sr.sample} 条`);
+  });
+  on("#major", "change", e => { state.major = e.target.value; persistFilters(); render(); });
+  on("#edu", "change", e => { state.edu = e.target.value; persistFilters(); render(); });
+  on("#q", "input", e => { state.q = e.target.value.trim(); persistFilters(); render(); });
+  on("#sort", "change", e => setSort(e.target.value));
+  on("#resetBtn", "click", () => {
+    state.type = "全部";
+    state.major = "全部专业";
+    state.edu = "全部学历";
+    state.q = "";
+    state.quick = null;
+    state.sel.clear();
+    state.exp.clear();
+    state.sort = "due";
+    state.dir = 1;
+    const q = $("#q"); if (q) q.value = "";
+    persistFilters();
+    mountFilters();
+    render();
+    toast("筛选、排序与展开已重置");
+  });
+
+  /* KPI 卡就是入口：紧急卡只筛 7 天内截止，收藏卡只筛已收藏，单位卡跳单位库 */
+  function hitKPI(e) {
+    const card = e.target.closest ? e.target.closest(".kpi[role='button']") : null;
+    if (!card) return;
+    if (card.dataset.goview) { setView(card.dataset.goview); toast("已跳到单位库，按单位看岗位"); return; }
+    const q = card.dataset.quick;
+    state.quick = (q === "all" || q === state.quick) ? null : q;
+    state.sel.clear();
+    persistFilters();
+    render();
+    const k = KPIS();
+    toast(state.quick === "urgent" ? `只显示 7 天内截止的 ${k.urgent7} 个岗位`
+      : state.quick === "saved" ? `只显示你收藏的 ${state.saved.size} 个岗位`
+      : "已回到全部在招岗位");
+  }
+  on(".kpis", "click", hitKPI);
+  on(".kpis", "keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (!e.target.closest || !e.target.closest(".kpi[role='button']")) return;
+    e.preventDefault();
+    hitKPI(e);
+  });
+  $$("th.sortable").forEach(th => {
+    on(th, "click", () => setSort(th.dataset.sort));
+    on(th, "keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSort(th.dataset.sort); }
+    });
+  });
+
+  /* 表格交互 */
+  on("#rows", "click", e => {
+    const ex = e.target.closest("[data-exp]");
+    if (ex) {
+      const i = Number(ex.dataset.exp);
+      if (state.exp.has(i)) state.exp.delete(i); else state.exp.add(i);
+      render();
+      return;
+    }
+    const stg = e.target.closest("[data-stage]");
+    if (stg) { setStage(Number(stg.dataset.stage), stg.dataset.st); return; }
+    const cp = e.target.closest("[data-copy]");
+    if (cp) {
+      const d = byId.get(Number(cp.dataset.copy));
+      if (!d) return;
+      copyAndToast(copyTarget(d), "已复制报名入口", "复制失败：请手动选中「报名入口」再复制");
+      return;
+    }
+    const star = e.target.closest("[data-save]");
+    if (star) {
+      const i = Number(star.dataset.save);
+      const next = setSaved(i, !state.saved.has(i));
+      toast(next ? "已加入投递清单" : "已取消收藏");
+      return;
+    }
+    const open = e.target.closest("[data-open]");
+    if (open) { openDrawer(Number(open.dataset.open), open); return; }
+    const cb = e.target.closest("input[type=checkbox]");
+    if (cb) {
+      const i = Number(cb.closest("tr").dataset.i);
+      cb.checked ? state.sel.add(i) : state.sel.delete(i);
+      syncBulk();
+      return;
+    }
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && String(sel).trim()) return;
+    const tr = e.target.closest("tr[data-i]");
+    if (tr) openDrawer(Number(tr.dataset.i), tr);
+  });
+  on("#checkAll", "change", e => {
+    const list = filtered();
+    if (e.target.checked) list.forEach(d => state.sel.add(d.i));
+    else list.forEach(d => state.sel.delete(d.i));
+    e.target.indeterminate = false;
+    paintRows(list);
+    syncBulk(list);
+  });
+  on("#clearSel", "click", () => { state.sel.clear(); paintRows(filtered()); syncBulk(); });
+  on("#saveSel", "click", () => {
+    const list = visibleSelected();
+    if (!list.length) { toast("先勾选要收藏的岗位"); return; }
+    setSavedMany(list, true);
+    state.sel.clear();
+    paintRows(filtered());
+    syncBulk();
+    toast(`已收藏 ${list.length} 条岗位`);
+  });
+  on("#copySel", "click", () => {
+    const list = visibleSelected();
+    if (!list.length) { toast("先勾选要复制的岗位"); return; }
+    const text = list.map(d => `${d.u || ""} ${d.r || ""}\t${copyTarget(d)}`).join("\n");
+    copyAndToast(text, `已复制 ${list.length} 条报名入口`, "复制失败：请检查浏览器剪贴板权限");
+  });
+  on("#exportBtn", "click", exportCsv);
+
+  /* 视图导航 */
+  $$(".navi a").forEach(a => on(a, "click", e => {
+    e.preventDefault();
+    if (a.dataset.view) setView(a.dataset.view);
+  }));
+  on("#newBtn", "click", () => {
+    setView("collect");
+    const inp = $("#curl");
+    if (inp) setTimeout(() => { inp.focus(); inp.select(); }, 0);
+  });
+  on("#themeBtn", "click", () => {
+    const dark = document.documentElement.dataset.theme === "dark";
+    const next = dark ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    const b = $("#themeBtn");
+    if (b) b.setAttribute("aria-pressed", String(next === "dark"));
+    lsSet(LS.theme, next);
+  });
+  on(".density", "click", e => {
+    const b = e.target.closest(".dbtn");
+    if (b) setDensity(b.dataset.den);
+  });
+  on("#fsMinus", "click", () => {
+    const i = FS_STEPS.indexOf(nearestFs());
+    applyFs(FS_STEPS[Math.max(0, i - 1)]);
+  });
+  on("#fsPlus", "click", () => {
+    const i = FS_STEPS.indexOf(nearestFs());
+    applyFs(FS_STEPS[Math.min(FS_STEPS.length - 1, i + 1)]);
+  });
+
+  on("#bellBtn", "click", () => toast("示例数据：暂无新通知"));
+
+  /* 单位库 / 我的投递 */
+  on("#unitchips", "click", e => {
+    const b = e.target.closest(".chip");
+    if (!b) return;
+    state.uType = b.dataset.utype;
+    renderUnits();
+  });
+  on("#urows", "click", e => {
+    const row = e.target.closest("[data-unit]");
+    if (row) gotoUnit(row.dataset.unit);
+  });
+  on("#mrows", "click", e => {
+    const adv = e.target.closest("[data-adv]");
+    if (adv) {
+      const i = Number(adv.dataset.adv);
+      const cur = stageOf(i).n;
+      setStage(i, STAGES[(cur + 1) % STAGES.length].k);
+      return;
+    }
+    const star = e.target.closest("[data-save]");
+    if (star) {
+      const i = Number(star.dataset.save);
+      // setSaved 内部已同步 KPI 并在 mine 视图重绘，这里不再重复 render
+      const next = setSaved(i, !state.saved.has(i));
+      toast(next ? "已加入投递清单" : "已从投递清单移除");
+      return;
+    }
+    const cb = e.target.closest("[data-check]");
+    if (cb) {
+      const i = Number(cb.dataset.check);
+      if (cb.checked) state.sel.add(i); else state.sel.delete(i);
+      const row = cb.closest(".row");
+      if (row) row.classList.toggle("selected", cb.checked);
+      return;
+    }
+    const open = e.target.closest("[data-open]");
+    if (open) { openDrawer(Number(open.dataset.open), open); return; }
+    const row = e.target.closest(".row[data-i]");
+    if (row) openDrawer(Number(row.dataset.i), row);
+  });
+  on("#mineExport", "click", exportMine);
+  /* 漏斗：点一次筛这一档，再点一次取消 */
+  on("#mfunnel", "click", e => {
+    const b = e.target.closest("[data-mst]");
+    if (!b) return;
+    const k = b.dataset.mst;
+    state.mineSt = (state.mineSt === k) ? null : k;
+    renderMine();
+    syncStatusText();
+    const n = state.mineSt ? savedJobs().filter(d => stageOf(d.i).k === state.mineSt).length : savedJobs().length;
+    toast(state.mineSt ? `只看「${STAGE_I[k].lb}」：${n} 条` : "已回到全部");
+  });
+
+  /* 抽屉 */
+  on("#dwClose", "click", closeDrawer);
+  on("#scrim", "click", closeDrawer);
+  on("#dwStages", "click", e => {
+    const b = e.target.closest("[data-stage]");
+    if (b) setStage(Number(b.dataset.stage), b.dataset.st);
+  });
+  on("#dwSave", "click", () => {
+    if (dwIndex == null) return;
+    const next = setSaved(dwIndex, !state.saved.has(dwIndex));
+    toast(next ? "已加入投递清单" : "已取消收藏");
+  });
+  on("#dwGo", "click", () => { if (dwIndex != null) openJobUrl(byId.get(dwIndex)); });
+
+  /* 公告采集 */
+  on("#crawlBtn", "click", () => { const inp = $("#curl"); startCrawl(inp ? inp.value : ""); });
+  on("#curl", "keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); startCrawl(e.target.value); }
+  });
+  on("#cq", "input", e => { cq = e.target.value.trim(); renderCitems(); });
+
+  /* ---- 公告列表 type-ahead：聚焦列表里直接敲字，跳到最近的标题/单位 ---- */
+  let taBuf = "", taTimer = 0;
+  function taFocus() {
+    const items = $$("#citems .citem");
+    if (!items.length) return null;
+    let best = null, bestIdx = -1;
+    const seq = taBuf.toLowerCase();
+    items.forEach((b, i) => {
+      const n = NOTICES.filter(x => String(x.id) === b.dataset.n)[0];
+      if (!n) return;
+      const hay = `${n.u || ""} ${n.title || ""}`.toLowerCase();
+      if (hay.indexOf(seq) >= 0 && bestIdx < 0) { best = n; bestIdx = i; }
+    });
+    if (!best) return null;
+    curNotice = best.id;
+    renderCitems();
+    renderCinfo();
+    syncCountText(filtered());
+    const sel = document.querySelector(`#citems .citem[data-n="${best.id}"]`);
+    if (sel && sel.focus) sel.focus({ preventScroll: false });
+    /* 状态栏闪一下「跳到：标题」，比在列表里塞提示条干净 */
+    setText("#statusCount", "跳到：" + (best.title || ""));
+    clearTimeout(window.__taStatusT);
+    window.__taStatusT = setTimeout(() => {
+      const sr = skillRows(state.skillType === "全部" ? DATA : DATA.filter(d => d && d.t === state.skillType));
+      if (state.view === "collect") setText("#statusCount", `采集 ${NOTICES.length} 条公告`);
+      else if (state.view === "skill") setText("#statusCount", `技能口径 ${sr.rows.length} 项 · 样本 ${sr.sample} 条`);
+      else syncCountText(filtered());
+    }, 1500);
+    return best;
+  }
+  on("#citems", "keydown", e => {
+    const printable = e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && !e.isComposing;
+    if (printable) {
+      taBuf += e.key;
+      clearTimeout(taTimer);
+      taTimer = setTimeout(() => { taBuf = ""; }, 800);
+      const hit = taFocus();
+      if (hit) { e.preventDefault(); return; }
+      if (taBuf.length > 1) { e.preventDefault(); return; }
+    }
+    if (e.key === "Escape") { taBuf = ""; return; }
+  });
+
+  on("#citems", "click", e => {
+    const b = e.target.closest(".citem");
+    if (!b) return;
+    curNotice = b.dataset.n;
+    renderCitems();
+    renderCinfo();
+    const sel = document.querySelector(`#citems .citem[data-n="${curNotice}"]`);
+    if (sel) sel.focus({ preventScroll: true });
+  });
+  on("#citems", "keydown", e => {
+    const items = $$("#citems .citem");
+    if (!items.length) return;
+    const active = document.activeElement.closest && document.activeElement.closest(".citem");
+    const i = items.indexOf(active);
+    let next = null;
+    if (e.key === "ArrowDown") next = items[Math.min(i + 1, items.length - 1)];
+    else if (e.key === "ArrowUp") next = items[Math.max(i - 1, 0)];
+    else if (e.key === "Home") next = items[0];
+    else if (e.key === "End") next = items[items.length - 1];
+    if (next) { e.preventDefault(); next.focus(); }
+  });
+  on("#cinfo", "click", e => {
+    const jum = e.target.closest("[data-n]");
+    if (jum) { curNotice = jum.dataset.n; renderCitems(); renderCinfo(); return; }
+    const fold = e.target.closest("[data-fold]");
+    if (fold) {
+      exOpen = !exOpen;
+      const wrap = document.querySelector("#cinfo .exwrap");
+      if (wrap) wrap.hidden = !exOpen;
+      fold.setAttribute("aria-expanded", String(exOpen));
+      return;
+    }
+    const open = e.target.closest("[data-open]");
+    if (open) { openDrawer(Number(open.dataset.open), open); return; }
+    const n = currentNotice();
+    if (!n) return;
+    if (e.target.closest("#reparse")) {
+      if (stOf(n) === "parsing" || stOf(n) === "pending") return;
+      runParse(n);
+      toast(stOf(n) === "ok" ? "重新解析中…" : "重试中…");
+    } else if (e.target.closest("#expNotice")) {
+      exportNoticeCsv(n);
+    } else if (e.target.closest("#openSrc")) {
+      const url = noticeUrl(n);
+      if (!url) { toast("这条公告还没有可打开的原文地址"); return; }
+      window.open(url, "_blank", "noopener");
+    }
+  });
+
+  /* 快捷键 */
+  document.addEventListener("keydown", e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      const q = $("#q");
+      if (q) { q.focus(); q.select(); }
+    }
+    if (e.key === "Tab") {
+      const drawer = $("#drawer");
+      if (drawer && drawer.classList.contains("on")) {
+        const focusables = [...drawer.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
+          .filter(el => el.getClientRects().length > 0);
+        if (focusables.length) {
+          const first = focusables[0], last = focusables[focusables.length - 1];
+          if (!drawer.contains(document.activeElement)) { e.preventDefault(); first.focus(); return; }
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+          return;
+        }
+      }
+    }
+    if (e.key === "Escape") closeDrawer();
+  });
+}
+
+/* ---------------- 密度 / 主题 ---------------- */
+function setDensity(v) {
+  const val = v === "tight" ? "tight" : "loose";
+  document.documentElement.dataset.density = val;
+  $$(".dbtn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.den === val)));
+  lsSet(LS.density, val);
+}
+function applyTheme() {
+  const param = /[?&]theme=dark/.test(location.search) ? "dark" : "";
+  const saved = lsGet(LS.theme, "");
+  const theme = param || (saved === "dark" ? "dark" : "light");
+  document.documentElement.dataset.theme = theme;
+  const b = $("#themeBtn");
+  if (b) b.setAttribute("aria-pressed", String(theme === "dark"));
+}
+
+/* ---------------- 字号（15 / 17 / 19 / 21 px） ---------------- */
+const FS_STEPS = [15, 17, 19, 21];
+function nearestFs() {
+  const raw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fs"));
+  const v = Number.isFinite(raw) && raw > 0 ? raw : 17;
+  return FS_STEPS.reduce((best, s) => Math.abs(s - v) < Math.abs(best - v) ? s : best, FS_STEPS[1]);
+}
+function applyFs(v, quiet) {
+  const px = FS_STEPS.indexOf(v) >= 0 ? v : FS_STEPS[1];
+  document.documentElement.style.setProperty("--fs", px + "px");
+  lsSet(LS.fs, px + "px");
+  const m = $("#fsMinus"), p = $("#fsPlus");
+  if (m) m.disabled = px <= FS_STEPS[0];
+  if (p) p.disabled = px >= FS_STEPS[FS_STEPS.length - 1];
+  if (!quiet) toast("字号 " + px + "px");
+}
+function initA11y() {
+  const el = $("#toast");
+  if (el) { el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite"); el.setAttribute("aria-atomic", "true"); }
+  const drawer = $("#drawer");
+  if (drawer) {
+    drawer.setAttribute("role", "dialog");
+    drawer.setAttribute("aria-modal", "true");
+    drawer.setAttribute("aria-labelledby", "dwRole");
+    if (drawer.getAttribute("aria-hidden") === "true") drawer.inert = true;
+  }
+  const save = $("#dwSave");
+  if (save) save.setAttribute("aria-pressed", "false");
+  // 单位库 / 我的投递的 div 表格已由 HTML 带 .u / .m 修饰类，列宽交给 ui，这里不再叠类
+}
+
+/* ---------------- 启动 ---------------- */
+(function init() {
+  applyTheme();
+  setDensity(lsGet(LS.density, "loose"));
+  const savedFs = parseFloat(lsGet(LS.fs, ""));
+  applyFs(Number.isFinite(savedFs) ? FS_STEPS.reduce((b, s) => Math.abs(s - savedFs) < Math.abs(b - savedFs) ? s : b, FS_STEPS[1]) : 17, true);
+
+  restoreSaved();
+  restoreFilters();
+  mountTypebar();
+  reindex();
+  syncFiltersUI();
+  const q = $("#q");
+  if (q) q.value = state.q;
+  initA11y();
+
+  render();
+  renderCitems();
+  renderCinfo();
+  setView(viewFromUrl(), { silent: true });
+  bindEvents();
+})();
+</script>
+</body>
+</html>
