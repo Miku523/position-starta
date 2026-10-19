@@ -11,6 +11,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const zlib = require('zlib');
 const { execFile, spawn } = require('child_process');
 
 const PORT = 8901;
@@ -250,11 +251,45 @@ async function downloadFile(href, log) {
 }
 
 /* ---------------- xlsx 解析 ---------------- */
+/* ---------------- zip 解压（纯 Node 实现） ----------------
+ * 之前用系统 bsdtar，它会把盘符 "C:" 误判成远程主机（间歇性
+ * "Cannot connect to C: resolve failed"），换掉后 xlsx/docx 解析稳定 */
 function unzipTo(zipPath, dir) {
   return new Promise((resolve, reject) => {
-    // Windows 自带 bsdtar 会把盘符 "C:" 误判成远程主机，--force-local 强制按本地路径处理
-    execFile('tar', ['--force-local', '-xf', zipPath, '-C', dir], { windowsHide: true }, (err, so, se) =>
-      err ? reject(new Error(String(se || err.message).slice(0, 200))) : resolve());
+    try {
+      const buf = fs.readFileSync(zipPath);
+      let eocd = -1;
+      for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65558); i--) {
+        if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
+      }
+      if (eocd < 0) throw new Error('不是有效的 zip（找不到目录尾）');
+      const count = buf.readUInt16LE(eocd + 10);
+      let off = buf.readUInt32LE(eocd + 16);
+      for (let k = 0; k < count; k++) {
+        if (off + 46 > buf.length || buf.readUInt32LE(off) !== 0x02014b50) break;
+        const method = buf.readUInt16LE(off + 10);
+        const csize = buf.readUInt32LE(off + 20);
+        const nameLen = buf.readUInt16LE(off + 28);
+        const extraLen = buf.readUInt16LE(off + 30);
+        const cmtLen = buf.readUInt16LE(off + 32);
+        const lho = buf.readUInt32LE(off + 42);
+        const name = buf.subarray(off + 46, off + 46 + nameLen).toString('utf8').replace(/\\/g, '/');
+        off += 46 + nameLen + extraLen + cmtLen;
+        if (!name || name.endsWith('/')) continue;
+        const ln = buf.readUInt16LE(lho + 26);
+        const le = buf.readUInt16LE(lho + 28);
+        const raw = buf.subarray(lho + 30 + ln + le, lho + 30 + ln + le + csize);
+        let data;
+        if (method === 0) data = raw;
+        else if (method === 8) data = zlib.inflateRawSync(raw);
+        else continue; // 其他压缩算法（罕见）跳过
+        const safe = name.split('/').filter((s) => s && s !== '.' && s !== '..').join('/');
+        const dest = path.join(dir, safe);
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.writeFileSync(dest, data);
+      }
+      resolve();
+    } catch (e) { reject(e); }
   });
 }
 function readXlsx(filePath) {
