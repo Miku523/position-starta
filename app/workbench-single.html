@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>星他 · 招聘情报台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='%23c2410c'/%3E%3Ctext%20x='16'%20y='22'%20font-family='sans-serif'%20font-size='15'%20font-weight='700'%20fill='white'%20text-anchor='middle'%3EST%3C/text%3E%3C/svg%3E">
 <style>
   :root{
     --fs:16px;
@@ -1151,8 +1152,10 @@ html[data-density="tight"] td.c-unit .u-name{font-size:.92rem}
   .topbar #exportBtn,.topbar #newBtn{padding:0 10px;font-size:.82rem}
   .topbar #exportBtn svg,.topbar #newBtn svg{width:12px;height:12px}
   .crumb{max-width:44vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-  .statusbar{overflow:hidden;white-space:nowrap}
+  .statusbar{overflow:hidden;white-space:nowrap;gap:8px;padding:0 12px}
   .statusbar .hideSm{display:none}
+  .statusbar #statusMeta{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .statusbar .report-link-sm,.statusbar #dualLinkSm{flex:0 0 auto}
   .me-grid{grid-template-columns:minmax(0,1fr)}
   .me-form{grid-template-columns:minmax(0,1fr)}
   .me-form .fld.wide{grid-column:1 / -1}
@@ -1634,6 +1637,9 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
         <span class="rl-full">采样报告</span>
       </a>
+      <a class="btn ghost report-link" id="dualLink" href="双端/index.html" target="_blank" rel="noopener" title="看双身份演示（求职者 / 招聘方）"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.4 2.7-5.2 6-5.2s6 1.8 6 5.2"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 20c0-2.6-1-4.2-2.6-5"/></svg>
+        <span class="rl-full">双端演示</span>
+      </a>
       <button class="btn" id="exportBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>导出</button>
       <button class="btn primary" id="newBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新建采集</button>
     </div>
@@ -1660,7 +1666,7 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
 
       <section class="kpis" aria-label="关键指标（可点，点了就筛）">
         <div class="kpi" role="button" tabindex="0" data-quick="all" aria-pressed="true" aria-label="全部岗位"><div class="lb">全库岗位 / POSITIONS</div><div class="v num"><span id="kpiOpen">9,200</span><i>个</i></div><div class="ft"><span class="dot"></span>来自 <span id="kpiWeekNew">2</span> 份公告 · 点此看全部</div></div>
-        <div class="kpi" role="button" tabindex="0" data-goview="units" aria-label="覆盖雇主，跳转竞争雇主"><div class="lb">覆盖雇主 / EMPLOYERS</div><div class="v num"><span id="kpiUnits">4,519</span><i>家</i></div><div class="ft"><span class="dot"></span><span id="kpiTypes">2</span> 类性质 · 去竞争雇主 →</div></div>
+        <div class="kpi" role="button" tabindex="0" data-goview="units" aria-label="覆盖雇主，跳转竞争雇主"><div class="lb">覆盖雇主 / EMPLOYERS</div><div class="v num"><span id="kpiUnits">4,512</span><i>家</i></div><div class="ft"><span class="dot"></span><span id="kpiTypes">2</span> 类性质 · 去竞争雇主 →</div></div>
         <div class="kpi" role="button" tabindex="0" data-quick="open" aria-pressed="false" aria-label="只看正在报名的岗位"><div class="lb">报名中 / OPEN</div><div class="v num"><span id="kpiUrgent">31</span><i>个</i></div><div class="ft"><span class="dot warn"></span>最近截止 <span id="kpiEarliest">10-26</span> · 点此只筛这些</div></div>
         <div class="kpi" role="button" tabindex="0" data-quick="saved" aria-pressed="false" aria-label="只看已对标的岗位"><div class="lb">已对标 / BENCHMARK</div><div class="v num"><span id="kpiSaved">0</span><i>个</i></div><div class="ft"><span class="dot"></span>点星标即对标</div></div>
       </section>
@@ -1877,6 +1883,7 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
     <span class="hideSm">·</span>
     <span id="statusMeta">数据源 2 份公告 · 9,200 条真实岗位</span>
     <a class="report-link-sm" href="https://mikuascendlog.com/position-strata/" target="_blank" rel="noopener">采样报告 ↗</a>
+    <a class="report-link-sm" id="dualLinkSm" href="双端/index.html" target="_blank" rel="noopener">双端 ↗</a>
     <span class="sp"></span>
     <span class="hideSm">Ctrl K 搜索</span>
     <span class="hideSm">Esc 关闭</span>
@@ -2437,7 +2444,11 @@ function fallbackKpis() {
     weekNew
   };
 }
+/* KPI 只与静态 DATA / S.META 有关：整页只算一次（原来 syncCountText 与 syncKPI 各调一次，
+   每次都把 9,200 行扫两遍 = daysLeft 36,801 次/渲染）。 */
+let __kpiCache = null;
 function KPIS() {
+  if (__kpiCache) return __kpiCache;
   const base = fallbackKpis();
   if (typeof S.kpis === "function") {
     try {
@@ -2449,15 +2460,37 @@ function KPIS() {
           if (isFinite(v)) out[key] = v;
         });
         out.total = libTotal();
+        __kpiCache = out;
         return out;
       }
     } catch (e) { /* 兜底 */ }
   }
+  __kpiCache = base;
   return base;
 }
 
 /* ---------------- 筛选 / 排序 ---------------- */
+/* 行级小写 haystack：12 个字段每行只拼一次，之后直接 indexOf。
+   9,200 行约 3MB 字符串，换掉每次按键 9,200 次模板拼接 + toLowerCase。 */
+let __hayRows = [];
+function hayOf(i, d) {
+  const hit = __hayRows[i];
+  if (typeof hit === "string") return hit;
+  const hay = `${d.u || ""} ${d.r || ""} ${d.m || ""} ${d.mf || ""} ${d.t || ""} ${d.city || ""} ${d.w || ""} ${d.code || ""} ${d.dept || ""} ${d.lv || ""} ${d.cand || ""} ${d.desc || ""}`.toLowerCase();
+  __hayRows[i] = hay;
+  return hay;
+}
+/* 同一筛选条件下 filtered() 只算一次：翻页/展开/勾选/主题/密度都会走 render()，
+   但这些操作不改变结果集，没必要把 9,200 行重扫 + 全量重排。
+   键 = filterSig()（函数声明提升到顶部可用）+ 对标集内容（quick==="saved" 时才参与）。 */
+let __filteredCache = { sig: null, list: null };
+/* 单一 Intl.Collator 实例：String.localeCompare(x, "zh") 每次调用都要构造/查表，
+   9,200 行排序约 12 万次比较；共享实例后排序快一个数量级。 */
+let __zhColl = null;
+function zhColl() { return __zhColl || (__zhColl = new Intl.Collator("zh")); }
 function filtered() {
+  const sig = filterSig() + "\u0002" + (state.quick === "saved" ? Array.from(state.saved).sort((a, b) => a - b).join(",") : "");
+  if (__filteredCache.sig === sig) return __filteredCache.list;
   const q = state.q.toLowerCase();
   const list = [];
   DATA.forEach((d, i) => {
@@ -2470,23 +2503,33 @@ function filtered() {
     /* 专业门类是多值字段（用 | 分隔），按 token 包含匹配，避免「只选一个门类就漏掉复合专业」 */
     if (state.major !== "全部专业" && String(d.mf || "").indexOf(state.major) < 0) return;
     if (state.edu !== "全部学历" && d.e !== state.edu) return;
-    if (q) {
-      const hay = `${d.u || ""} ${d.r || ""} ${d.m || ""} ${d.mf || ""} ${d.t || ""} ${d.city || ""} ${d.w || ""} ${d.code || ""} ${d.dept || ""} ${d.lv || ""} ${d.cand || ""} ${d.desc || ""}`.toLowerCase();
-      if (hay.indexOf(q) < 0) return;
-    }
+    if (q && hayOf(i, d).indexOf(q) < 0) return;
     list.push(Object.assign({}, d, { i }));
   });
   const key = state.sort;
   const dir = state.dir < 0 ? -1 : 1;
-  list.sort((a, b) => {
-    if (key === "n") return ((Number(a.n) || 0) - (Number(b.n) || 0)) * dir;
-    if (key === "unit") {
-      const u = String(a.u || "").localeCompare(String(b.u || ""), "zh");
+  if (key === "n") {
+    list.sort((a, b) => ((Number(a.n) || 0) - (Number(b.n) || 0)) * dir);
+  } else if (key === "unit") {
+    const coll = zhColl();
+    list.sort((a, b) => {
+      const u = coll.compare(String(a.u || ""), String(b.u || ""));
       return u ? u * dir : dueCompare(a, b);
-    }
-    const dv = dueCompare(a, b);
-    return dv ? dv * dir : (Number(b.n) || 0) - (Number(a.n) || 0);
-  });
+    });
+  } else {
+    /* 排序键先算一遍：dleft 内含正则 + Date 构造，旧实现每次比较跑 2 次
+       （9,200 行 ≈ 24 万次），预算成 Map 后排序只比数字，顺序完全等价。 */
+    const left = new Map();
+    list.forEach(d => left.set(d.i, dleft(d)));
+    list.sort((a, b) => {
+      const la = left.get(a.i), lb = left.get(b.i);
+      const dv = (la === null || lb === null)
+        ? (la === null && lb === null ? 0 : (la === null ? 1 : -1))
+        : la - lb;
+      return dv ? dv * dir : (Number(b.n) || 0) - (Number(a.n) || 0);
+    });
+  }
+  __filteredCache = { sig, list };
   return list;
 }
 
@@ -3107,6 +3150,7 @@ function openJobUrl(d) {
 const VIEW_LABEL = { lib: "市场岗位库", collect: "情报采集", units: "竞争雇主", mine: "对标清单", skill: "门槛基准", me: "个人中心" };
 function setView(v, opts) {
   if (!VIEW_LABEL[v]) v = "lib";
+  const prevView = state.view;
   state.view = v;
   $$(".main .page").forEach(el => { el.hidden = el.id !== "view-" + v; });
   $$(".navi a").forEach(a => {
@@ -3125,7 +3169,9 @@ function setView(v, opts) {
     try {
       const u = new URL(location.href);
       u.searchParams.set("view", v);
-      history.replaceState(null, "", u.href);
+      if (u.href === location.href) { /* 同地址不写历史 */ }
+      else if (prevView && prevView !== v) history.pushState(null, "", u.href);
+      else history.replaceState(null, "", u.href);
     } catch (e) { /* file:// 或权限受限时忽略 */ }
   }
 }
@@ -3135,13 +3181,31 @@ function viewFromUrl() {
     return VIEW_LABEL[v] ? v : "lib";
   } catch (e) { return "lib"; }
 }
+/* 浏览器后退/前进：HR 视图交给 hr-core，其余走 setView（不再写历史） */
+window.addEventListener("popstate", () => {
+  let raw = "";
+  try { raw = new URLSearchParams(location.search).get("view") || ""; } catch (e) { /* ignore */ }
+  if (window.HR && window.HR.views && window.HR.views[raw]) return;
+  setView(viewFromUrl(), { silent: true });
+});
 
 /* ---------------- 竞争雇主 ---------------- */
-function unitDue(u) {
-  const ds = DATA.filter(d => d && d.u === u && dueRank(d.d) < 9999)
-    .map(d => d.d).sort((a, b) => dueRank(a) - dueRank(b));
-  return ds[0] || "";
+/* 单位 → 最早截止日：全表扫一次建索引。
+   旧实现 unitDue(u) 内部 DATA.filter 扫 9,200 行，而 unitGroups() 会对 4,519 个单位各调一次
+   ≈ 4,100 万次迭代（实测单次切「竞争雇主」248-313ms）。 */
+let __unitDueMap = null;
+function unitDueMap() {
+  if (__unitDueMap) return __unitDueMap;
+  const map = new Map();
+  DATA.forEach(d => {
+    if (!d || !d.u || dueRank(d.d) >= 9999) return;
+    const cur = map.get(d.u);
+    if (cur === undefined || dueRank(d.d) < dueRank(cur)) map.set(d.u, d.d);
+  });
+  __unitDueMap = map;
+  return map;
 }
+function unitDue(u) { return unitDueMap().get(u) || ""; }
 function normUnit(x) {
   const u = x.u || x.unit || x.name || "";
   const roles = Array.isArray(x.roles)
@@ -3157,7 +3221,10 @@ function normUnit(x) {
     due: x.due || x.d || unitDue(u)
   };
 }
+/* DATA 运行期只读（全脚本没有 push/splice），分组结果可以整页复用 */
+let __unitGroupsCache = null;
 function unitGroups() {
+  if (__unitGroupsCache) return __unitGroupsCache;
   let arr = [];
   if (typeof S.unitsOf === "function") {
     try {
@@ -3178,7 +3245,17 @@ function unitGroups() {
     arr = Array.from(map.values());
   }
   arr.forEach(g => { if (!g.due) g.due = unitDue(g.u); });
+  __unitGroupsCache = arr;
   return arr;
+}
+/* 4,512 组的排序与筛选无关（总序：岗位数降序 → 单位名 zh 排序），预排一次即可；
+   旧实现每次切「竞争雇主」都对全部 4,512 组跑 localeCompare 排序（实测 7.6ms/次）。 */
+let __unitSorted = null;
+function unitGroupsSorted() {
+  if (__unitSorted) return __unitSorted;
+  const coll = new Intl.Collator("zh");
+  __unitSorted = unitGroups().slice().sort((a, b) => b.n - a.n || coll.compare(String(a.u), String(b.u)));
+  return __unitSorted;
 }
 function renderUnits() {
   const head = $("#uhead"), box = $("#urows");
@@ -3194,13 +3271,12 @@ function renderUnits() {
     }).join("");
   }
   const kw = String(state.uQ || "").trim().toLowerCase();
-  const all = groups
+  const all = unitGroupsSorted()
     .filter(g => state.uType === "全部" || g.t === state.uType)
     .filter(g => !kw
       || String(g.u).toLowerCase().indexOf(kw) >= 0
       || String(g.city || "").indexOf(kw) >= 0
-      || (g.roles || []).some(r => String(r).indexOf(kw) >= 0))
-    .sort((a, b) => b.n - a.n || String(a.u).localeCompare(String(b.u), "zh"));
+      || (g.roles || []).some(r => String(r).indexOf(kw) >= 0));
   setText("#uCount", all.length.toLocaleString("zh-CN"));
   const per = 40;
   const pages = Math.max(1, Math.ceil(all.length / per));
@@ -4361,7 +4437,7 @@ window.ME = (function () {
     const sc = score();
     const scoreEl = $("#meScore");
     if (scoreEl) {
-      scoreEl.textContent = sc + "%";
+      scoreEl.innerHTML = "完整度 <b>" + sc + "%</b>";
       scoreEl.className = "score" + (sc >= 80 ? " ok" : sc >= 40 ? "" : " low");
       scoreEl.title = sc >= 80 ? "资料够完整，可以打印报名表了" : "还差一些：投递前把必填项补齐";
     }
@@ -5080,6 +5156,7 @@ window.ME = (function () {
 
   /* ---------------- 视图跳转 ---------------- */
   function setViewSafe(v) {
+    if (v && views && views[v]) { hardSwitch(v); return; }
     if (typeof window.setView === "function") window.setView(v);
   }
   function currentView() {
@@ -5094,7 +5171,8 @@ window.ME = (function () {
   /* 直接切换视图：绕过 app.js 的 VIEW_LABEL 校验，
      由 hr-core 自己控制 .main .page 的显示与导航高亮。
      这样 app.js 可以保持零改动，减少与其它工具并发写同一文件的冲突。 */
-  function hardSwitch(v) {
+  var _navInit = false;
+  function hardSwitch(v, opts) {
     if (!v) return false;
     var page = document.getElementById("view-" + v);
     if (!page) return false;
@@ -5108,7 +5186,13 @@ window.ME = (function () {
     var sc = document.getElementById("statusCount");
     if (sc) sc.textContent = statusText(v);
     document.documentElement.setAttribute("data-view", v);
-    try { history.replaceState(null, "", "?view=" + encodeURIComponent(v)); } catch (e) { /* file:// 忽略 */ }
+    try {
+      var u = new URL(location.href);
+      u.searchParams.set("view", v);
+      var next = u.href;
+      if (!_navInit || (opts && opts.initial) || next === location.href) history.replaceState(null, "", next);
+      else history.pushState(null, "", next);
+    } catch (e) { /* file:// 忽略 */ }
     render(v);
     return true;
   }
@@ -5721,7 +5805,8 @@ window.ME = (function () {
     mountChrome();
     /* 如果打开时深链到新视图，视图脚本已就绪，补渲染一次 */
     var v = currentView();
-    if (HR.views[v]) hardSwitch(v);
+    if (HR.views[v]) hardSwitch(v, { initial: true });
+    _navInit = true;
     refreshBell();
     /* app.js 的 window.load 回调会 syncStatusText() 覆盖状态栏，这里补回 HR 视图的文案 */
     window.addEventListener("load", function () {

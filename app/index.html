@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>星他 · 招聘情报台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='%23c2410c'/%3E%3Ctext%20x='16'%20y='22'%20font-family='sans-serif'%20font-size='15'%20font-weight='700'%20fill='white'%20text-anchor='middle'%3EST%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/styles.css">
 <link rel="stylesheet" href="assets/hr.css">
 </head>
@@ -70,6 +71,9 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
         <span class="rl-full">采样报告</span>
       </a>
+      <a class="btn ghost report-link" id="dualLink" href="双端/index.html" target="_blank" rel="noopener" title="看双身份演示（求职者 / 招聘方）"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.4 2.7-5.2 6-5.2s6 1.8 6 5.2"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 20c0-2.6-1-4.2-2.6-5"/></svg>
+        <span class="rl-full">双端演示</span>
+      </a>
       <button class="btn" id="exportBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>导出</button>
       <button class="btn primary" id="newBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新建采集</button>
     </div>
@@ -96,7 +100,7 @@
 
       <section class="kpis" aria-label="关键指标（可点，点了就筛）">
         <div class="kpi" role="button" tabindex="0" data-quick="all" aria-pressed="true" aria-label="全部岗位"><div class="lb">全库岗位 / POSITIONS</div><div class="v num"><span id="kpiOpen">9,200</span><i>个</i></div><div class="ft"><span class="dot"></span>来自 <span id="kpiWeekNew">2</span> 份公告 · 点此看全部</div></div>
-        <div class="kpi" role="button" tabindex="0" data-goview="units" aria-label="覆盖雇主，跳转竞争雇主"><div class="lb">覆盖雇主 / EMPLOYERS</div><div class="v num"><span id="kpiUnits">4,519</span><i>家</i></div><div class="ft"><span class="dot"></span><span id="kpiTypes">2</span> 类性质 · 去竞争雇主 →</div></div>
+        <div class="kpi" role="button" tabindex="0" data-goview="units" aria-label="覆盖雇主，跳转竞争雇主"><div class="lb">覆盖雇主 / EMPLOYERS</div><div class="v num"><span id="kpiUnits">4,512</span><i>家</i></div><div class="ft"><span class="dot"></span><span id="kpiTypes">2</span> 类性质 · 去竞争雇主 →</div></div>
         <div class="kpi" role="button" tabindex="0" data-quick="open" aria-pressed="false" aria-label="只看正在报名的岗位"><div class="lb">报名中 / OPEN</div><div class="v num"><span id="kpiUrgent">31</span><i>个</i></div><div class="ft"><span class="dot warn"></span>最近截止 <span id="kpiEarliest">10-26</span> · 点此只筛这些</div></div>
         <div class="kpi" role="button" tabindex="0" data-quick="saved" aria-pressed="false" aria-label="只看已对标的岗位"><div class="lb">已对标 / BENCHMARK</div><div class="v num"><span id="kpiSaved">0</span><i>个</i></div><div class="ft"><span class="dot"></span>点星标即对标</div></div>
       </section>
@@ -313,6 +317,7 @@
     <span class="hideSm">·</span>
     <span id="statusMeta">数据源 2 份公告 · 9,200 条真实岗位</span>
     <a class="report-link-sm" href="https://mikuascendlog.com/position-strata/" target="_blank" rel="noopener">采样报告 ↗</a>
+    <a class="report-link-sm" id="dualLinkSm" href="双端/index.html" target="_blank" rel="noopener">双端 ↗</a>
     <span class="sp"></span>
     <span class="hideSm">Ctrl K 搜索</span>
     <span class="hideSm">Esc 关闭</span>

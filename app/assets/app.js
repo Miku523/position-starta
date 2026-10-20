@@ -273,7 +273,11 @@ function fallbackKpis() {
     weekNew
   };
 }
+/* KPI 只与静态 DATA / S.META 有关：整页只算一次（原来 syncCountText 与 syncKPI 各调一次，
+   每次都把 9,200 行扫两遍 = daysLeft 36,801 次/渲染）。 */
+let __kpiCache = null;
 function KPIS() {
+  if (__kpiCache) return __kpiCache;
   const base = fallbackKpis();
   if (typeof S.kpis === "function") {
     try {
@@ -285,15 +289,37 @@ function KPIS() {
           if (isFinite(v)) out[key] = v;
         });
         out.total = libTotal();
+        __kpiCache = out;
         return out;
       }
     } catch (e) { /* 兜底 */ }
   }
+  __kpiCache = base;
   return base;
 }
 
 /* ---------------- 筛选 / 排序 ---------------- */
+/* 行级小写 haystack：12 个字段每行只拼一次，之后直接 indexOf。
+   9,200 行约 3MB 字符串，换掉每次按键 9,200 次模板拼接 + toLowerCase。 */
+let __hayRows = [];
+function hayOf(i, d) {
+  const hit = __hayRows[i];
+  if (typeof hit === "string") return hit;
+  const hay = `${d.u || ""} ${d.r || ""} ${d.m || ""} ${d.mf || ""} ${d.t || ""} ${d.city || ""} ${d.w || ""} ${d.code || ""} ${d.dept || ""} ${d.lv || ""} ${d.cand || ""} ${d.desc || ""}`.toLowerCase();
+  __hayRows[i] = hay;
+  return hay;
+}
+/* 同一筛选条件下 filtered() 只算一次：翻页/展开/勾选/主题/密度都会走 render()，
+   但这些操作不改变结果集，没必要把 9,200 行重扫 + 全量重排。
+   键 = filterSig()（函数声明提升到顶部可用）+ 对标集内容（quick==="saved" 时才参与）。 */
+let __filteredCache = { sig: null, list: null };
+/* 单一 Intl.Collator 实例：String.localeCompare(x, "zh") 每次调用都要构造/查表，
+   9,200 行排序约 12 万次比较；共享实例后排序快一个数量级。 */
+let __zhColl = null;
+function zhColl() { return __zhColl || (__zhColl = new Intl.Collator("zh")); }
 function filtered() {
+  const sig = filterSig() + "\u0002" + (state.quick === "saved" ? Array.from(state.saved).sort((a, b) => a - b).join(",") : "");
+  if (__filteredCache.sig === sig) return __filteredCache.list;
   const q = state.q.toLowerCase();
   const list = [];
   DATA.forEach((d, i) => {
@@ -306,23 +332,33 @@ function filtered() {
     /* 专业门类是多值字段（用 | 分隔），按 token 包含匹配，避免「只选一个门类就漏掉复合专业」 */
     if (state.major !== "全部专业" && String(d.mf || "").indexOf(state.major) < 0) return;
     if (state.edu !== "全部学历" && d.e !== state.edu) return;
-    if (q) {
-      const hay = `${d.u || ""} ${d.r || ""} ${d.m || ""} ${d.mf || ""} ${d.t || ""} ${d.city || ""} ${d.w || ""} ${d.code || ""} ${d.dept || ""} ${d.lv || ""} ${d.cand || ""} ${d.desc || ""}`.toLowerCase();
-      if (hay.indexOf(q) < 0) return;
-    }
+    if (q && hayOf(i, d).indexOf(q) < 0) return;
     list.push(Object.assign({}, d, { i }));
   });
   const key = state.sort;
   const dir = state.dir < 0 ? -1 : 1;
-  list.sort((a, b) => {
-    if (key === "n") return ((Number(a.n) || 0) - (Number(b.n) || 0)) * dir;
-    if (key === "unit") {
-      const u = String(a.u || "").localeCompare(String(b.u || ""), "zh");
+  if (key === "n") {
+    list.sort((a, b) => ((Number(a.n) || 0) - (Number(b.n) || 0)) * dir);
+  } else if (key === "unit") {
+    const coll = zhColl();
+    list.sort((a, b) => {
+      const u = coll.compare(String(a.u || ""), String(b.u || ""));
       return u ? u * dir : dueCompare(a, b);
-    }
-    const dv = dueCompare(a, b);
-    return dv ? dv * dir : (Number(b.n) || 0) - (Number(a.n) || 0);
-  });
+    });
+  } else {
+    /* 排序键先算一遍：dleft 内含正则 + Date 构造，旧实现每次比较跑 2 次
+       （9,200 行 ≈ 24 万次），预算成 Map 后排序只比数字，顺序完全等价。 */
+    const left = new Map();
+    list.forEach(d => left.set(d.i, dleft(d)));
+    list.sort((a, b) => {
+      const la = left.get(a.i), lb = left.get(b.i);
+      const dv = (la === null || lb === null)
+        ? (la === null && lb === null ? 0 : (la === null ? 1 : -1))
+        : la - lb;
+      return dv ? dv * dir : (Number(b.n) || 0) - (Number(a.n) || 0);
+    });
+  }
+  __filteredCache = { sig, list };
   return list;
 }
 
@@ -943,6 +979,7 @@ function openJobUrl(d) {
 const VIEW_LABEL = { lib: "市场岗位库", collect: "情报采集", units: "竞争雇主", mine: "对标清单", skill: "门槛基准", me: "个人中心" };
 function setView(v, opts) {
   if (!VIEW_LABEL[v]) v = "lib";
+  const prevView = state.view;
   state.view = v;
   $$(".main .page").forEach(el => { el.hidden = el.id !== "view-" + v; });
   $$(".navi a").forEach(a => {
@@ -961,7 +998,9 @@ function setView(v, opts) {
     try {
       const u = new URL(location.href);
       u.searchParams.set("view", v);
-      history.replaceState(null, "", u.href);
+      if (u.href === location.href) { /* 同地址不写历史 */ }
+      else if (prevView && prevView !== v) history.pushState(null, "", u.href);
+      else history.replaceState(null, "", u.href);
     } catch (e) { /* file:// 或权限受限时忽略 */ }
   }
 }
@@ -971,13 +1010,31 @@ function viewFromUrl() {
     return VIEW_LABEL[v] ? v : "lib";
   } catch (e) { return "lib"; }
 }
+/* 浏览器后退/前进：HR 视图交给 hr-core，其余走 setView（不再写历史） */
+window.addEventListener("popstate", () => {
+  let raw = "";
+  try { raw = new URLSearchParams(location.search).get("view") || ""; } catch (e) { /* ignore */ }
+  if (window.HR && window.HR.views && window.HR.views[raw]) return;
+  setView(viewFromUrl(), { silent: true });
+});
 
 /* ---------------- 竞争雇主 ---------------- */
-function unitDue(u) {
-  const ds = DATA.filter(d => d && d.u === u && dueRank(d.d) < 9999)
-    .map(d => d.d).sort((a, b) => dueRank(a) - dueRank(b));
-  return ds[0] || "";
+/* 单位 → 最早截止日：全表扫一次建索引。
+   旧实现 unitDue(u) 内部 DATA.filter 扫 9,200 行，而 unitGroups() 会对 4,519 个单位各调一次
+   ≈ 4,100 万次迭代（实测单次切「竞争雇主」248-313ms）。 */
+let __unitDueMap = null;
+function unitDueMap() {
+  if (__unitDueMap) return __unitDueMap;
+  const map = new Map();
+  DATA.forEach(d => {
+    if (!d || !d.u || dueRank(d.d) >= 9999) return;
+    const cur = map.get(d.u);
+    if (cur === undefined || dueRank(d.d) < dueRank(cur)) map.set(d.u, d.d);
+  });
+  __unitDueMap = map;
+  return map;
 }
+function unitDue(u) { return unitDueMap().get(u) || ""; }
 function normUnit(x) {
   const u = x.u || x.unit || x.name || "";
   const roles = Array.isArray(x.roles)
@@ -993,7 +1050,10 @@ function normUnit(x) {
     due: x.due || x.d || unitDue(u)
   };
 }
+/* DATA 运行期只读（全脚本没有 push/splice），分组结果可以整页复用 */
+let __unitGroupsCache = null;
 function unitGroups() {
+  if (__unitGroupsCache) return __unitGroupsCache;
   let arr = [];
   if (typeof S.unitsOf === "function") {
     try {
@@ -1014,7 +1074,17 @@ function unitGroups() {
     arr = Array.from(map.values());
   }
   arr.forEach(g => { if (!g.due) g.due = unitDue(g.u); });
+  __unitGroupsCache = arr;
   return arr;
+}
+/* 4,512 组的排序与筛选无关（总序：岗位数降序 → 单位名 zh 排序），预排一次即可；
+   旧实现每次切「竞争雇主」都对全部 4,512 组跑 localeCompare 排序（实测 7.6ms/次）。 */
+let __unitSorted = null;
+function unitGroupsSorted() {
+  if (__unitSorted) return __unitSorted;
+  const coll = new Intl.Collator("zh");
+  __unitSorted = unitGroups().slice().sort((a, b) => b.n - a.n || coll.compare(String(a.u), String(b.u)));
+  return __unitSorted;
 }
 function renderUnits() {
   const head = $("#uhead"), box = $("#urows");
@@ -1030,13 +1100,12 @@ function renderUnits() {
     }).join("");
   }
   const kw = String(state.uQ || "").trim().toLowerCase();
-  const all = groups
+  const all = unitGroupsSorted()
     .filter(g => state.uType === "全部" || g.t === state.uType)
     .filter(g => !kw
       || String(g.u).toLowerCase().indexOf(kw) >= 0
       || String(g.city || "").indexOf(kw) >= 0
-      || (g.roles || []).some(r => String(r).indexOf(kw) >= 0))
-    .sort((a, b) => b.n - a.n || String(a.u).localeCompare(String(b.u), "zh"));
+      || (g.roles || []).some(r => String(r).indexOf(kw) >= 0));
   setText("#uCount", all.length.toLocaleString("zh-CN"));
   const per = 40;
   const pages = Math.max(1, Math.ceil(all.length / per));

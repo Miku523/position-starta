@@ -1144,8 +1144,10 @@ html[data-density="tight"] td.c-unit .u-name{font-size:.92rem}
   .topbar #exportBtn,.topbar #newBtn{padding:0 10px;font-size:.82rem}
   .topbar #exportBtn svg,.topbar #newBtn svg{width:12px;height:12px}
   .crumb{max-width:44vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-  .statusbar{overflow:hidden;white-space:nowrap}
+  .statusbar{overflow:hidden;white-space:nowrap;gap:8px;padding:0 12px}
   .statusbar .hideSm{display:none}
+  .statusbar #statusMeta{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .statusbar .report-link-sm,.statusbar #dualLinkSm{flex:0 0 auto}
   .me-grid{grid-template-columns:minmax(0,1fr)}
   .me-form{grid-template-columns:minmax(0,1fr)}
   .me-form .fld.wide{grid-column:1 / -1}

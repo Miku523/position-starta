@@ -149,7 +149,7 @@ window.ME = (function () {
     const sc = score();
     const scoreEl = $("#meScore");
     if (scoreEl) {
-      scoreEl.textContent = sc + "%";
+      scoreEl.innerHTML = "完整度 <b>" + sc + "%</b>";
       scoreEl.className = "score" + (sc >= 80 ? " ok" : sc >= 40 ? "" : " low");
       scoreEl.title = sc >= 80 ? "资料够完整，可以打印报名表了" : "还差一些：投递前把必填项补齐";
     }

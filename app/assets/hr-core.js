@@ -570,6 +570,7 @@
 
   /* ---------------- 视图跳转 ---------------- */
   function setViewSafe(v) {
+    if (v && views && views[v]) { hardSwitch(v); return; }
     if (typeof window.setView === "function") window.setView(v);
   }
   function currentView() {
@@ -584,7 +585,8 @@
   /* 直接切换视图：绕过 app.js 的 VIEW_LABEL 校验，
      由 hr-core 自己控制 .main .page 的显示与导航高亮。
      这样 app.js 可以保持零改动，减少与其它工具并发写同一文件的冲突。 */
-  function hardSwitch(v) {
+  var _navInit = false;
+  function hardSwitch(v, opts) {
     if (!v) return false;
     var page = document.getElementById("view-" + v);
     if (!page) return false;
@@ -598,7 +600,13 @@
     var sc = document.getElementById("statusCount");
     if (sc) sc.textContent = statusText(v);
     document.documentElement.setAttribute("data-view", v);
-    try { history.replaceState(null, "", "?view=" + encodeURIComponent(v)); } catch (e) { /* file:// 忽略 */ }
+    try {
+      var u = new URL(location.href);
+      u.searchParams.set("view", v);
+      var next = u.href;
+      if (!_navInit || (opts && opts.initial) || next === location.href) history.replaceState(null, "", next);
+      else history.pushState(null, "", next);
+    } catch (e) { /* file:// 忽略 */ }
     render(v);
     return true;
   }
@@ -1211,7 +1219,8 @@
     mountChrome();
     /* 如果打开时深链到新视图，视图脚本已就绪，补渲染一次 */
     var v = currentView();
-    if (HR.views[v]) hardSwitch(v);
+    if (HR.views[v]) hardSwitch(v, { initial: true });
+    _navInit = true;
     refreshBell();
     /* app.js 的 window.load 回调会 syncStatusText() 覆盖状态栏，这里补回 HR 视图的文案 */
     window.addEventListener("load", function () {
