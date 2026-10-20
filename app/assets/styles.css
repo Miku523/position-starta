@@ -145,6 +145,16 @@
   .btn.ghost:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
   .btn[disabled]{opacity:.45;pointer-events:none}
 
+  /* 作品互链：桌面放顶栏，窄屏收进状态栏 */
+  .report-link{text-decoration:none}
+  .report-link .rl-full{white-space:nowrap}
+  .report-link-sm{display:none;color:var(--ink2);font-size:.72rem;border-bottom:1px solid var(--line);padding-bottom:1px;white-space:nowrap}
+  .report-link-sm:hover{color:var(--accent);border-color:var(--accent-line)}
+  @media (max-width:680px){
+    .report-link{display:none}
+    .report-link-sm{display:inline}
+  }
+
   /* ---------------- main ---------------- */
   .main{overflow:auto;padding:22px 24px 22px;position:relative;min-height:0;display:flex;flex-direction:column}
   .main::before{

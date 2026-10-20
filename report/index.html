@@ -307,6 +307,8 @@ details.acc .body th,details.acc .body td{border-color:var(--lineD2);color:var(-
 /* 收尾 */
 .foot{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim2);
   display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:30px 0 46px;border-top:1px solid var(--lineD)}
+.foot a{color:var(--paper2);text-decoration:none;border-bottom:1px solid var(--lineD);padding-bottom:1px}
+.foot a:hover{color:var(--orange);border-color:var(--orange)}
 
 /* ---------- 响应式 ---------- */
 @media (max-width:980px){
@@ -368,6 +370,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
     <span class="keep">19 SITES · 29 SUBMITS</span>
     <span class="keep">9,200 POSITIONS</span>
     <span class="keep">2026-10-20</span>
+    <a class="lang" href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">招聘工作台 ↗</a>
     <a class="lang" href="#s06">数据下载</a>
   </div>
 </header>
@@ -630,6 +633,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
       <button class="btn" id="csv">下载专业榜 CSV · 8 行</button>
       <button class="btn ghost" id="json">下载 JSON · 含证据字段</button>
       <a class="btn ghost" href="https://browser.lexmount.cn/zh/docs" target="_blank" rel="noopener">看这套流程怎么跑 ↗</a>
+      <a class="btn ghost" href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">打开招聘工作台 demo ↗</a>
     </div>
     <p style="font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--dim2);margin-top:14px">
       表来自 2026-10-20 凌晨的 29 次真实提交；失败与重试记录见 03 与 07。</p>
@@ -664,15 +668,15 @@ close     每个 session 结束即 close，防遗漏计费</div>
       <details class="acc"><summary><span>复现步骤 · 想自己跑一遍</span><span class="n">A-04 <span class="ico">+</span></span></summary>
         <div class="body">
           <b>1 · 起采集台</b><br>
-          在 <span class="mono">recruit-tool/</span> 里跑 <span class="mono">node server.js</span>，开 <span class="mono">http://127.0.0.1:8901</span>。引擎选「Lexmount 云浏览器」，贴公告详情页地址，必要时勾「列表页展开详情」再点开始。凭证走环境变量（<span class="mono">LEXMOUNT_API_KEY</span> / <span class="mono">LEXMOUNT_PROJECT_ID</span> / <span class="mono">LEXMOUNT_BASE_URL</span>），每个 Session 跑完都显式 close，不挂账。<br>
+          在 <span class="mono">source/</span> 里建 <span class="mono">public/</span>，把 <span class="mono">采集台界面.html</span> 复制成 <span class="mono">public/index.html</span>（<span class="mono">server.js</span> 只认这个入口），再跑 <span class="mono">node server.js</span>，开 <span class="mono">http://127.0.0.1:8901</span>。引擎选「Lexmount 云浏览器」，贴公告详情页地址，必要时勾「列表页展开详情」再点开始。凭证走环境变量（<span class="mono">LEXMOUNT_API_KEY</span> / <span class="mono">LEXMOUNT_PROJECT_ID</span> / <span class="mono">LEXMOUNT_BASE_URL</span>），每个 Session 跑完都显式 close，不挂账。<br>
           <b>2 · 归一成同一套字段</b><br>
           跑完在「汇总表」点「归一为统一表」：不同公告的 xlsx / PDF 表头会被映射到 11 个字段。要跨批次聚合就去「历史记录」勾几份 → 合并选中。<br>
           <b>3 · 重算统计</b><br>
           批次会落到 <span class="mono">runs/batch-*.json</span>，然后跑
           <span class="mono">python canon_stat.py runs/batch-1792437271749.json</span>，输出学历构成、专业频次、地区分布、单位数、聘用人数合计。<br>
           <b>4 · 看报告</b><br>
-          <span class="mono">starta-report/index.html</span> 是单文件，双击就能开；要截图或打印就 <span class="mono">python -m http.server 8899</span> 起个本地服务再访问。<br>
-          <b>环境依赖</b>：Node 22+；<span class="mono">.doc</span> 转 <span class="mono">.docx</span> 需要 LibreOffice；PDF 用 <span class="mono">bin/pdftotext/pdftotext.exe</span>（已随工具打包，含三个 DLL）；xlsx 只用 tar 解包 + XML 解析，不依赖 Office。
+          <span class="mono">/</span> 是报告单文件版（本地双击 <span class="mono">index.html</span> 也能开），<span class="mono">/report/</span> 是多文件版；要截图或打印就 <span class="mono">python -m http.server 8899</span> 起个本地服务再访问。<br>
+          <b>环境依赖</b>：Node 22+；<span class="mono">.doc</span> 转 <span class="mono">.docx</span> 需要 LibreOffice；PDF 用 <span class="mono">bin/pdftotext/pdftotext.exe</span>、云浏览器 CLI 放 <span class="mono">bin/browser-cli.exe</span>（两个二进制不在仓库里，需自备）；xlsx 只用 tar 解包 + XML 解析，不依赖 Office。
         </div>
       </details>
     </div>
@@ -680,6 +684,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
     <div class="foot">
       <span>岗位要求的地层 / SKILL STARTA SURVEY</span>
       <span>数据由 Lexmount 云浏览器 20 个 Session 产出 · 2026-10-20</span>
+      <span><a href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">招聘工作台 demo →</a></span>
     </div>
   </div>
 </section>

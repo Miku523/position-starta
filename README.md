@@ -1,30 +1,30 @@
 # 岗位要求的地层 · 一次可回放的云端采样
 
-> **在线看：https://mikuascendlog.com/position-strata/**
+> **报告：** https://mikuascendlog.com/position-strata/
+> **招聘工作台：** https://mikuascendlog.com/position-strata/app/
+> Lexmount 云平台真实任务挑战 · 参赛作品材料包 · 提交日期：2026-10-20
 
-## 站点结构（GitHub Pages）
+## 页面怎么进
 
-| 路径 | 是什么 |
-| --- | --- |
-| `/` | **报告**（单文件版，1.54 MB，图片内嵌，双击即开） |
-| `/report/` | 报告多文件版（index.html + assets/） |
-| `/app/` | 招聘工作台（index + assets/，数据为示例数据） |
-| `/app/workbench-single.html` | 工作台单文件版（离线可开） |
-| `/data/` | 9,200 行岗位底表 CSV、会话台账 CSV |
-| `/source/` | 采集台源码（server.js、canon_stat.py、采集台界面.html） |
-| `/previews/` | 现场截图 |
+| 想看的 | 打开 | 说明 |
+| --- | --- | --- |
+| 报告（主入口） | `/` | 单文件版，1.54 MB，图片内嵌，双击即开 |
+| 报告（多文件版） | `/report/` | `index.html` + `assets/` 四张配图，方便看源码 |
+| 招聘工作台 | `/app/` | 岗位库 / 公告采集 / 单位库 / 我的投递 / 技能剖面，示例数据 |
+| 工作台离线版 | `/app/workbench-single.html` | 169 KB，单文件无依赖，双击即开 |
+| 岗位底表 | `/data/岗位表_统一字段.csv` | 9,200 行 |
+| 会话台账 | `/data/会话台账.csv` | 批次 / 成败 / Session ID |
+| 采集台源码 | `/source/` | `server.js`、`canon_stat.py`、`采集台界面.html` |
+| 现场截图 | `previews/`（9 张） | 如 [线上首页](previews/线上首页.png)、[采集台-广东岗位表](previews/采集台-广东岗位表.png) |
 
---- | --- |
-| `/` | **招聘工作台**（最新本地部署：index.html + assets/style.css·app.js·data.js） |
-| `/single.html` | 报告单文件版（1.54 MB，图片内嵌，双击即开） |
-| `/starta-workbench.html` | 工作台单文件版（169 KB，离线可开） |
-| `/report/` | 报告多文件版（index.html + assets/） |
-| `/data/` | 9,200 行岗位底表 CSV、会话台账 CSV |
-| `/source/` | 采集台源码（server.js、canon_stat.py、采集台界面.html） |
-| `/previews/` | 现场截图 |
+页面之间怎么跳：
 
-> Lexmount 云平台真实任务挑战 · 参赛作品材料包
-> 提交日期：2026-10-20
+- 报告顶栏、页脚、06 节按钮 → **招聘工作台** → `/app/`
+- 工作台顶栏「采样报告」→ **报告首页** → `/`（窄屏收在状态栏）
+- 工作台视图可直链：`/app/?view=lib|collect|units|mine|skill`（默认 `lib` 岗位库）
+- 报告 01–07 节：右下「目录 +」，或键盘 `↓` / `↑` / `PgDn` / `PgUp`；`#s06` 直达数据下载
+
+单文件版（`index.html`、`workbench-single.html`）双击即可离线打开；互链按钮指向线上地址。
 
 ---
 
@@ -77,20 +77,23 @@ HR／求职者想知道「这批岗位到底卡什么」，只能一张张表翻
 | 材料 | 位置 |
 | --- | --- |
 | **在线报告（Pages）** | **https://mikuascendlog.com/position-strata/** |
+| **招聘工作台（Pages）** | **https://mikuascendlog.com/position-strata/app/** |
 | 报告（单文件 HTML，双击即开） | `index.html` |
 | 报告 PDF | `技能地层采样报告.pdf` |
 | 归一后的岗位底表（9,200 行 CSV） | `data/岗位表_统一字段.csv` |
 | 会话台账（批次／成功失败／Session ID） | `data/会话台账.csv` |
-| 采集台源码与复现脚本 | 见仓库 `recruit-tool/`、`dump_canon.py` |
-| 现场截图（采集台、报告各屏） | `previews/` |
+| 采集台源码与复现脚本 | `source/server.js`、`source/canon_stat.py`、`dump_canon.py` |
+| 现场截图（采集台、报告各屏） | `previews/`（9 张，见上表示例） |
 
 ## 五、复现
 
-1. `cd recruit-tool && node server.js` → 打开 `http://127.0.0.1:8901`
+1. `cd source`，先把 `采集台界面.html` 复制成 `public/index.html`（`server.js` 只认这个入口），再 `node server.js` → 打开 `http://127.0.0.1:8901`
 2. 引擎选「Lexmount 云浏览器」，贴公告地址，点开始采集（凭证走 `LEXMOUNT_API_KEY` / `LEXMOUNT_PROJECT_ID` / `LEXMOUNT_BASE_URL`）
 3. 汇总表里点「归一为统一表」，可导出 CSV；历史记录里可勾多批次合并
-4. `python dump_canon.py <batch.json> out.csv` 导底表；`python canon_stat.py <batch.json>` 复算统计
-5. `cd report && python -m http.server 8899` 看报告（或直接双击 `index.html`）
+4. `python dump_canon.py <batch.json> out.csv` 导底表；`python source/canon_stat.py <batch.json>` 复算统计
+5. 看报告：在线访问 `/`（或 `/report/`）；本地可双击单文件 `index.html`，或 `cd report && python -m http.server 8899`
+
+> 仓库只放源码：`source/bin/browser-cli.exe`（云浏览器 CLI）与 `source/bin/pdftotext/` 没有随包分发，复现时需自己放回这两个位置。
 
 ## 六、局限（写在前面，不藏）
 

@@ -152,6 +152,16 @@
   .btn.ghost:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
   .btn[disabled]{opacity:.45;pointer-events:none}
 
+  /* 作品互链：桌面放顶栏，窄屏收进状态栏 */
+  .report-link{text-decoration:none}
+  .report-link .rl-full{white-space:nowrap}
+  .report-link-sm{display:none;color:var(--ink2);font-size:.72rem;border-bottom:1px solid var(--line);padding-bottom:1px;white-space:nowrap}
+  .report-link-sm:hover{color:var(--accent);border-color:var(--accent-line)}
+  @media (max-width:680px){
+    .report-link{display:none}
+    .report-link-sm{display:inline}
+  }
+
   /* ---------------- main ---------------- */
   .main{overflow:auto;padding:22px 24px 22px;position:relative;min-height:0;display:flex;flex-direction:column}
   .main::before{
@@ -964,6 +974,10 @@ html[data-density="tight"] td.c-unit .u-name{font-size:.92rem}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></svg>
       </button>
       <span class="divider"></span>
+      <a class="btn ghost report-link" href="https://mikuascendlog.com/position-strata/" target="_blank" rel="noopener" title="看线上采样报告">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+        <span class="rl-full">采样报告</span>
+      </a>
       <button class="btn" id="exportBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>导出</button>
       <button class="btn primary" id="newBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新建采集</button>
     </div>
@@ -1130,6 +1144,7 @@ html[data-density="tight"] td.c-unit .u-name{font-size:.92rem}
     <span>星他 工作台 v0.9</span>
     <span class="hideSm">·</span>
     <span id="statusMeta">数据源 13 份公告 · 示例数据</span>
+    <a class="report-link-sm" href="https://mikuascendlog.com/position-strata/" target="_blank" rel="noopener">采样报告 ↗</a>
     <span class="sp"></span>
     <span class="hideSm">Ctrl K 搜索</span>
     <span class="hideSm">Esc 关闭</span>
