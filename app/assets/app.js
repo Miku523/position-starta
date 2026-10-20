@@ -1463,7 +1463,7 @@ function renderCinfo() {
           <td class="mono" title="${esc(it.host || "")}">${esc(it.host || "—")}</td>
           <td class="c-major"><a class="lnk" href="${esc(to)}" target="_blank" rel="noopener" title="${esc(it.title || "")}">${esc(it.title || it.url)}</a></td>
           <td class="c-num">${fmtNum(it.chars)}</td>
-          <td class="c-num">${fmtNum(it.files)}</td>
+          <td class="c-num">${fmtNum(it.files && it.files.length)}</td>
           <td>${(it.stored && it.stored.length) ? it.stored.map(id => {
           const nt = NOTICES.filter(x => x.id === id)[0];
           return `<span class="stored">${esc(nt ? nt.id : id)}</span>`;
