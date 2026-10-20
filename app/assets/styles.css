@@ -1197,8 +1197,35 @@ a.lnk.is-dead:hover{color:var(--ink2);border-bottom-color:var(--muted)}
 .pg-btn{transition:background .12s,border-color .12s,color .12s}
 .pg-btn:active:not([disabled]){transform:translateY(1px)}
 .meter i{transition:width .4s cubic-bezier(.22,.61,.36,1),opacity .2s}
-/* 抽屉常驻合成层，开合走 compositor，不吃主线程；关闭后保留成本可控 */
-#drawer{will-change:transform}
+/* 抽屉只在打开期间占用合成层，关闭后立即释放 */
+#drawer.on{will-change:transform}
+
+/* ---------- 5.5 color-mix 回退：Safari < 16.2 / 旧 Chromium ----------
+   旧引擎不支持 color-mix 会把整条声明丢弃（背景/边框变透明）。
+   这里用实色变量兜底关键表面；纯装饰差异，不影响任何功能。 */
+@supports not (color: color-mix(in srgb, red, blue)){
+  .navi a:hover{background:var(--line2)}
+  .icobtn:hover,.btn:hover,.btn.ghost:hover,.chip:hover,.citem:hover,.me-app:hover,
+  .dbtn[aria-pressed="true"],.pg-btn:hover:not([disabled]){background:var(--line2)}
+  tbody tr:hover,.table .row:hover,.mini tbody tr:hover td,.mini thead th,
+  .ci-table tbody tr:hover,.expbtn:hover{background:var(--line2)}
+  tr.exp > td{background:var(--accent-soft)}
+  .user .av{background:var(--accent-soft)}
+  .btn:hover,.expbtn[aria-expanded="true"],.urlin:focus{border-color:var(--line)}
+  .btn.primary:hover{background:var(--accent)}
+  .ucard{background:var(--panel);border-color:var(--line)}
+  .ucard:hover{background:var(--panel);border-color:var(--accent-line)}
+  .bar-fill{background:var(--accent)}
+  .ex{border-left-color:var(--accent-line)}
+  .stpill[data-st],.c-unit .st[data-st]{border-color:var(--line)}
+  .dwbtn.done,#dwApply.done,.ci-badge.open,.callout.ok,.score.ok,.applybtn.done{border-color:var(--line);background:var(--line2)}
+  .score.low,.hotline{border-color:var(--line);background:var(--line2)}
+  .molist,.density .dbtn{border-color:var(--line)}
+  html[data-theme="dark"] .bar-row::before{background:var(--line2)}
+  @media (max-width:680px){
+    tbody tr[data-i],.table .row{background:var(--panel)}
+  }
+}
 
 /* ---------- 5. 粗指针（触控）目标 ≥36px，不撑破 rail ---------- */
 @media (pointer:coarse){
@@ -1213,6 +1240,14 @@ a.lnk.is-dead:hover{color:var(--ink2);border-bottom-color:var(--muted)}
 /* ---------- 6. 打印与「减弱动效」全局降级 ---------- */
 @media print{
   .page:not([hidden]){animation:none!important}
+  /* 普通 Ctrl+P：侧栏/顶栏/状态栏/提示条/浮层都不打印，只留正文 */
+  .rail,.topbar,.statusbar,.banner,.live-pill,#livePill,.toast,#toast,#drawer,#scrim,
+  .hbell,.hrmodal-scrim,.hrmodal,.hr-usermenu,.hr-footlink{display:none!important}
+  .app{display:block;height:auto}
+  .app > .rail,.app > .topbar,.app > .statusbar{display:none!important}
+  .app > .main{display:block;height:auto;overflow:visible}
+  .main .page[hidden]{display:none!important}
+  body{background:#fff}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{

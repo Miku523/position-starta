@@ -34,7 +34,10 @@ window.STARTA = (function(){
   const NOTICE_BY_ID = {};
   NOTICES.forEach(function(n){
     NOTICE_BY_ID[n.id] = n;
-    n.end = n.endDate || n.applyEnd || "";
+    /* 两个来源字段可能一个是日期、一个带时分：取更精确的那个，
+       否则 16:00 截止会被 endDate 的日期截成 0 点，导致“当天已截止”。 */
+    var _ed = String(n.endDate || ""), _ae = String(n.applyEnd || "");
+    n.end = _ae.length > _ed.length ? _ae : (_ed || _ae);
     n.start = n.startDate || n.applyStart || "";
   });
 

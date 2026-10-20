@@ -491,7 +491,7 @@ td.num{font-family:var(--mono);text-align:right}
 
 /* ---------- 响应式 ---------- */
 @media (max-width:980px){
-  .app{grid-template-columns:1fr;grid-template-rows:56px auto minmax(0,1fr)}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
   .app>.rail{grid-row:2;grid-column:1;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--line);min-height:0}
   .app>.topbar{grid-row:1;grid-column:1}
   .app>.main{grid-row:3;grid-column:1}
@@ -507,7 +507,8 @@ td.num{font-family:var(--mono);text-align:right}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .jobcard{grid-template-columns:1fr}
   .j-side{flex-direction:row;align-items:center;justify-content:space-between;border-left:0;border-top:1px dashed var(--line);padding:10px 0 0}
-  .topbar{padding:0 12px;gap:8px}
+  .topbar{padding:6px 12px;gap:8px;min-height:56px;flex-wrap:wrap;row-gap:6px;align-content:center}
+  .topbar .spacer{display:none}
   .crumb{display:none}
   .listmeta{flex-direction:column;gap:2px}
   .landing-inner{grid-template-columns:1fr;gap:26px}
@@ -624,10 +625,31 @@ a.ext:hover{background:var(--accent-soft)}
 .ivres{margin-left:0;vertical-align:1px;align-self:flex-start}
 .ivhint{margin:4px 0 0;font-size:.8rem;color:var(--ok);line-height:1.55}
 .ivhint.bad{color:var(--bad)}
+.ivacts{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.pbox{display:flex;flex-direction:column;gap:8px}
+.prow{display:grid;grid-template-columns:1fr 96px 92px;gap:8px;align-items:center}
+.prow input,.prow select{width:100%;height:36px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit;font-size:.88rem}
+.ivav{color:var(--accent);margin-left:6px;font-weight:600}
+.pslot{display:flex;flex-direction:column;gap:6px}
+.pnote{width:100%;height:34px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit;font-size:.82rem}
+.ivpnotes{margin:6px 0 0;display:flex;flex-wrap:wrap;gap:4px 12px}
+.ivpnotes .pnt{font-size:.78rem;color:var(--ink2)}
+.ivpnotes .pnt b{color:var(--ink)}
+.pstats{display:flex;flex-direction:column;gap:9px}
+.pstatrow{display:grid;grid-template-columns:64px minmax(0,1fr) 40px 46px 96px;gap:10px;align-items:center;font-size:.84rem}
+.pstatname{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pstatn{color:var(--muted);font-size:.76rem;text-align:right}
+.ptag{font-size:.72rem;padding:2px 7px;border-radius:99px;white-space:nowrap;text-align:center}
+.ptag.tight{background:rgba(179,38,30,.10);color:#B3261E}
+.ptag.loose{background:rgba(31,138,87,.10);color:#1F8A57}
+.ptag.even{background:var(--line);color:var(--ink2)}
+@media (max-width:640px){.pstatrow{grid-template-columns:54px minmax(0,1fr) 34px 78px;gap:8px}.pstatrow .pstatn{display:none}}
+@media (max-width:640px){.prow{grid-template-columns:1fr 84px 78px;gap:6px}}
 .ivtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .ivtop b{min-width:0}
 .ivby{color:var(--ink2)}
-.ivbox .ivhint+.btn{margin-top:6px}
+.ivbox .ivhint+.btn{margin-top:6px}
+
 .mrow.m3{grid-template-columns:repeat(3,minmax(0,1fr))}
 </style>
 <!-- LIVE_CSS_START -->
@@ -835,10 +857,14 @@ a.ext:hover{background:var(--accent-soft)}
     since: 0,             /* 服务端启动时间 */
     asOf: 0,              /* 真实数据截至时间（毫秒） */
     lastBeat: 0,          /* 最近一次服务端心跳 */
-    ready: false
+    ready: false,
+    opened: false,        /* 是否成功连上过实时服务（决定“连接中/重连中”） */
+    gen: 0                /* 连接代号：手动 connect / 重连时作废旧 SSE 回调 */
   };
 
-  var subs = {};
+  /* null 原型：事件名可能来自服务端（任意字符串），用 {} 会让 "constructor" /
+     "__proto__" 这类名字撞上 Object.prototype，dispatch 时直接抛 TypeError。 */
+  var subs = Object.create(null);
   var timers = [];
   var tabId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   var bc = null;
@@ -862,7 +888,7 @@ a.ext:hover{background:var(--accent-soft)}
       return p.join(".");
     }
   }
-  function pad2(n) { return String(n).padStart(2, "0"); }
+  function pad2(n) { n = String(n); return n.length < 2 ? "0" + n : n; }
   function hms(ms) {
     var s = Math.max(0, Math.floor(ms / 1000));
     return pad2(Math.floor(s / 3600)) + ":" + pad2(Math.floor(s % 3600 / 60)) + ":" + pad2(s % 60);
@@ -899,8 +925,16 @@ a.ext:hover{background:var(--accent-soft)}
     var t = Date.parse(s.replace(" ", "T"));
     return t;
   }
-  function dispatch(type, payload, from) {
-    var list = (subs[type] || []).concat(subs["*"] || []);
+  function alive(node) {
+    if (!node) return false;
+    if (typeof node.isConnected === "boolean") return node.isConnected;
+    /* IE11 / 旧内核没有 isConnected：退回 DOM 树查询 */
+    return !!(doc.documentElement && doc.documentElement.contains(node));
+  }
+  function dispatch(type, payload, from, noStar) {
+    var base = Array.isArray(subs[type]) ? subs[type] : [];
+    var list = base.slice();
+    if (!noStar && type !== "*" && Array.isArray(subs["*"])) list = list.concat(subs["*"]);
     for (var i = 0; i < list.length; i++) {
       try { list[i](payload, type, from || "local"); } catch (e) { if (global.console) console.error("[Live]", e); }
     }
@@ -997,7 +1031,6 @@ a.ext:hover{background:var(--accent-soft)}
       return;
     }
     dispatch(msg.t, msg.p, "peer");
-    dispatch("*", msg.p, "peer");
   }
   function initChannel() {
     try {
@@ -1035,9 +1068,16 @@ a.ext:hover{background:var(--accent-soft)}
     var candidates = resolveCandidates();
     state.serverTried = candidates.join(" / ");
     if (!candidates.length) { setMode("sync"); return; }
-    setMode(state.ready ? "reconnecting" : "connecting");
+    /* 新一轮连接先掐掉旧的 SSE 和待执行的退避定时器：
+       否则手动 connect() / 重复 init 会让旧连接继续挂着，服务端在线数虚高、事件重复。 */
+    var gen = (state.gen || 0) + 1;
+    state.gen = gen;
+    if (state.es) { try { state.es.close(); } catch (e) { } state.es = null; }
+    if (state.retryTimer) { clearTimeout(state.retryTimer); state.retryTimer = 0; }
+    setMode(state.opened ? "reconnecting" : "connecting");
     var idx = 0;
     (function next() {
+      if (gen !== state.gen) return;
       if (idx >= candidates.length) {
         setMode("sync");
         scheduleRetry();
@@ -1049,13 +1089,16 @@ a.ext:hover{background:var(--accent-soft)}
       catch (e) { next(); return; }
       var opened = false;
       var guard = setTimeout(function () {
-        if (opened) return;
+        if (opened || gen !== state.gen) return;
         try { es.close(); } catch (e) { }
         next();
       }, 2600);
       es.onopen = function () {
+        /* 这条连接已经被新一轮 connect() 取代：安静关掉，不要污染新状态 */
+        if (gen !== state.gen) { try { es.close(); } catch (e) { } return; }
         opened = true;
         clearTimeout(guard);
+        state.opened = true;
         state.es = es;
         state.server = base;
         state.ready = true;
@@ -1063,11 +1106,13 @@ a.ext:hover{background:var(--accent-soft)}
         setMode("live");
       };
       es.onmessage = function (ev) {
+        if (gen !== state.gen) return;
         var msg;
         try { msg = JSON.parse(ev.data); } catch (e) { return; }
         handleServer(msg);
       };
       es.onerror = function () {
+        if (gen !== state.gen) { try { es.close(); } catch (e) { } return; }
         clearTimeout(guard);
         try { es.close(); } catch (e) { }
         if (state.es === es) state.es = null;
@@ -1107,6 +1152,8 @@ a.ext:hover{background:var(--accent-soft)}
         dispatch("heartbeat", msg, "server");
         break;
       case "data":
+        /* 数据文件变了：同步“数据截至”的真实时间，别让页面停在旧扫描时间 */
+        if (msg.asOf && !cfg.localAsOf) { state.asOf = Number(msg.asOf) || state.asOf; pillRender(); }
         dispatch("data", msg, "server");
         break;
       case "session":
@@ -1116,12 +1163,11 @@ a.ext:hover{background:var(--accent-soft)}
         /* 统一约定：on('event', fn) 拿到完整信封（含 name / at / replay）；
            on('<name>', fn) 拿到其中的 payload。 */
         dispatch("event", msg, "server");
-        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server");
+        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server", true);
         break;
       default:
         dispatch(msg.type, msg, "server");
     }
-    dispatch("*", msg, "server");
   }
 
   /* ---------------- 真实的“N 分钟前” ---------------- */
@@ -1134,7 +1180,7 @@ a.ext:hover{background:var(--accent-soft)}
     var prefix = opts.prefix == null ? "" : opts.prefix;
     if (node.__liveTimer) clearInterval(node.__liveTimer);
     function paint() {
-      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
       var t = typeof ts === "function" ? ts() : ts;
       if (t == null || t === "") { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
       var ms = typeof t === "number" ? t : toDate(t);
@@ -1159,7 +1205,7 @@ a.ext:hover{background:var(--accent-soft)}
     var ms = typeof deadline === "number" ? deadline : toDate(deadline);
     if (node.__liveTimer) clearInterval(node.__liveTimer);
     function paint() {
-      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
       if (!isFinite(ms)) { node.textContent = "—"; return; }
       var left = ms - Date.now();
       if (left <= 0) {
@@ -1273,7 +1319,7 @@ a.ext:hover{background:var(--accent-soft)}
     /* 同一个节点重复绑（页面重渲染、胶囊重建）先掐掉旧定时器，别越积越多 */
     if (node.__liveClockTimer) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; }
     function paint() {
-      if (!node.isConnected) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
+      if (!alive(node)) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
       var d = new Date();
       var s = pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + (opts.seconds === false ? "" : ":" + pad2(d.getSeconds()));
       node.textContent = s;
@@ -1769,7 +1815,7 @@ function normInterviews(list, legacy){
     const rec={no:out.length+1,date:iv.date,time:iv.time,mode:iv.mode,place:iv.place,
               note:String(x.note||"").slice(0,60),feedback:String(x.feedback||"").slice(0,80),
               result:["待面","通过","未通过"].indexOf(x.result)>=0?x.result:"待面",
-              by:String(x.by||"").slice(0,12)};
+              by:String(x.by||"").slice(0,12),panel:normPanel(x.panel)};
     if(Array.isArray(x.history)&&x.history.length){
       rec.history=x.history.slice(0,8).map(function(h){return {at:String(h.at||""),reason:String(h.reason||""),
         from:{date:String((h.from||{}).date||""),time:String((h.from||{}).time||""),mode:String((h.from||{}).mode||""),place:String((h.from||{}).place||"")}}});
@@ -1891,14 +1937,20 @@ function normalizeState(s){
     govReminders:normGovReminders(s.govReminders)
   };
 }
+function backupBadState(raw){
+  try{ if(raw) localStorage.setItem(KEY+":bad", raw); }catch(e){}
+  // 等 DOM/Toast 就绪后再提示；损坏数据先备份，避免静默清空用户数据
+  setTimeout(function(){ try{ toast("本地演示数据损坏，已备份原数据并恢复初始状态"); }catch(e){} },0);
+}
 function loadState(){
   try{
     const raw=localStorage.getItem(KEY);
     if(raw){
       const s=JSON.parse(raw);
       if(s && s.version===1 && s.profile && Array.isArray(s.apps)) return normalizeState(s);
+      backupBadState(raw);
     }
-  }catch(e){}
+  }catch(e){ try{ backupBadState(localStorage.getItem(KEY)||""); }catch(_){} }
   return seedState();
 }
 let persistWarned=false;
@@ -2058,7 +2110,7 @@ function topbarHtml(){
 function statusbarHtml(){
   const pub=JOBS.filter(j=>j.src==="发布").length;
   return '<span>示例数据 · '+JOBS.length+' 个岗位（'+(JOBS.length-pub)+' 采集 + '+pub+' 发布）</span>'+
-         '<span>本地存储 · 刷新不丢 · 演示版 v0.13</span>'+
+         '<span>本地存储 · 刷新不丢 · 演示版 v0.15</span>'+
          '<span id="liveAsOf" class="live-asof" title="最后一次写入本机的时间"></span>';
 }
 
@@ -2078,8 +2130,13 @@ function renderMain(){
     else if(ui.view==="posts") html=viewPosts();
     else html=viewPool();
   }
+  /* 同视图内的重渲染（推进/淘汰/筛选/换主题）保留滚动位置；
+     真正切视图时才回到顶部，避免点一次“推进”就跳回列表顶端。 */
+  const keepScroll=renderMain._v===ui.view;
+  const prevScroll=main.scrollTop;
   main.innerHTML=html;
-  main.scrollTop=0;
+  main.scrollTop=keepScroll?prevScroll:0;
+  renderMain._v=ui.view;
 }
 
 /* ---------- 求职者：岗位发现 ---------- */
@@ -2244,8 +2301,9 @@ function stepperDone(a){
 function icsPad(n){ return String(n).padStart(2,"0"); }
 function icsStart(date,time){
   const d=String(date||"").replace(/-/g,"");
-  const t=String(time||"09:00").replace(/:/g,"");
-  return d+"T"+(t.length===4?t+"00":t)+"00";
+  const m=/^(\d{1,2}):(\d{2})/.exec(String(time||"09:00"));
+  const hh=icsPad(m?Number(m[1]):9), mm=icsPad(m?Number(m[2]):0);
+  return d+"T"+hh+mm+"00";
 }
 function icsEnd(date,time){
   const d0=new Date(String(date||"")+"T"+String(time||"09:00")+":00");
@@ -2255,6 +2313,18 @@ function icsEnd(date,time){
 }
 function icsEsc(x){
   return String(x||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
+}
+/* RFC5545：单行不超过 75 octets，超长折行续行以一个空格开头（中文按 UTF-8 字节计） */
+function icsFold(line){
+  const bytes=function(s){ return encodeURIComponent(s).replace(/%[0-9A-F]{2}/g,"x").length; };
+  if(bytes(line)<=75) return line;
+  let out="", cur="", n=0, limit=75;
+  for(let i=0;i<line.length;i++){
+    const ch=line.charAt(i), b=bytes(ch);
+    if(n+b>limit){ out+=cur+"\r\n "; cur=""; n=0; limit=74; }
+    cur+=ch; n+=b;
+  }
+  return out+cur;
 }
 function exportIcs(id, no){
   const a=state.apps.find(function(x){return x.id===id});
@@ -2275,7 +2345,7 @@ function exportIcs(id, no){
     "DESCRIPTION:"+icsEsc("第 "+iv.no+" 轮 · "+iv.mode+(iv.by?" · 面试官 "+iv.by:"")+(iv.note?"\n"+iv.note:"")),
     "END:VEVENT","END:VCALENDAR"
   ];
-  const blob=new Blob([lines.join("\r\n")+"\r\n"],{type:"text/calendar;charset=utf-8"});
+  const blob=new Blob([lines.map(icsFold).join("\r\n")+"\r\n"],{type:"text/calendar;charset=utf-8"});
   const url=URL.createObjectURL(blob);
   const el=document.createElement("a");
   el.href=url;
@@ -2283,6 +2353,22 @@ function exportIcs(id, no){
   document.body.appendChild(el); el.click(); el.remove();
   setTimeout(function(){ URL.revokeObjectURL(url); },2000);
   toast("已导出 .ics · 双击就能加进手机或电脑日历");
+}
+function normPanel(list){
+  const out=[];
+  (Array.isArray(list)?list:[]).forEach(function(p){
+    if(!p || !p.name) return;
+    const s=Number(p.score);
+    out.push({name:String(p.name).slice(0,12),weight:(Number(p.weight)===2?2:1),score:(s>=1&&s<=10?Math.round(s):null),note:String(p.note||"").slice(0,40)});
+  });
+  return out.slice(0,3);
+}
+function panelAvg(list){
+  const v=(list||[]).filter(function(p){return p && p.name && p.score>=1});
+  if(!v.length) return null;
+  let sw=0, ss=0;
+  v.forEach(function(p){ const w=(Number(p.weight)===2?2:1); sw+=w; ss+=w*Number(p.score); });
+  return Math.round(ss/sw*10)/10;
 }
 function interviewBlock(a, mode){
   const list=a.interviews||[];
@@ -2300,12 +2386,13 @@ function interviewBlock(a, mode){
       '<div class="ivmain"><div class="ivtop"><b>'+esc(iv.date)+' '+esc(iv.time)+' · '+esc(iv.mode)+'</b>'+
         (iv.result&&iv.result!=="待面"?'<span class="badge '+(iv.result==="通过"?"ok":"bad")+' ivres">'+esc(iv.result)+'</span>':'')+'</div>'+
         (iv.place?'<span>'+esc(iv.place)+'</span>':'')+
-        (iv.by?'<span class="ivby">面试官：'+esc(iv.by)+'</span>':'')+
+        (function(){const pa=panelAvg(iv.panel);if(iv.panel&&iv.panel.length){return '<span class="ivby">面试官：'+iv.panel.map(function(p){return esc(p.name)+(Number(p.weight)===2?'（主）':'')}).join(' · ')+(pa!==null?'<b class="ivav">加权 '+pa+'</b>':'')+'</span>';}return iv.by?'<span class="ivby">面试官：'+esc(iv.by)+'</span>':'';})()+
+        (isHr&&iv.panel&&iv.panel.some(function(p){return p.note})?'<p class="ivpnotes">'+iv.panel.filter(function(p){return p.note}).map(function(p){return '<span class="pnt"><b>'+esc(p.name)+'</b> '+esc(p.note)+'</span>'}).join("")+'</p>':'')+
         (iv.note?'<p>'+esc(iv.note)+'</p>':'')+
         (iv.feedback?'<p class="ivfb">本轮反馈：'+esc(iv.feedback)+'</p>':'')+
         (iv.history&&iv.history.length?'<p class="ivhist">改期 '+iv.history.length+' 次 · 原定 '+esc(iv.history[0].from.date)+' '+esc(iv.history[0].from.time)+(iv.history[0].reason?'（'+esc(iv.history[0].reason)+'）':'')+'</p>':'')+
       '</div>'+
-      (isHr?'<button class="btn ghost sm" data-act="interview" data-app="'+a.id+'" data-no="'+iv.no+'">改</button>':'<button class="btn ghost sm" data-act="ics" data-app="'+a.id+'" data-no="'+iv.no+'">加进日历</button>')+
+      (isHr?'<span class="ivacts"><button class="btn ghost sm" data-act="interview" data-app="'+a.id+'" data-no="'+iv.no+'">改</button><button class="btn ghost sm" data-act="panel" data-app="'+a.id+'" data-no="'+iv.no+'">评分'+(panelAvg(iv.panel)!==null?' '+panelAvg(iv.panel):'')+'</button></span>':'<button class="btn ghost sm" data-act="ics" data-app="'+a.id+'" data-no="'+iv.no+'">加进日历</button>')+
     '</div>';
   }).join("");
   const add=(isHr && a.status==="面试")
@@ -2494,6 +2581,40 @@ const STAGE_ORDER={"已投递":0,"初筛":1,"面试":2,"已录用":3,"已淘汰"
 function reachedStage(a,stage){
   return a.events.some(e=>(STAGE_ORDER[e.status]||0)>=(STAGE_ORDER[stage]||0));
 }
+function panelStats(){
+  const by={};
+  state.apps.forEach(function(a){
+    (a.interviews||[]).forEach(function(iv){
+      (iv.panel||[]).forEach(function(p){
+        if(!p || !p.name || !(Number(p.score)>=1)) return;
+        if(!by[p.name]) by[p.name]={name:p.name,n:0,sum:0};
+        by[p.name].n++; by[p.name].sum+=Number(p.score);
+      });
+    });
+  });
+  const list=Object.keys(by).map(function(k){
+    const v=by[k];
+    return {name:v.name,n:v.n,avg:Math.round(v.sum/v.n*10)/10};
+  }).sort(function(a,b){ return b.n-a.n || b.avg-a.avg; });
+  const total=list.reduce(function(t,x){return t+x.n},0);
+  const mean=total?Math.round(list.reduce(function(t,x){return t+x.avg*x.n},0)/total*10)/10:null;
+  return {list:list,total:total,mean:mean};
+}
+function panelStatsHtml(){
+  const st=panelStats();
+  if(!st.list.length) return '';
+  return '<div class="card" style="margin-top:12px">'+
+    '<div class="listmeta"><span>面试官打分</span><span>'+st.total+' 条打分 · 总体均分 '+st.mean+'</span></div>'+
+    '<div class="pstats">'+st.list.map(function(x){
+      const d=Math.round((x.avg-st.mean)*10)/10;
+      const tag=d>=0.5?'<span class="ptag loose">偏松 +'+d.toFixed(1)+'</span>':(d<=-0.5?'<span class="ptag tight">偏严 '+d.toFixed(1)+'</span>':'<span class="ptag even">接近均分</span>');
+      return '<div class="pstatrow"><span class="pstatname">'+esc(x.name)+'</span>'+
+        '<div class="rtrack"><i style="width:'+(x.avg/10*100)+'%"></i></div>'+
+        '<b>'+x.avg+'</b><span class="pstatn">'+x.n+' 次</span>'+tag+'</div>';
+    }).join("")+'</div>'+
+    '<p class="note" style="margin:10px 0 0">只看打过分的轮次。偏严/偏松是相对全体面试官均分算的——同一批人打了多轮才有可比性。</p>'+
+    '</div>';
+}
 function viewFunnel(){
   const apps=state.apps;
   const total=apps.length;
@@ -2541,6 +2662,7 @@ function viewFunnel(){
           }).join("")+'</div>'
         : '<p class="note">'+(rej?'目前没有新的门槛建议：理由还没过半，或这批数据已经采纳过。':'还没有淘汰记录，先淘汰几个人并写清理由。')+'</p>')+
     '</div>'+
+    panelStatsHtml()+
     '<div class="card note"><b>这就是数据飞轮。</b>求职端看到「为什么没成」，招聘端看到「哪条门槛最卡人」；同一维度占多数时，上面直接给出下一轮门槛，采纳即生效。</div>'+
   '</div>';
 }
@@ -2690,7 +2812,7 @@ function openPostModal(){
 }
 function formVal(id){ const el=$("#"+id); return el?String(el.value||"").trim():""; }
 function confirmPost(){
-  const u=formVal("ppU"), r=formVal("ppR"), city=formVal("ppCity"), desc=formVal("ppDesc");
+  const u=formVal("ppU").trim().slice(0,20), r=formVal("ppR").trim().slice(0,20), city=formVal("ppCity").trim().slice(0,10), desc=formVal("ppDesc").trim().slice(0,120);
   const n=parseInt(formVal("ppN"),10), d=formVal("ppD"), err=$("#ppErr");
   if(!u||!r||!city||!n||n<1||!d){ if(err) err.hidden=false; return; }
   const dd=d.split("-").slice(1).map(function(x){return x.replace(/^0/,"");}).join("-");
@@ -2935,7 +3057,7 @@ function openInterview(id, no){
   let def=cur.date;
   if(!def){
     const d=new Date(); d.setDate(d.getDate()+2);
-    def=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    def=d.getFullYear()+"-"+icsPad(d.getMonth()+1)+"-"+icsPad(d.getDate());
   }
   openModal('<div class="mhead"><h2>第 '+idx+' 轮面试 · '+esc(a.candidate.name)+'</h2><span class="badge">'+esc(j.u)+'</span></div>'+
     '<p class="mtext">'+(list[idx-1]?'改动会立刻同步给求职者，并留下一条改期记录。':'排完求职端「我的投递」里立刻出现这一轮，多轮会按顺序列出来。')+'</p>'+
@@ -2951,8 +3073,60 @@ function openInterview(id, no){
     (list[idx-1]?'<label class="mfield">改期原因（可选，会同步给求职者）<input id="ivReason" type="text" maxlength="40" placeholder="例：面试官时间冲突"></label>':'')+
     '<label class="mfield">本轮结果<select id="ivResult">'+["待面","通过","未通过"].map(function(x){return '<option'+(cur.result===x?" selected":"")+'>'+x+'</option>'}).join("")+'</select></label>'+
     '<div class="mfoot"><button class="btn ghost" data-act="close-modal">取消</button>'+
-    '<div class="mfoot"><button class="btn ghost" data-act="close-modal">取消</button>'+
     '<button class="btn primary" data-act="interview-save" data-app="'+a.id+'" data-no="'+idx+'">保存这轮</button></div>');
+}
+function openPanel(id, no){
+  const a=state.apps.find(function(x){return x.id===id});
+  if(!a) return;
+  const iv=(a.interviews||[])[(parseInt(no,10)||1)-1];
+  if(!iv) return;
+  const list=(iv.panel||[]).slice(0,3);
+  const slot=function(i){
+    const p=list[i]||{name:"",weight:(i===0?2:1),score:null,note:""};
+    return '<div class="pslot">'
+      +'<div class="prow">'
+      +'<input id="pn'+i+'" type="text" maxlength="12" value="'+esc(p.name||"")+'" placeholder="面试官 '+(i+1)+(i===0?"（主面）":"（可选）")+'">'
+      +'<select id="pwt'+i+'"><option value="2"'+(Number(p.weight)===2?" selected":"")+'>主面 ×2</option><option value="1"'+(Number(p.weight)===1?" selected":"")+'>陪面 ×1</option></select>'
+      +'<select id="psc'+i+'"><option value="">未打分</option>'+[1,2,3,4,5,6,7,8,9,10].map(function(n){return '<option value="'+n+'"'+(String(p.score)===String(n)?" selected":"")+'>'+n+'</option>'}).join("")+'</select>'
+      +'</div>'
+      +'<input class="pnote" id="pnt'+i+'" type="text" maxlength="40" value="'+esc(p.note||"")+'" placeholder="一句话评价（可选，只有招聘方能看到）">'
+      +'</div>';
+  };
+  const cur=panelAvg(iv.panel);
+  openModal('<div class="mhead"><h2>面试官评分 · 第 '+iv.no+' 轮</h2><span class="badge">'+esc(a.candidate.name)+'</span></div>'+
+    '<p class="mtext">主面权重 ×2，陪面 ×1，按权重算加权分。分数只留在招聘方这边，求职者看不到。</p>'+
+    '<div class="pbox">'+[0,1,2].map(slot).join("")+'</div>'+
+    (cur!==null?'<p class="muted small" style="margin:10px 0 0">当前加权 <b>'+cur+'</b>（'+(iv.panel||[]).filter(function(p){return p.score>=1}).length+' 人已打分）</p>':'<p class="muted small" style="margin:10px 0 0">还没人打分。留空名字的行会被忽略。</p>')+
+    '<div class="mfoot"><button class="btn ghost" data-act="close-modal">取消</button>'+
+    '<button class="btn primary" data-act="panel-save" data-app="'+a.id+'" data-no="'+iv.no+'">保存评分</button></div>');
+}
+function savePanel(id, no){
+  const a=state.apps.find(function(x){return x.id===id});
+  if(!a) return;
+  const list=(a.interviews||[]).slice();
+  const iv=list[(parseInt(no,10)||1)-1];
+  if(!iv) return;
+  const panel=[];
+  [0,1,2].forEach(function(i){
+    const nm=(document.getElementById("pn"+i)||{}).value||"";
+    if(!nm.trim()) return;
+    const wt=(document.getElementById("pwt"+i)||{}).value;
+    const sc=(document.getElementById("psc"+i)||{}).value;
+    const nt=(document.getElementById("pnt"+i)||{}).value||"";
+    panel.push({name:nm.trim().slice(0,12),weight:(wt==="2"?2:1),score:(sc?Number(sc):null),note:nt.trim().slice(0,40)});
+  });
+  iv.panel=normPanel(panel);
+  if(iv.panel.length && !iv.by) iv.by=iv.panel[0].name.slice(0,12);  /* 手填面试官优先，不用首位评分人覆盖 */
+  a.updatedAt=nowISO();
+  commit();
+  closeModal();
+  const avg=panelAvg(iv.panel);
+  toast(iv.panel.length
+    ? ("已保存 "+iv.panel.length+" 位面试官"+(avg!==null?" · 加权 "+avg:"")+" · 分数只留招聘方")
+    : "已清空这一轮的面试官");
+  renderMain();
+
+  openCandDrawer(id);
 }
 function saveInterview(id, no){
   const a=state.apps.find(x=>x.id===id);
@@ -2961,11 +3135,16 @@ function saveInterview(id, no){
   if(!date || !time){ toast("日期和时间都要填"); return; }
   const idx=Math.max(1, parseInt(no,10)||((a.interviews||[]).length+1));
   const list=(a.interviews||[]).slice();
+  const prev=list[idx-1];
+  if(!prev){
+    const when=new Date(date+"T"+time+":00");
+    if(!isNaN(when.getTime()) && when.getTime() < Date.now()-60000){ toast("面试时间不能早于现在，请改到未来时间"); return; }
+  }
   const iv={no:idx,date:date,time:time,mode:formVal("ivMode")||"现场",
     place:formVal("ivPlace").slice(0,60),note:formVal("ivNote").slice(0,60),
     feedback:formVal("ivFb").slice(0,80),result:formVal("ivResult")||"待面",
     by:(formVal("ivBy")||"").slice(0,12)};
-  const prev=list[idx-1];
+  if(prev) iv.panel=prev.panel||null;   /* 改期/编辑只改表单字段，面试官评分必须保留 */
   const moved=!!prev && (prev.date!==iv.date || prev.time!==iv.time || prev.mode!==iv.mode || prev.place!==iv.place);
   if(prev){
     iv.history=(prev.history||[]).slice();
@@ -3034,20 +3213,27 @@ function saveReview(id){
   const rv={match:+formVal("rvMatch")||7,comm:+formVal("rvComm")||7,exp:+formVal("rvExp")||7,
     verdict:verdict,note:formVal("rvNote").slice(0,80),at:nowISO()};
   const prevStatus=a.status, prevUpdated=a.updatedAt, prevReview=a.review, prevReason=a.reason, prevLen=a.events.length;
+  const target=verdict==="pass"?"已录用":"已淘汰";
+  const same=prevStatus===target && !!prevReview &&
+    prevReview.match===rv.match && prevReview.comm===rv.comm && prevReview.exp===rv.exp &&
+    prevReview.verdict===rv.verdict && String(prevReview.note||"")===String(rv.note||"");
   a.review=rv;
-  a.status=verdict==="pass"?"已录用":"已淘汰";
+  a.status=target;
   a.reason=verdict==="pass"?null:"面试未通过";
-  a.events.push({status:a.status,at:nowISO()});
+  /* 重复保存同结论不再追加重复事件；撤销也必须按 id 重新取当前对象 */
+  if(!same) a.events.push({status:a.status,at:nowISO()});
   a.updatedAt=nowISO();
   commit();
   closeModal(); closeDrawer(); renderApp();
+  if(same){ toast("面评已更新 · 结论未变，不重复记事件"); return; }
   toast("面评已保存 · "+(verdict==="pass"?"已发放录用":"已转淘汰")+" · 求职端能看到结论和反馈", {label:"撤销", fn:function(){
-    if(a.events.length!==prevLen+1) return;
-    a.events.pop();
-    a.status=prevStatus;
-    a.review=prevReview;
-    a.reason=prevReason;
-    a.updatedAt=prevUpdated;
+    const b=state.apps.find(function(x){return x.id===id});
+    if(!b || b.events.length!==prevLen+1) return;
+    b.events.pop();
+    b.status=prevStatus;
+    b.review=prevReview;
+    b.reason=prevReason;
+    b.updatedAt=prevUpdated;
     commit(); renderApp();
     toast("已撤销面评 · 回到「"+STATUS_LABEL[prevStatus]+"」");
   }});
@@ -3065,12 +3251,13 @@ function advanceApp(id){
   closeDrawer();
   renderApp();
   toast("已推进到"+STATUS_LABEL[next]+" · 求职端会同步看到", {label:"撤销", fn:function(){
-    if(a.status!==next) return;
-    const last=a.events[a.events.length-1];
+    const b=state.apps.find(function(x){return x.id===id});
+    if(!b || b.status!==next) return;
+    const last=b.events[b.events.length-1];
     if(!last || last.status!==next) return;
-    a.events.pop();
-    a.status=prev;
-    a.updatedAt=prevUpdated;
+    b.events.pop();
+    b.status=prev;
+    b.updatedAt=prevUpdated;
     commit();
     renderApp();
     toast("已撤销 · 回到「"+STATUS_LABEL[prev]+"」");
@@ -3124,22 +3311,23 @@ function confirmReject(id){
   renderApp();
   // 淘汰是不可逆的破坏性操作，比推进更需要纠错入口
   toast("已淘汰 · 理由已同步求职端 —— 去「招聘漏斗」看分布", {label:"撤销", fn:function(){
-    if(a.status!=="已淘汰" || a.events.length!==prevLen+1) return;
-    a.events.length=prevLen;
-    a.status=prevStatus;
-    a.reason=prevReason;
-    a.updatedAt=prevUpdated;
+    const b=state.apps.find(function(x){return x.id===id});
+    if(!b || b.status!=="已淘汰" || b.events.length!==prevLen+1) return;
+    b.events.length=prevLen;
+    b.status=prevStatus;
+    b.reason=prevReason;
+    b.updatedAt=prevUpdated;
     commit();
     renderApp();
     toast("已撤销淘汰 · 回到「"+STATUS_LABEL[prevStatus]+"」");
   }});
 }
 function saveProfile(){
-  const name=($("#pfName").value||"").trim()||"林一";
+  const name=(($("#pfName").value||"").trim()||"林一").slice(0,12);
   const edu=$("#pfEdu").value;
   const major=$("#pfMajor").value;
   const exp=$("#pfExp").value;
-  const city=$("#pfCity").value;
+  const city=($("#pfCity").value||"").trim().slice(0,10);
   const skills=$$("#skillBox input:checked").map(i=>i.value);
   state.profile={name:name,edu:edu,major:major,exp:exp,city:city,skills:skills};
   commit();
@@ -3181,7 +3369,7 @@ function confirmClaim(id){
   if(!box) return;
   const picked=Array.from(box.querySelectorAll("input:checked")).map(function(x){return x.value;});
   if(!picked.length){ toast("先勾一项再提交"); return; }
-  const note=String(($("#claimNote")||{}).value||"").trim();
+  const note=String(($("#claimNote")||{}).value||"").trim().slice(0,60);
   state.claims=state.claims||[];
   state.claims.unshift({
     id:"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
@@ -3298,6 +3486,8 @@ document.addEventListener("click",function(e){
   if(act==="interview-save"){ saveInterview(el.getAttribute("data-app"), el.getAttribute("data-no")); return; }
   if(act==="close-by-round"){ closeByRound(el.getAttribute("data-app"), el.getAttribute("data-no")); return; }
   if(act==="ics"){ exportIcs(el.getAttribute("data-app"), el.getAttribute("data-no")); return; }
+  if(act==="panel"){ openPanel(el.getAttribute("data-app"), parseInt(el.getAttribute("data-no"),10)||1); return; }
+  if(act==="panel-save"){ savePanel(el.getAttribute("data-app"), el.getAttribute("data-no")); return; }
   if(act==="review"){ openReview(el.getAttribute("data-app")); return; }
   if(act==="review-save"){ saveReview(el.getAttribute("data-app")); return; }
   if(act==="reject"){ openReject(el.getAttribute("data-app")); return; }
@@ -3426,22 +3616,25 @@ function switchRole(role){
   renderApp();
   toast(role==="candidate"?"已切换到求职者端 · 林一":"已切换到招聘方端 · 陈晓");
 }
-function upcomingInterviews(days){
+function upcomingInterviews(days, onlyMine){
   const t=new Date(); t.setHours(0,0,0,0);
+  const now=new Date();
   const lim=new Date(t); lim.setDate(lim.getDate()+(days||7));
   const out=[];
   state.apps.forEach(function(a){
+    if(a.status!=="面试") return;
+    if(onlyMine && !a.mine) return;
     (a.interviews||[]).forEach(function(iv){
       if(!iv.date) return;
       const d=new Date(iv.date+"T"+(iv.time||"00:00")+":00");
       if(isNaN(d.getTime())) return;
-      if(d>=t && d<=lim) out.push({app:a,iv:iv,at:d});
+      if(d>=now && d<=lim) out.push({app:a,iv:iv,at:d});
     });
   });
   return out.sort(function(x,y){ return x.at-y.at; });
 }
 function upbarHtml(scope){
-  const list=upcomingInterviews(7);
+  const list=upcomingInterviews(7, scope!=="hr");
   if(!list.length) return "";
   const next=list[0];
   const j=jobById(next.app.jobId);

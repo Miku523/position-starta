@@ -434,13 +434,16 @@
     state.talent.forEach(function (t) {
       if (t.stage !== "new") return;
       var age = daysFrom(t.updated);
-      if (age == null || age < 2) return;
+      /* daysFrom(d) = 该日期 - 今天：历史时间得到负数，之前写成 age < 2 直接 return，
+         导致“待初筛超过 2 天”永远不会提醒。这里用已等待天数。 */
+      var waited = age == null ? null : -age;
+      if (waited == null || waited < 2) return;
       var key5 = "talent:" + t.id;
       if (seen[key5]) return;
       out.push({
         id: key5, kind: "talent", tone: "warn",
         title: "候选人待初筛 · " + t.name,
-        desc: [t.jobTitle || "未关联职位", "来源 " + (t.source || "手动录入"), "已等待 " + age + " 天"].join(" · "),
+        desc: [t.jobTitle || "未关联职位", "来源 " + (t.source || "手动录入"), "已等待 " + waited + " 天"].join(" · "),
         at: t.updated, view: "talent", param: t.id, icon: "user"
       });
     });
@@ -622,17 +625,21 @@
     document.documentElement.setAttribute("data-view", v);
     applyViewTitle(v);
     /* 视图切换写干净的 ?view=：筛选参数只属于岗位库，别带着走 */
-    try {
-      var u = new URL(location.href);
-      ["q", "pg", "type", "major", "edu", "sort", "dir", "quick", "job", "notice"].forEach(function (k) {
-        u.searchParams.delete(k);
-      });
-      if (v === "lib") u.searchParams.delete("view");
-      else u.searchParams.set("view", v);
-      var next = u.href;
-      if (!_navInit || (opts && opts.initial) || next === location.href) history.replaceState(null, "", next);
-      else history.pushState(null, "", next);
-    } catch (e) { /* file:// 忽略 */ }
+    /* file:// 下 app.js 明确不写地址栏（双击打开时地址栏无意义，写 ?view= 会让
+       切回市场库后残留旧值、刷新落错页），这里保持同一口径。 */
+    if (location.protocol !== "file:") {
+      try {
+        var u = new URL(location.href);
+        ["q", "pg", "type", "major", "edu", "sort", "dir", "quick", "job", "notice"].forEach(function (k) {
+          u.searchParams.delete(k);
+        });
+        if (v === "lib") u.searchParams.delete("view");
+        else u.searchParams.set("view", v);
+        var next = u.href;
+        if (!_navInit || (opts && opts.initial) || next === location.href) history.replaceState(null, "", next);
+        else history.pushState(null, "", next);
+      } catch (e) { /* 旧内核忽略 */ }
+    }
     render(v);
     var main = document.querySelector(".main");
     if (main && main.scrollTop) main.scrollTop = 0;
@@ -1101,10 +1108,12 @@
     return { added: added, skipped: skipped };
   }
   function talentCSV() {
-    var head = ["姓名", "手机", "邮箱", "来源", "关联职位", "阶段", "备注", "更新时间"];
+    /* 阶段同时导出“人读标签”和“机器 key”，职位带 ID：
+       只导标签会让 round-trip 导入丢阶段/断职位关联（#86）。 */
+    var head = ["姓名", "手机", "邮箱", "来源", "关联职位", "阶段", "阶段Key", "职位ID", "备注", "更新时间"];
     var rows = state.talent.map(function (t) {
       var s = TALENT_STAGES.filter(function (x) { return x.k === t.stage; })[0];
-      return [t.name, t.phone, t.email, t.source, t.jobTitle, s ? s.lb : t.stage, t.note, t.updated];
+      return [t.name, t.phone, t.email, t.source, t.jobTitle, s ? s.lb : t.stage, t.stage, t.jobId || "", t.note, t.updated];
     });
     return [csvLine(head)].concat(rows.map(csvLine)).join("\r\n");
   }
@@ -1148,17 +1157,29 @@
     var iMail = idx(["邮箱", "email", "e-mail"]);
     var iSrc = idx(["来源", "source", "渠道"]);
     var iJob = idx(["关联职位", "职位", "岗位", "job", "jobtitle"]);
+    var iJobId = idx(["职位id", "jobid"]);
+    var iStageKey = idx(["阶段key", "stagekey", "stage"]);
+    var iStageLb = idx(["阶段", "状态", "status"]);
     var iNote = idx(["备注", "note", "备注信息"]);
     var list = [];
     for (var r = 1; r < rows.length; r++) {
       var any = rows[r].some(function (x) { return String(x).trim() !== ""; });
       if (!any) continue;
+      /* 先按 key 认阶段，再退回中文标签；职位优先用 ID 恢复关联 */
+      var st = iStageKey >= 0 ? String(rows[r][iStageKey] || "").trim() : "";
+      if (!TALENT_STAGES.some(function (s) { return s.k === st; })) {
+        var lb = iStageLb >= 0 ? String(rows[r][iStageLb] || "").trim() : "";
+        var hit = TALENT_STAGES.filter(function (s) { return s.lb === lb; })[0];
+        st = hit ? hit.k : "";
+      }
       list.push({
         name: rows[r][iName],
         phone: iPhone >= 0 ? rows[r][iPhone] : "",
         email: iMail >= 0 ? rows[r][iMail] : "",
         source: iSrc >= 0 ? rows[r][iSrc] : "CSV 导入",
         jobTitle: iJob >= 0 ? rows[r][iJob] : "",
+        jobId: iJobId >= 0 ? String(rows[r][iJobId] || "").trim() : "",
+        stage: st,
         note: iNote >= 0 ? rows[r][iNote] : ""
       });
     }

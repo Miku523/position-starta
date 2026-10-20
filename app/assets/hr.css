@@ -415,3 +415,13 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
   .hrpanel .panel-hd{flex-wrap:wrap;row-gap:2px}
   .hrpanel .panel-hd > b{flex:1 1 100%}
 }
+
+/* ---------- v1.2 · 窄屏弹窗/表单不溢出（720px 固定宽在手机上会顶出屏幕） ---------- */
+@media (max-width: 560px) {
+  .hrmodal { padding: 12px; }
+  .hrmodal-box, .hrmodal-box.wide { width: 100%; max-width: 100%; max-height: calc(100dvh - 24px); }
+  .hrmodal-bd { overflow: auto; }
+  .hrmodal-ft { flex-wrap: wrap; }
+  .hrmodal-ft .btn { min-height: 44px; }
+  .hrform-row, .hrform-row.three { grid-template-columns: 1fr; }
+}

@@ -113,6 +113,16 @@ window.ME = (function () {
     out.mNote = note ? String(note.value || "").trim() : "";
     return out;
   }
+  let saveTimer = 0;
+  /* 输入防抖：连续打字时 350ms 内只落盘+重绘一次；change/blur/手动保存会立即冲刷 */
+  function scheduleSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { saveTimer = 0; saveProfile(true); }, 350);
+  }
+  function flushSave() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = 0; }
+    saveProfile(true);
+  }
   function saveProfile(quiet) {
     state.profile = Object.assign({}, state.profile, collect());
     state.savedAt = new Date().toLocaleString("zh-CN", { hour12: false });
@@ -214,6 +224,7 @@ window.ME = (function () {
       <p class="ps-ft">本表由浏览器本地生成，仅作报名资料整理；正式报名请到公告指定的报名系统提交。</p>`;
   }
   function print() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = 0; }
     saveProfile(true);
     buildPrintSheet();
     document.body.classList.add("printing");
@@ -236,11 +247,14 @@ window.ME = (function () {
     }
     const form = $("#meForm");
     if (form) {
-      form.addEventListener("input", () => { saveProfile(true); });
-      form.addEventListener("change", () => { saveProfile(true); });
+      form.addEventListener("input", scheduleSave);
+      form.addEventListener("change", flushSave);
     }
     const save = $("#meSave");
-    if (save) save.addEventListener("click", () => saveProfile(false));
+    if (save) save.addEventListener("click", () => {
+      if (saveTimer) { clearTimeout(saveTimer); saveTimer = 0; }
+      saveProfile(false);
+    });
     const reset = $("#meReset");
     if (reset) reset.addEventListener("click", resetProfile);
     const exp = $("#meExport");

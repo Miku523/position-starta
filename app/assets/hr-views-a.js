@@ -109,7 +109,11 @@
         "</div>" +
         field("岗位职责", '<textarea name="responsibilities" rows="3" maxlength="1200" placeholder="写清做什么、汇报给谁、考核口径">' + esc(v.responsibilities || "") + "</textarea>") +
         field("任职要求", '<textarea name="requirements" rows="3" maxlength="1200" placeholder="学历、专业、证书、能力项">' + esc(v.requirements || "") + "</textarea>") +
-        field("状态", select("status", [{ v: "draft", lb: "草稿（不参与差距核算展示）" }, { v: "live", lb: "在招（进提醒与简报）" }], v.status || "draft")) +
+        field("状态", select("status", (function () {
+          var opts = [{ v: "draft", lb: "草稿（不参与差距核算展示）" }, { v: "live", lb: "在招（进提醒与简报）" }];
+          if (v.status === "closed") opts.push({ v: "closed", lb: "已关闭（保留历史口径）" });
+          return opts;
+        })(), v.status || "draft")) +
       "</div>" +
       (v.versions && v.versions.length
         ? '<div class="hrversions"><b>版本记录</b><ul>' + v.versions.slice(-5).reverse().map(function (x) {
@@ -155,7 +159,8 @@
   }
 
   /* ---------------- JD 视图 ---------------- */
-  function jdCard(j) {
+  function jdCard(j, ro) {
+    ro = ro || "";
     var g = null;
     try { g = HR.market && HR.market.gap ? HR.market.gap(j) : null; } catch (e) { g = null; }
     var meta = [j.dept, j.city, j.type, j.level].filter(Boolean).map(esc).join(" · ");
@@ -181,10 +186,10 @@
         (g.flags.length > 1 ? '<ul class="hrgap-flags">' + g.flags.slice(1).map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul>" : "") +
       "</div>" : "") +
       '<footer class="hjdcard-ft">' +
-        '<button type="button" class="btn ghost" data-hr-act="jd-edit" data-id="' + esc(j.id) + '">编辑</button>' +
-        (j.status !== "closed" ? '<button type="button" class="btn ghost" data-hr-act="jd-status" data-id="' + esc(j.id) + '" data-st="' + (j.status === "live" ? "draft" : "live") + '">' + (j.status === "live" ? "暂停招聘" : "发布在招") + "</button>" : '<button type="button" class="btn ghost" data-hr-act="jd-status" data-id="' + esc(j.id) + '" data-st="live">重新开启</button>') +
+        '<button type="button" class="btn ghost" data-hr-act="jd-edit" data-id="' + esc(j.id) + '"' + ro + '>编辑</button>' +
+        (j.status !== "closed" ? '<button type="button" class="btn ghost" data-hr-act="jd-status" data-id="' + esc(j.id) + '" data-st="' + (j.status === "live" ? "draft" : "live") + '"' + ro + '>' + (j.status === "live" ? "暂停招聘" : "发布在招") + "</button>" : '<button type="button" class="btn ghost" data-hr-act="jd-status" data-id="' + esc(j.id) + '" data-st="live"' + ro + '>重新开启</button>') +
         '<button type="button" class="btn ghost" data-hr-act="jd-copy" data-id="' + esc(j.id) + '">复制 JD</button>' +
-        '<button type="button" class="btn ghost danger" data-hr-act="jd-del" data-id="' + esc(j.id) + '">删除</button>' +
+        '<button type="button" class="btn ghost danger" data-hr-act="jd-del" data-id="' + esc(j.id) + '"' + ro + '>删除</button>' +
         '<small class="hrmeta">更新于 ' + esc(j.updated || j.created || "") + "</small>" +
       "</footer></article>";
   }
@@ -219,7 +224,7 @@
         var rank = { live: 0, draft: 1, closed: 2 };
         return (rank[a.status] - rank[b.status]) || String(b.updated || "").localeCompare(String(a.updated || ""));
       });
-      body = '<div class="hjdlist">' + sorted.map(jdCard).join("") + "</div>";
+      body = '<div class="hjdlist">' + sorted.map(function (j) { return jdCard(j, ro); }).join("") + "</div>";
     }
 
     var rolesHint = HR.canWrite() ? "" :
@@ -245,7 +250,7 @@
         var jj = HR.jd.get(id);
         if (!jj) return;
         var st = b.getAttribute("data-st");
-        HR.jd.setStatus(id, st);
+        if (!HR.jd.setStatus(id, st)) return;   /* 只读角色：requireWrite 已提示，别再报成功 */
         HR.toast("「" + jj.title + "」→ " + (HR.jdStatus[st] || {}).lb);
         renderJd(page);
         return;
@@ -255,7 +260,7 @@
         var jx = HR.jd.get(id);
         if (!jx) return;
         HR.confirm("删除职位", "将删除「" + jx.title + "」及其版本记录，候选人关联不受影响。确定？", function () {
-          HR.jd.remove(id);
+          if (!HR.jd.remove(id)) return;   /* 只读角色：不能假装删除成功 */
           HR.toast("职位已删除");
           renderJd(page);
         }, "删除");
@@ -548,6 +553,14 @@
       renderTalent(page);
     });
     page.addEventListener("click", function (e) {
+      /* 阶段筛选 chip 没有 data-hr-act，必须在通用 action 守卫之前处理 */
+      var f = e.target.closest("[data-hr-stage-filter]");
+      if (f) {
+        e.preventDefault();
+        page.__hrTstage = f.getAttribute("data-hr-stage-filter") || "";
+        renderTalent(page);
+        return;
+      }
       var b = e.target.closest("[data-hr-act]");
       if (!b) return;
       var act = b.getAttribute("data-hr-act");
@@ -575,12 +588,6 @@
         return;
       }
       if (act === "tal-import") { e.preventDefault(); openImport(); return; }
-      var f = e.target.closest("[data-hr-stage-filter]");
-      if (f) {
-        e.preventDefault();
-        page.__hrTstage = f.getAttribute("data-hr-stage-filter") || "";
-        renderTalent(page);
-      }
     });
   }
 

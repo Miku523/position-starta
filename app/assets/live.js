@@ -39,10 +39,14 @@
     since: 0,             /* 服务端启动时间 */
     asOf: 0,              /* 真实数据截至时间（毫秒） */
     lastBeat: 0,          /* 最近一次服务端心跳 */
-    ready: false
+    ready: false,
+    opened: false,        /* 是否成功连上过实时服务（决定“连接中/重连中”） */
+    gen: 0                /* 连接代号：手动 connect / 重连时作废旧 SSE 回调 */
   };
 
-  var subs = {};
+  /* null 原型：事件名可能来自服务端（任意字符串），用 {} 会让 "constructor" /
+     "__proto__" 这类名字撞上 Object.prototype，dispatch 时直接抛 TypeError。 */
+  var subs = Object.create(null);
   var timers = [];
   var tabId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   var bc = null;
@@ -66,7 +70,7 @@
       return p.join(".");
     }
   }
-  function pad2(n) { return String(n).padStart(2, "0"); }
+  function pad2(n) { n = String(n); return n.length < 2 ? "0" + n : n; }
   function hms(ms) {
     var s = Math.max(0, Math.floor(ms / 1000));
     return pad2(Math.floor(s / 3600)) + ":" + pad2(Math.floor(s % 3600 / 60)) + ":" + pad2(s % 60);
@@ -103,8 +107,16 @@
     var t = Date.parse(s.replace(" ", "T"));
     return t;
   }
-  function dispatch(type, payload, from) {
-    var list = (subs[type] || []).concat(subs["*"] || []);
+  function alive(node) {
+    if (!node) return false;
+    if (typeof node.isConnected === "boolean") return node.isConnected;
+    /* IE11 / 旧内核没有 isConnected：退回 DOM 树查询 */
+    return !!(doc.documentElement && doc.documentElement.contains(node));
+  }
+  function dispatch(type, payload, from, noStar) {
+    var base = Array.isArray(subs[type]) ? subs[type] : [];
+    var list = base.slice();
+    if (!noStar && type !== "*" && Array.isArray(subs["*"])) list = list.concat(subs["*"]);
     for (var i = 0; i < list.length; i++) {
       try { list[i](payload, type, from || "local"); } catch (e) { if (global.console) console.error("[Live]", e); }
     }
@@ -201,7 +213,6 @@
       return;
     }
     dispatch(msg.t, msg.p, "peer");
-    dispatch("*", msg.p, "peer");
   }
   function initChannel() {
     try {
@@ -239,9 +250,16 @@
     var candidates = resolveCandidates();
     state.serverTried = candidates.join(" / ");
     if (!candidates.length) { setMode("sync"); return; }
-    setMode(state.ready ? "reconnecting" : "connecting");
+    /* 新一轮连接先掐掉旧的 SSE 和待执行的退避定时器：
+       否则手动 connect() / 重复 init 会让旧连接继续挂着，服务端在线数虚高、事件重复。 */
+    var gen = (state.gen || 0) + 1;
+    state.gen = gen;
+    if (state.es) { try { state.es.close(); } catch (e) { } state.es = null; }
+    if (state.retryTimer) { clearTimeout(state.retryTimer); state.retryTimer = 0; }
+    setMode(state.opened ? "reconnecting" : "connecting");
     var idx = 0;
     (function next() {
+      if (gen !== state.gen) return;
       if (idx >= candidates.length) {
         setMode("sync");
         scheduleRetry();
@@ -253,13 +271,16 @@
       catch (e) { next(); return; }
       var opened = false;
       var guard = setTimeout(function () {
-        if (opened) return;
+        if (opened || gen !== state.gen) return;
         try { es.close(); } catch (e) { }
         next();
       }, 2600);
       es.onopen = function () {
+        /* 这条连接已经被新一轮 connect() 取代：安静关掉，不要污染新状态 */
+        if (gen !== state.gen) { try { es.close(); } catch (e) { } return; }
         opened = true;
         clearTimeout(guard);
+        state.opened = true;
         state.es = es;
         state.server = base;
         state.ready = true;
@@ -267,11 +288,13 @@
         setMode("live");
       };
       es.onmessage = function (ev) {
+        if (gen !== state.gen) return;
         var msg;
         try { msg = JSON.parse(ev.data); } catch (e) { return; }
         handleServer(msg);
       };
       es.onerror = function () {
+        if (gen !== state.gen) { try { es.close(); } catch (e) { } return; }
         clearTimeout(guard);
         try { es.close(); } catch (e) { }
         if (state.es === es) state.es = null;
@@ -311,6 +334,8 @@
         dispatch("heartbeat", msg, "server");
         break;
       case "data":
+        /* 数据文件变了：同步“数据截至”的真实时间，别让页面停在旧扫描时间 */
+        if (msg.asOf && !cfg.localAsOf) { state.asOf = Number(msg.asOf) || state.asOf; pillRender(); }
         dispatch("data", msg, "server");
         break;
       case "session":
@@ -320,12 +345,11 @@
         /* 统一约定：on('event', fn) 拿到完整信封（含 name / at / replay）；
            on('<name>', fn) 拿到其中的 payload。 */
         dispatch("event", msg, "server");
-        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server");
+        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server", true);
         break;
       default:
         dispatch(msg.type, msg, "server");
     }
-    dispatch("*", msg, "server");
   }
 
   /* ---------------- 真实的“N 分钟前” ---------------- */
@@ -338,7 +362,7 @@
     var prefix = opts.prefix == null ? "" : opts.prefix;
     if (node.__liveTimer) clearInterval(node.__liveTimer);
     function paint() {
-      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
       var t = typeof ts === "function" ? ts() : ts;
       if (t == null || t === "") { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
       var ms = typeof t === "number" ? t : toDate(t);
@@ -363,7 +387,7 @@
     var ms = typeof deadline === "number" ? deadline : toDate(deadline);
     if (node.__liveTimer) clearInterval(node.__liveTimer);
     function paint() {
-      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
       if (!isFinite(ms)) { node.textContent = "—"; return; }
       var left = ms - Date.now();
       if (left <= 0) {
@@ -477,7 +501,7 @@
     /* 同一个节点重复绑（页面重渲染、胶囊重建）先掐掉旧定时器，别越积越多 */
     if (node.__liveClockTimer) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; }
     function paint() {
-      if (!node.isConnected) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
+      if (!alive(node)) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
       var d = new Date();
       var s = pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + (opts.seconds === false ? "" : ":" + pad2(d.getSeconds()));
       node.textContent = s;

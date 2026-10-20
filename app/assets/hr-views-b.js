@@ -61,15 +61,15 @@
             '<span class="hrrule-t">' + esc(RULE_TYPE_LB[r.type] || r.type) + "</span>" +
             '<b class="hrrule-v">' + esc(r.value) + "</b>" +
             '<span class="hrrule-n">命中 ' + fmt(n) + " 个岗位" + (ex ? " · 如 " + esc(ex) : "") + "</span>" +
-            toggleSwitch(r.enabled !== false, 'data-hr-act="rule-toggle" data-id="' + esc(r.id) + '" aria-label="启停规则"') +
-            '<button type="button" class="icobtn" data-hr-act="rule-del" data-id="' + esc(r.id) + '" aria-label="删除规则" title="删除规则">' + icon("trash", 14) + "</button>" +
+            toggleSwitch(r.enabled !== false, 'data-hr-act="rule-toggle" data-id="' + esc(r.id) + '"' + ro + ' aria-label="启停规则"') +
+            '<button type="button" class="icobtn" data-hr-act="rule-del" data-id="' + esc(r.id) + '" aria-label="删除规则" title="删除规则"' + ro + '>' + icon("trash", 14) + "</button>" +
             "</div>";
         }).join("") : '<div class="hr-empty small"><b>还没有规则</b><span>加一条「广州」「林学」这样的单位或关键词，新岗位就会进提醒。</span></div>') +
       "</div></div>";
 
     var notifPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>未读动态</b><span>' + (unread ? unread + " 条未读" : "全部已读") + "</span></div>" +
       (unread ? '<div class="hrnotifs">' + notifs.map(function (n) {
-        return '<button type="button" class="hrnotif ' + esc(n.tone || "") + '" data-hr-act="notif-go" data-view="' + esc(n.view) + '" data-param="' + esc(n.param || "") + '">' +
+        return '<button type="button" class="hrnotif ' + esc(n.tone || "") + '" data-hr-act="notif-go" data-nid="' + esc(n.id) + '" data-view="' + esc(n.view) + '" data-param="' + esc(n.param || "") + '">' +
           '<span class="hrnotif-ic">' + icon(kindIcon(n.kind), 16) + "</span>" +
           '<span class="hrnotif-main"><b>' + esc(n.title) + "</b><small>" + esc(n.desc) + "</small></span>" +
           '<span class="hrnotif-at">' + esc(HR.atLabel(n.at)) + "</span>" +
@@ -250,8 +250,11 @@
     var st = HR.state();
     var audit = (st.audit || []).slice(0, 40);
 
+    var ro = HR.canWrite() ? "" : " disabled";
+    var roNote = HR.canWrite() ? "" : '<p class="hrnote-line">' + icon("alert", 13) + " 当前身份「" + esc(HR.role().lb) + "」只读：改招聘方信息、切换角色、清空招聘数据都已禁用。切到「招聘负责人」后再操作。</p>";
+
     var head = '<div class="page-head"><div><h1>设置与合规</h1><p class="sub">这个页面回答三个问题：数据从哪来、谁在动它、接简历会不会踩 PIPL。</p></div>' +
-      '<div class="head-side"><button type="button" class="btn ghost" data-hr-act="set-profile">改招聘方信息</button></div></div>';
+      '<div class="head-side"><button type="button" class="btn ghost" data-hr-act="set-profile"' + ro + ' title="' + (HR.canWrite() ? "修改招聘方信息" : "只读角色：切换到「招聘负责人」后可编辑") + '">改招聘方信息</button></div></div>' + roNote;
 
     /* 数据源台账 */
     var srcPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>数据源台账</b><span>快照 ' + esc(meta.snapshot || "—") + " · 可回溯到公告原文</span></div>" +
@@ -276,7 +279,7 @@
       '<div class="hrroles">' + HR.roles.map(function (r) {
         var on = r.k === HR.roleKey();
         return '<div class="hrrole' + (on ? " on" : "") + '"><div><b>' + esc(r.lb) + "<em>" + esc(r.tag) + "</em></b><small>" + esc(r.desc) + "</small></div>" +
-          (on ? '<span class="chip on">当前</span>' : '<button type="button" class="btn ghost" data-hr-act="set-role" data-role="' + esc(r.k) + '">切换</button>') + "</div>";
+          (on ? '<span class="chip on">当前</span>' : '<button type="button" class="btn ghost" data-hr-act="set-role" data-role="' + esc(r.k) + '"' + ro + ' title="' + (HR.canWrite() ? "切换角色" : "只读角色：切换到「招聘负责人」后可编辑") + '">切换</button>') + "</div>";
       }).join("") + "</div>" +
       '<p class="hrnote-line">' + icon("alert", 13) + ' 权限只在前端做门控（演示版没有账号后端）。真实上线时要接 SSO / RBAC，服务端校验每个写接口。</p></div>';
 
@@ -309,7 +312,7 @@
         kv("对标清单", HR.bench().rows.length + " 个岗位（键 starta-wb-bench，与其他模块共用）") +
         kv("存储位置", "localStorage · starta-hr-v1") +
       "</div>" +
-      '<div class="hrdanger"><button type="button" class="btn ghost danger" data-hr-act="set-clear-hr">清空招聘数据</button>' +
+      '<div class="hrdanger"><button type="button" class="btn ghost danger" data-hr-act="set-clear-hr"' + ro + ' title="' + (HR.canWrite() ? "清空招聘数据" : "只读角色：切换到「招聘负责人」后可编辑") + '">清空招聘数据</button>' +
       '<span class="hrmuted">只删职位 / 候选人 / 规则 / 审计，不动对标清单与求职者资料。</span></div></div>';
 
     /* 审计 */
@@ -342,6 +345,10 @@
       var b = e.target.closest("[data-hr-act]");
       if (!b) return;
       var act = b.getAttribute("data-hr-act");
+      if (!HR.canWrite()) {
+        HR.toast("当前角色「" + HR.role().lb + "」只读，不能修改设置");
+        return;
+      }
       if (act === "set-role") {
         HR.setRole(b.getAttribute("data-role"));
         renderSettings(page);

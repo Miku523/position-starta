@@ -43,7 +43,9 @@
     if (!pill) return;
     pill.classList.add(ok ? "live-flash" : "live-flash-warn");
     setTimeout(function () {
-      pill.classList.remove("live-flash", "live-flash-warn");
+      /* 分开 remove：IE11 的 DOMTokenList.remove 只吃一个参数，多参会抛错 */
+      pill.classList.remove("live-flash");
+      pill.classList.remove("live-flash-warn");
     }, 1200);
   }
 

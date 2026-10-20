@@ -39,15 +39,15 @@
     if (!files || !files.length) return;
     tb.innerHTML = files.map(function (f) {
       if (f.missing) {
-        return '<tr><td class="b">' + f.name + '</td><td colspan="4" class="empty">缺失 ' + (f.error || "") + '</td></tr>';
+        return '<tr><td class="b">' + esc(f.name) + '</td><td colspan="4" class="empty">缺失 ' + esc(f.error || "") + '</td></tr>';
       }
       var age = Date.now() - (f.mtime || 0);
       var stale = age > 7 * 86400000 ? " stale" : "";
       return '<tr>' +
-        '<td class="b">' + f.name + '</td>' +
+        '<td class="b">' + esc(f.name) + '</td>' +
         '<td class="b">' + Live.fmt(f.rows) + '</td>' +
         '<td>' + bytes(f.bytes) + '</td>' +
-        '<td>' + new Date(f.mtime).toLocaleString("zh-CN", { hour12: false }) + '</td>' +
+        '<td>' + (isFinite(f.mtime) ? new Date(f.mtime).toLocaleString("zh-CN", { hour12: false }) : "—") + '</td>' +
         '<td><span class="fresh' + stale + '"><i></i><span data-age="' + f.mtime + '"></span></span></td>' +
         '</tr>';
     }).join("");
@@ -78,13 +78,18 @@
     row.className = "ev" + (replay ? " replay" : "");
     var payload = ev.payload == null ? "" : JSON.stringify(ev.payload);
     if (payload.length > 90) payload = payload.slice(0, 89) + "…";
-    row.innerHTML = '<time>' + new Date(ev.at).toLocaleTimeString("zh-CN", { hour12: false }) + '</time>' +
-      '<span class="name"><b>' + ev.name + '</b>' + esc(payload) + '</span>' +
+    row.innerHTML = '<time>' + fmtTime(ev.at) + '</time>' +
+      '<span class="name"><b>' + esc(ev.name) + '</b>' + esc(payload) + '</span>' +
       '<span class="who">' + (ev.replay ? "回放" : "实时") + '</span>';
     box.insertBefore(row, box.firstChild);
     while (box.children.length > 40) box.removeChild(box.lastChild);
     evCount++;
     $("evCount").textContent = Live.fmt(evCount) + " 条" + (evCount > 1 ? "（含回放）" : "");
+  }
+  /* 事件名/时间都来自外部 POST：名字必须转义，非法时间显示“—”，别渲染 Invalid Date */
+  function fmtTime(at) {
+    var d = new Date(at);
+    return isFinite(d.getTime()) ? d.toLocaleTimeString("zh-CN", { hour12: false }) : "—";
   }
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });

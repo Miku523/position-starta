@@ -37,6 +37,8 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
+/* 遮罩打开时锁背景滚动（只锁滚动，不改滚动位置） */
+html.lb-open{overflow:hidden}
 body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
 img{max-width:100%}
@@ -48,7 +50,7 @@ a{color:inherit}
   gap:16px;padding:16px 28px;border-bottom:1px solid var(--lineD);
   font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 .bar b{color:var(--paper);font-weight:500;letter-spacing:.12em}
-.bar .r{display:flex;gap:18px;white-space:nowrap}
+.bar .r{display:flex;align-items:center;gap:18px;min-height:16px;white-space:nowrap}
 .progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--orange);z-index:60;
   box-shadow:0 0 12px rgba(228,87,46,.6)}
 .lang{color:var(--paper2);text-decoration:none;border-bottom:1px solid var(--lineD);padding-bottom:1px}
@@ -413,11 +415,17 @@ details.acc .body th{color:#9FA6AE}
 
 /* 打印 */
 @media print{
-  .bar,.toc,.tocbtn,.sheet,.hint,.progress,.scrollhint,.spot,.lb{display:none!important}
+  .bar,.toc,.tocbtn,.sheet,.hint,.progress,.scrollhint,.spot,.lb,.dl{display:none!important}
   html,body{background:#fff!important;color:#111!important}
   .dark{background:#fff!important;color:#111!important}
   .dark::before,.dark::after,.light::before{display:none}
-  section{page-break-inside:avoid;break-inside:avoid}
+  /* 打印对比度：深色章节翻白后，--dim/--dim2/--paper2 仍是屏幕用的浅色，
+     正文只剩 ~3:1，强调句（inline 的 color:var(--paper2)）会直接隐形；压深到 AA。 */
+  html,body{--dim:#333A42!important;--dim2:#3B424A!important;--paper2:#2A3037!important;--lineD:rgba(10,11,12,.35)!important;--lineD2:rgba(10,11,12,.18)!important}
+  /* 每节都远超一页，整节 avoid 只会把下一节强推新页（实测 11 页 → 8 页）；
+     seamline 与下一节标题要同页，避免章节条孤零零留在页底。 */
+  section{page-break-inside:auto;break-inside:auto}
+  .seamline{break-after:avoid;page-break-after:avoid}
   .sect-pad{padding:28px 0}
   .card,.evidence,.flip,.graph,.fail{break-inside:avoid;box-shadow:none!important;border-color:#ccc!important}
   /* 打印时 .core-mask 必须保留确定高度：.layer 靠 flex:8/72.6/14.6/4.5 + flex-basis:0 分配父级高度，
@@ -425,11 +433,14 @@ details.acc .body th{color:#9FA6AE}
      .core 保持 absolute + inset:0 由 mask 撑高即可，不要再改 position。 */
   .core-mask{height:460px!important}
   .core{transform:none!important}
+  /* 打印没有 3D 上下文：翻面卡片会正反两面叠印成镜像字，只保留正面 */
+  .flip .inner{transform:none!important}
+  .flip .b{display:none!important}
   .core-block,.core-side{break-inside:avoid}
   .gnode rect{fill:#fff;stroke:#bbb}
   .gnode text.big{fill:#111} .gnode text{fill:#444}
   .edge{stroke:#bbb}
-  a[href^="http"]::after{content:" (" attr(href) ")";font-family:var(--mono);font-size:8px;color:#777}
+  a[href^="http"]::after{content:" (" attr(href) ")";font-family:var(--mono);font-size:8px;color:#444}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -956,7 +967,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
           批次会落到 <span class="mono">runs/batch-*.json</span>，然后跑
           <span class="mono">python canon_stat.py runs/batch-1792437271749.json</span>，输出学历构成、专业频次、地区分布、单位数、聘用人数合计。<br>
           <b>4 · 看报告</b><br>
-          线上 <span class="mono">/</span> 是<b>多文件版</b>：图按需加载，首屏 HTML 约 65 KB；<span class="mono">/report/</span> 放的是<b>单文件版</b>（约 1.5 MB，图已内嵌，可下载后双击打开，适合离线看与打印）。要截图或打印就下单文件版，或用 <span class="mono">python -m http.server 8899</span> 起本地服务访问多文件版。<br>
+          线上 <span class="mono">/</span> 是<b>单文件版</b>（约 1.58 MB，图已内嵌，可下载后双击打开，适合离线看与打印）；<span class="mono">/report/</span> 放的是<b>多文件版</b>：图按需加载，首屏 HTML 约 105 KB。要截图或打印就用单文件版，或用 <span class="mono">python -m http.server 8899</span> 起本地服务访问多文件版。<br>
           <b>环境依赖</b>：Node 22+；<span class="mono">.doc</span> 转 <span class="mono">.docx</span> 需要 LibreOffice；PDF 用 <span class="mono">bin/pdftotext/pdftotext.exe</span>、云浏览器 CLI 放 <span class="mono">bin/browser-cli.exe</span>（两个二进制不在仓库里，需自备）；xlsx 只用 tar 解包 + XML 解析，不依赖 Office。
         </div>
       </details>
@@ -973,7 +984,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
 
 <!-- 目录 -->
 <nav class="toc" id="toc" aria-label="目录"></nav>
-<button class="tocbtn" id="tocbtn" aria-label="打开目录">目录 +</button>
+<button class="tocbtn" id="tocbtn" aria-label="打开目录" aria-controls="sheet" aria-expanded="false">目录 +</button>
 <div class="sheet" id="sheet" aria-hidden="true"></div>
 
 <!-- 证据遮罩 -->
@@ -986,7 +997,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
       <div class="acts">
         <a id="lburl" href="#" target="_blank" rel="noopener">打开原页 ↗</a>
         <a id="lbreplay" href="https://browser.lexmount.cn/settings/sessions" target="_blank" rel="noopener" title="打开 Lexmount 会话管理，用上面的会话 ID 筛选后点「回放」">看回放 ↗</a>
-        <a href="#s04">看上表 ↓</a>
+        <a href="#s04" id="lbgo">看上表 ↓</a>
       </div>
     </div>
   </div>
@@ -1037,10 +1048,14 @@ close     每个 session 结束即 close，防遗漏计费</div>
     since: 0,             /* 服务端启动时间 */
     asOf: 0,              /* 真实数据截至时间（毫秒） */
     lastBeat: 0,          /* 最近一次服务端心跳 */
-    ready: false
+    ready: false,
+    opened: false,        /* 是否成功连上过实时服务（决定“连接中/重连中”） */
+    gen: 0                /* 连接代号：手动 connect / 重连时作废旧 SSE 回调 */
   };
 
-  var subs = {};
+  /* null 原型：事件名可能来自服务端（任意字符串），用 {} 会让 "constructor" /
+     "__proto__" 这类名字撞上 Object.prototype，dispatch 时直接抛 TypeError。 */
+  var subs = Object.create(null);
   var timers = [];
   var tabId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   var bc = null;
@@ -1064,7 +1079,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
       return p.join(".");
     }
   }
-  function pad2(n) { return String(n).padStart(2, "0"); }
+  function pad2(n) { n = String(n); return n.length < 2 ? "0" + n : n; }
   function hms(ms) {
     var s = Math.max(0, Math.floor(ms / 1000));
     return pad2(Math.floor(s / 3600)) + ":" + pad2(Math.floor(s % 3600 / 60)) + ":" + pad2(s % 60);
@@ -1101,8 +1116,16 @@ close     每个 session 结束即 close，防遗漏计费</div>
     var t = Date.parse(s.replace(" ", "T"));
     return t;
   }
-  function dispatch(type, payload, from) {
-    var list = (subs[type] || []).concat(subs["*"] || []);
+  function alive(node) {
+    if (!node) return false;
+    if (typeof node.isConnected === "boolean") return node.isConnected;
+    /* IE11 / 旧内核没有 isConnected：退回 DOM 树查询 */
+    return !!(doc.documentElement && doc.documentElement.contains(node));
+  }
+  function dispatch(type, payload, from, noStar) {
+    var base = Array.isArray(subs[type]) ? subs[type] : [];
+    var list = base.slice();
+    if (!noStar && type !== "*" && Array.isArray(subs["*"])) list = list.concat(subs["*"]);
     for (var i = 0; i < list.length; i++) {
       try { list[i](payload, type, from || "local"); } catch (e) { if (global.console) console.error("[Live]", e); }
     }
@@ -1199,7 +1222,6 @@ close     每个 session 结束即 close，防遗漏计费</div>
       return;
     }
     dispatch(msg.t, msg.p, "peer");
-    dispatch("*", msg.p, "peer");
   }
   function initChannel() {
     try {
@@ -1237,9 +1259,16 @@ close     每个 session 结束即 close，防遗漏计费</div>
     var candidates = resolveCandidates();
     state.serverTried = candidates.join(" / ");
     if (!candidates.length) { setMode("sync"); return; }
-    setMode(state.ready ? "reconnecting" : "connecting");
+    /* 新一轮连接先掐掉旧的 SSE 和待执行的退避定时器：
+       否则手动 connect() / 重复 init 会让旧连接继续挂着，服务端在线数虚高、事件重复。 */
+    var gen = (state.gen || 0) + 1;
+    state.gen = gen;
+    if (state.es) { try { state.es.close(); } catch (e) { } state.es = null; }
+    if (state.retryTimer) { clearTimeout(state.retryTimer); state.retryTimer = 0; }
+    setMode(state.opened ? "reconnecting" : "connecting");
     var idx = 0;
     (function next() {
+      if (gen !== state.gen) return;
       if (idx >= candidates.length) {
         setMode("sync");
         scheduleRetry();
@@ -1251,13 +1280,16 @@ close     每个 session 结束即 close，防遗漏计费</div>
       catch (e) { next(); return; }
       var opened = false;
       var guard = setTimeout(function () {
-        if (opened) return;
+        if (opened || gen !== state.gen) return;
         try { es.close(); } catch (e) { }
         next();
       }, 2600);
       es.onopen = function () {
+        /* 这条连接已经被新一轮 connect() 取代：安静关掉，不要污染新状态 */
+        if (gen !== state.gen) { try { es.close(); } catch (e) { } return; }
         opened = true;
         clearTimeout(guard);
+        state.opened = true;
         state.es = es;
         state.server = base;
         state.ready = true;
@@ -1265,11 +1297,13 @@ close     每个 session 结束即 close，防遗漏计费</div>
         setMode("live");
       };
       es.onmessage = function (ev) {
+        if (gen !== state.gen) return;
         var msg;
         try { msg = JSON.parse(ev.data); } catch (e) { return; }
         handleServer(msg);
       };
       es.onerror = function () {
+        if (gen !== state.gen) { try { es.close(); } catch (e) { } return; }
         clearTimeout(guard);
         try { es.close(); } catch (e) { }
         if (state.es === es) state.es = null;
@@ -1309,6 +1343,8 @@ close     每个 session 结束即 close，防遗漏计费</div>
         dispatch("heartbeat", msg, "server");
         break;
       case "data":
+        /* 数据文件变了：同步“数据截至”的真实时间，别让页面停在旧扫描时间 */
+        if (msg.asOf && !cfg.localAsOf) { state.asOf = Number(msg.asOf) || state.asOf; pillRender(); }
         dispatch("data", msg, "server");
         break;
       case "session":
@@ -1318,12 +1354,11 @@ close     每个 session 结束即 close，防遗漏计费</div>
         /* 统一约定：on('event', fn) 拿到完整信封（含 name / at / replay）；
            on('<name>', fn) 拿到其中的 payload。 */
         dispatch("event", msg, "server");
-        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server");
+        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server", true);
         break;
       default:
         dispatch(msg.type, msg, "server");
     }
-    dispatch("*", msg, "server");
   }
 
   /* ---------------- 真实的“N 分钟前” ---------------- */
@@ -1336,7 +1371,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
     var prefix = opts.prefix == null ? "" : opts.prefix;
     if (node.__liveTimer) clearInterval(node.__liveTimer);
     function paint() {
-      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
       var t = typeof ts === "function" ? ts() : ts;
       if (t == null || t === "") { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
       var ms = typeof t === "number" ? t : toDate(t);
@@ -1361,7 +1396,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
     var ms = typeof deadline === "number" ? deadline : toDate(deadline);
     if (node.__liveTimer) clearInterval(node.__liveTimer);
     function paint() {
-      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
       if (!isFinite(ms)) { node.textContent = "—"; return; }
       var left = ms - Date.now();
       if (left <= 0) {
@@ -1475,7 +1510,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
     /* 同一个节点重复绑（页面重渲染、胶囊重建）先掐掉旧定时器，别越积越多 */
     if (node.__liveClockTimer) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; }
     function paint() {
-      if (!node.isConnected) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
+      if (!alive(node)) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
       var d = new Date();
       var s = pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + (opts.seconds === false ? "" : ":" + pad2(d.getSeconds()));
       node.textContent = s;
@@ -1585,7 +1620,17 @@ close     每个 session 结束即 close，防遗漏计费</div>
     toc.appendChild(a);
     var b=a.cloneNode(true); sheet.appendChild(b);
   });
-  var tocLinks=$$('a',toc);
+  var tocLinks=$$('a',toc), sheetLinks=$$('a',sheet);
+  /* 目录高亮统一走这里：class 给样式，aria-current 给读屏（侧栏与抽屉两份目录都要同步） */
+  function setCurrent(i){
+    tocLinks.forEach(function(a,j){
+      a.classList.toggle('on',i===j);
+      if(i===j){ a.setAttribute('aria-current','location'); } else { a.removeAttribute('aria-current'); }
+    });
+    sheetLinks.forEach(function(a,j){
+      if(i===j){ a.setAttribute('aria-current','location'); } else { a.removeAttribute('aria-current'); }
+    });
+  }
 
   /* ---------- 进度 ---------- */
   var prog=$('#prog');
@@ -1597,15 +1642,40 @@ close     每个 session 结束即 close，防遗漏计费</div>
   addEventListener('scroll',onScroll,{passive:true}); onScroll();
 
   /* ---------- 高亮当前节 ---------- */
-  var io=new IntersectionObserver(function(es){
-    es.forEach(function(e){
-      if(e.isIntersecting){
-        var i=secs.indexOf(e.target);
-        tocLinks.forEach(function(a,j){a.classList.toggle('on',i===j)});
+  /* 老内核没有 IntersectionObserver：不能在这里抛错，否则后面的遮罩/键盘/导出全都不绑定。
+     降级：进场效果立即执行；目录高亮改用滚动位置计算（见下方 scroll 兜底）。 */
+  var IO=window.IntersectionObserver;
+  if(!IO){
+    IO=function(cb){ this._cb=cb; this._els=[]; this._t=0; };
+    IO.prototype.observe=function(el){
+      var self=this; self._els.push(el);
+      if(!self._t){
+        self._t=setTimeout(function(){
+          var list=self._els.map(function(t){return {target:t,isIntersecting:true}});
+          self._t=0; self._els=[]; self._cb(list);
+        },30);
       }
+    };
+    IO.prototype.unobserve=function(){};
+    IO.prototype.disconnect=function(){ clearTimeout(this._t); this._t=0; this._els=[]; };
+  }
+  var io=new IO(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting) setCurrent(secs.indexOf(e.target));
     });
   },{rootMargin:'-45% 0px -45% 0px'});
   secs.forEach(function(s){io.observe(s)});
+  /* 点目录后锚点默认跳转会把焦点丢给 body；补回被点的目录项，键盘用户可接着 Tab 下一节 */
+  tocLinks.forEach(function(a){
+    a.addEventListener('click',function(){
+      var el=a;
+      setTimeout(function(){ el.focus({preventScroll:true}); },0);
+    });
+  });
+  if(!window.IntersectionObserver){
+    addEventListener('scroll',function(){ setCurrent(activeIdx()); },{passive:true});
+    setTimeout(function(){ setCurrent(activeIdx()); },0);
+  }
 
   /* ---------- 指针微光（仅指针设备） ---------- */
   var canHover=matchMedia('(hover:hover)').matches;
@@ -1640,7 +1710,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
   });
 
   /* ---------- 专业榜条形：进场才长出来 ---------- */
-  var si=new IntersectionObserver(function(es){
+  var si=new IO(function(es){
     es.forEach(function(e){
       if(e.isIntersecting){
         $$('#majors .bar i').forEach(function(b,i){
@@ -1657,7 +1727,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
   /* 观察锚点用不动的 .core-mask：柱子初始位移 -101%，若直接观察它，相交矩形恒为 0×0，永远等不到回调 */
   var core=$('#core'), coreMask=$('.core-mask');
   if(core&&coreMask){
-    var ci=new IntersectionObserver(function(es){
+    var ci=new IO(function(es){
       es.forEach(function(e){
         if(e.isIntersecting){ core.classList.add('grown'); ci.disconnect(); }
       });
@@ -1668,7 +1738,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
   /* ---------- 连线：进入视口后流动 ---------- */
   var graph=$('#graph');
   if(graph){
-    var gi=new IntersectionObserver(function(es){
+    var gi=new IO(function(es){
       es.forEach(function(e){
         if(e.isIntersecting){
           $$('.edge',graph).forEach(function(p,i){
@@ -1697,8 +1767,14 @@ close     每个 session 结束即 close，防遗漏计费</div>
   }
 
   /* ---------- 证据卡：遮罩 ---------- */
-  var lb=$('#lb'), lbmeta=$('#lbmeta'), lbTitle=$('#lbt');
+  var lb=$('#lb'), lbmeta=$('#lbmeta'), lbTitle=$('#lbt'), lastFocus=null;
+  function lbFocusables(){
+    return $$('a[href],button:not([disabled])',lb).filter(function(n){
+      return !!(n.offsetWidth||n.offsetHeight||n.getClientRects().length);
+    });
+  }
   function openLb(el){
+    lastFocus=el;
     lbTitle.textContent=el.dataset.ev;
     var img=el.querySelector('img.shotimg'), lbimg=lb.querySelector('#lbimg');
     if(img&&lbimg) lbimg.src=img.getAttribute('src');
@@ -1718,27 +1794,51 @@ close     每个 session 结束即 close，防遗漏计费</div>
       '<span>会话 ID　<b>'+el.dataset.id+'</b></span>'+
       '<span>原始 URL　<b>'+el.dataset.url+'</b></span>';
     lb.classList.add('open');
+    /* 锁背景滚动（html.lb-open → overflow:hidden），焦点送入遮罩 */
+    var de=document.documentElement, sw=innerWidth-de.clientWidth;
+    de.classList.add('lb-open');
+    if(sw>0) de.style.paddingRight=sw+'px';   /* 补滚动条宽度，避免锁滚时整页横跳 */
     lb.querySelector('#lbx').focus();
   }
-  function closeLb(){ lb.classList.remove('open'); }
+  function closeLb(){
+    if(!lb.classList.contains('open')) return;
+    lb.classList.remove('open');
+    var de=document.documentElement;
+    de.classList.remove('lb-open');
+    de.style.paddingRight='';
+    /* 关闭后把焦点还给触发卡（浏览器默认会丢给 body） */
+    if(lastFocus&&lastFocus.focus){ try{ lastFocus.focus({preventScroll:true}); }catch(err){ lastFocus.focus(); } }
+  }
   $$('.evidence').forEach(function(c){
     c.addEventListener('click',function(){ openLb(c); });
     c.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();openLb(c)} });
   });
   $('#lbx').addEventListener('click',closeLb);
+  /* 遮罩里的“看上表”先关遮罩，再让默认锚点滚动生效（否则点了只剩底层页面在动） */
+  $('#lbgo').addEventListener('click',function(){ closeLb(); });
   lb.addEventListener('click',function(e){ if(e.target===lb) closeLb(); });
   addEventListener('keydown',function(e){
-    if(e.key==='Escape'){ closeLb(); sheet.classList.remove('open'); $('#tocbtn').setAttribute('aria-expanded','false'); }
+    if(e.key!=='Tab'||!lb.classList.contains('open')) return;
+    var f=lbFocusables(); if(!f.length) return;
+    var first=f[0], last=f[f.length-1], act=document.activeElement;
+    if(e.shiftKey){
+      if(act===first||f.indexOf(act)<0){ e.preventDefault(); last.focus(); }
+    }else{
+      if(act===last||f.indexOf(act)<0){ e.preventDefault(); first.focus(); }
+    }
+  });
+  addEventListener('keydown',function(e){
+    if(e.key==='Escape'){ closeLb(); closeSheet(); }
   });
 
-  /* ---------- 键盘翻节 ---------- */
+  /* ---------- 键盘翻节（只接管 ← →；↑ ↓ / PgUp / PgDn 保持原生滚动） ---------- */
   addEventListener('keydown',function(e){
     if(lb.classList.contains('open')) return;
-    if(e.target.matches('input,textarea')) return;
-    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){
+    if(e.target&&e.target.matches&&e.target.matches('input,textarea')) return;
+    if(e.key==='ArrowRight'){
       var i=activeIdx(); if(i<secs.length-1){ e.preventDefault(); secs[i+1].scrollIntoView({behavior:'smooth'}); }
     }
-    if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){
+    if(e.key==='ArrowLeft'){
       var j=activeIdx(); if(j>0){ e.preventDefault(); secs[j-1].scrollIntoView({behavior:'smooth'}); }
     }
   });
@@ -1755,12 +1855,26 @@ close     每个 session 结束即 close，防遗漏计费</div>
 
   /* ---------- 移动端目录 ---------- */
   var tb=$('#tocbtn');
+  sheet.inert=true;                /* 收起时抽屉内的链接不参与 Tab（aria-hidden 不挡焦点） */
   tb.addEventListener('click',function(){
     var open=sheet.classList.toggle('open');
     tb.textContent=open?'目录 −':'目录 +';
     tb.setAttribute('aria-expanded',open?'true':'false');
+    sheet.setAttribute('aria-hidden',open?'false':'true');
+    sheet.inert=!open;
   });
-  $$('a',sheet).forEach(function(a){a.addEventListener('click',function(){sheet.classList.remove('open');tb.textContent='目录 +'})});
+  function closeSheet(){
+    if(!sheet.classList.contains('open')) return;
+    sheet.classList.remove('open');
+    sheet.setAttribute('aria-hidden','true');
+    sheet.inert=true;
+    tb.textContent='目录 +';
+    tb.setAttribute('aria-expanded','false');
+    /* 抽屉收起后焦点回目录按钮；锚点默认跳转会在本事件之后把焦点重置到 body，故补一次 */
+    tb.focus({preventScroll:true});
+    setTimeout(function(){ if(!sheet.classList.contains('open')) tb.focus({preventScroll:true}); },0);
+  }
+  $$('a',sheet).forEach(function(a){a.addEventListener('click',function(){ closeSheet(); })});
 
   /* ---------- 首访提示 ---------- */
   var hint=$('#hint');

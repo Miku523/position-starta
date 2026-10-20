@@ -272,6 +272,7 @@
     var sections = opts.sections || BRIEF_SECTIONS.reduce(function (o, s) { o[s.k] = s.on; return o; }, {});
     var bench = HR.bench();
     var benchRows = bench.rows;
+    var benchProg = bench.prog || {};   /* 一次读取，别在 map 里反复 HR.bench()（O(n²) 主因） */
     var pool = benchRows;
     var jdList = HR.jd.list();
     var liveJds = jdList.filter(function (j) { return j.status === "live"; });
@@ -334,7 +335,7 @@
       bench: benchRows.map(function (d) {
         return {
           unit: d.u, role: d.r, type: d.t, city: d.city, edu: d.e, cand: d.cand, n: d.n,
-          end: d.end || d.d, left: d.left, stage: HR.stageLabel[HR.bench().prog[d.i] && HR.bench().prog[d.i].st || "saved"] || "待研判"
+          end: d.end || d.d, left: d.left, stage: HR.stageLabel[(benchProg[d.i] && benchProg[d.i].st) || "saved"] || "待研判"
         };
       }),
       jdGaps: gaps,
@@ -449,6 +450,10 @@
     }).join("") + '</div>';
   }
 
+  /* Markdown 表格单元格转义：单位名里可能有「|」，不转义会把表格切坏 */
+  function mdCell(v) {
+    return String(v == null ? "" : v).replace(/\|/g, "\\|").replace(/\r?\n|\r/g, " ");
+  }
   /* Markdown 版：方便贴到 IM / 文档 */
   function briefMD(model) {
     var L = [];
@@ -473,7 +478,9 @@
     else {
       L.push("| 单位 | 岗位 | 学历 | 名额 | 截止 | 阶段 |");
       L.push("| --- | --- | --- | --- | --- | --- |");
-      model.bench.forEach(function (r) { L.push("| " + r.unit + " | " + r.role + " | " + (r.edu || "") + " | " + r.n + " | " + (r.end || "—") + " | " + r.stage + " |"); });
+      model.bench.forEach(function (r) {
+        L.push("| " + mdCell(r.unit) + " | " + mdCell(r.role) + " | " + mdCell(r.edu) + " | " + mdCell(r.n) + " | " + mdCell(r.end || "—") + " | " + mdCell(r.stage) + " |");
+      });
     }
     L.push("");
     L.push("## JD 差距");

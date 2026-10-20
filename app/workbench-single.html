@@ -1205,8 +1205,35 @@ a.lnk.is-dead:hover{color:var(--ink2);border-bottom-color:var(--muted)}
 .pg-btn{transition:background .12s,border-color .12s,color .12s}
 .pg-btn:active:not([disabled]){transform:translateY(1px)}
 .meter i{transition:width .4s cubic-bezier(.22,.61,.36,1),opacity .2s}
-/* 抽屉常驻合成层，开合走 compositor，不吃主线程；关闭后保留成本可控 */
-#drawer{will-change:transform}
+/* 抽屉只在打开期间占用合成层，关闭后立即释放 */
+#drawer.on{will-change:transform}
+
+/* ---------- 5.5 color-mix 回退：Safari < 16.2 / 旧 Chromium ----------
+   旧引擎不支持 color-mix 会把整条声明丢弃（背景/边框变透明）。
+   这里用实色变量兜底关键表面；纯装饰差异，不影响任何功能。 */
+@supports not (color: color-mix(in srgb, red, blue)){
+  .navi a:hover{background:var(--line2)}
+  .icobtn:hover,.btn:hover,.btn.ghost:hover,.chip:hover,.citem:hover,.me-app:hover,
+  .dbtn[aria-pressed="true"],.pg-btn:hover:not([disabled]){background:var(--line2)}
+  tbody tr:hover,.table .row:hover,.mini tbody tr:hover td,.mini thead th,
+  .ci-table tbody tr:hover,.expbtn:hover{background:var(--line2)}
+  tr.exp > td{background:var(--accent-soft)}
+  .user .av{background:var(--accent-soft)}
+  .btn:hover,.expbtn[aria-expanded="true"],.urlin:focus{border-color:var(--line)}
+  .btn.primary:hover{background:var(--accent)}
+  .ucard{background:var(--panel);border-color:var(--line)}
+  .ucard:hover{background:var(--panel);border-color:var(--accent-line)}
+  .bar-fill{background:var(--accent)}
+  .ex{border-left-color:var(--accent-line)}
+  .stpill[data-st],.c-unit .st[data-st]{border-color:var(--line)}
+  .dwbtn.done,#dwApply.done,.ci-badge.open,.callout.ok,.score.ok,.applybtn.done{border-color:var(--line);background:var(--line2)}
+  .score.low,.hotline{border-color:var(--line);background:var(--line2)}
+  .molist,.density .dbtn{border-color:var(--line)}
+  html[data-theme="dark"] .bar-row::before{background:var(--line2)}
+  @media (max-width:680px){
+    tbody tr[data-i],.table .row{background:var(--panel)}
+  }
+}
 
 /* ---------- 5. 粗指针（触控）目标 ≥36px，不撑破 rail ---------- */
 @media (pointer:coarse){
@@ -1221,6 +1248,14 @@ a.lnk.is-dead:hover{color:var(--ink2);border-bottom-color:var(--muted)}
 /* ---------- 6. 打印与「减弱动效」全局降级 ---------- */
 @media print{
   .page:not([hidden]){animation:none!important}
+  /* 普通 Ctrl+P：侧栏/顶栏/状态栏/提示条/浮层都不打印，只留正文 */
+  .rail,.topbar,.statusbar,.banner,.live-pill,#livePill,.toast,#toast,#drawer,#scrim,
+  .hbell,.hrmodal-scrim,.hrmodal,.hr-usermenu,.hr-footlink{display:none!important}
+  .app{display:block;height:auto}
+  .app > .rail,.app > .topbar,.app > .statusbar{display:none!important}
+  .app > .main{display:block;height:auto;overflow:visible}
+  .main .page[hidden]{display:none!important}
+  body{background:#fff}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{
@@ -1652,6 +1687,16 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
   .hrpanel .panel-hd{flex-wrap:wrap;row-gap:2px}
   .hrpanel .panel-hd > b{flex:1 1 100%}
 }
+
+/* ---------- v1.2 · 窄屏弹窗/表单不溢出（720px 固定宽在手机上会顶出屏幕） ---------- */
+@media (max-width: 560px) {
+  .hrmodal { padding: 12px; }
+  .hrmodal-box, .hrmodal-box.wide { width: 100%; max-width: 100%; max-height: calc(100dvh - 24px); }
+  .hrmodal-bd { overflow: auto; }
+  .hrmodal-ft { flex-wrap: wrap; }
+  .hrmodal-ft .btn { min-height: 44px; }
+  .hrform-row, .hrform-row.three { grid-template-columns: 1fr; }
+}
 </style>
 <style>
 /* =====================================================================
@@ -2028,6 +2073,7 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
       <div class="funnel" id="mfunnel" role="group" aria-label="按研判阶段筛选" hidden></div>
       <div class="panel">
         <div class="tablewrap"><div class="table m"><div class="thead" id="mhead"></div><div class="rows" id="mrows"></div></div></div>
+        <div class="pager" id="mpager"></div>
       </div>
     </div>
 
@@ -2221,7 +2267,10 @@ window.STARTA = (function(){
   const NOTICE_BY_ID = {};
   NOTICES.forEach(function(n){
     NOTICE_BY_ID[n.id] = n;
-    n.end = n.endDate || n.applyEnd || "";
+    /* 两个来源字段可能一个是日期、一个带时分：取更精确的那个，
+       否则 16:00 截止会被 endDate 的日期截成 0 点，导致“当天已截止”。 */
+    var _ed = String(n.endDate || ""), _ae = String(n.applyEnd || "");
+    n.end = _ae.length > _ed.length ? _ae : (_ed || _ae);
     n.start = n.startDate || n.applyStart || "";
   });
 
@@ -2534,6 +2583,7 @@ const state = {
   quick: null, /* null | "urgent" | "open" | "saved"：点 KPI 卡进来的快捷筛选 */
   prog: {}, /* i -> { st, at }：研判阶段 + 最后一次改动日期 */
   mineSt: null, /* 对标清单页的阶段筛选 */
+  mPage: 0, /* 对标清单当前页（0 起） */
   page: 0, /* 市场岗位库当前页（0 起） */
   pgSize: 50, /* 一页 50 条：9,200 行不可能一次画完 */
   uPage: 0, /* 竞争雇主当前页 */
@@ -2877,7 +2927,8 @@ function pageSlice(list) {
   return { slice: all.slice(from, from + state.pgSize), from, total: all.length, pages, page: state.page };
 }
 /* 页码窗口：当前页两侧各 2 页，首尾固定带省略号 */
-function pageWindow(cur, pages) {
+function pageWindow(cur, pages, attr) {
+  const key = attr || "page";
   const out = [];
   const push = v => { if (out[out.length - 1] !== v) out.push(v); };
   push(0);
@@ -2886,7 +2937,7 @@ function pageWindow(cur, pages) {
   const html = [];
   out.forEach((p, idx) => {
     if (idx && p - out[idx - 1] > 1) html.push(`<span class="pg-gap">…</span>`);
-    html.push(`<button class="pg-btn${p === cur ? " on" : ""}" data-page="${p}" aria-label="第 ${p + 1} 页" aria-current="${p === cur ? "page" : "false"}">${p + 1}</button>`);
+    html.push(`<button class="pg-btn${p === cur ? " on" : ""}" data-${key}="${p}" aria-label="第 ${p + 1} 页" aria-current="${p === cur ? "page" : "false"}">${p + 1}</button>`);
   });
   return html.join("");
 }
@@ -2895,7 +2946,8 @@ function syncPager(list) {
   if (!box) return;
   const s = pageSlice(list);
   if (!s.total) { box.innerHTML = `<span class="pg-meta">共 0 条</span>`; return; }
-  const first = s.from + 1, last = Math.min(s.from + state.pgSize, s.total);
+  const first = (s.from + 1).toLocaleString("zh-CN");
+  const last = Math.min(s.from + state.pgSize, s.total).toLocaleString("zh-CN");
   box.innerHTML = `<span class="pg-meta">${first}–${last} / 共 ${s.total.toLocaleString("zh-CN")} 条</span>
     <div class="pg-nums">
       <button class="pg-btn pg-prev" data-page="${s.pages > 1 ? s.page - 1 : 0}" ${s.page === 0 ? "disabled" : ""} aria-label="上一页">‹</button>
@@ -3010,7 +3062,7 @@ function syncKPI() {
   setText("#kpiTypes", uniq(DATA.map(d => d && d.t)).length);
   setText("#kpiUrgent", fmt(k.open));
   setText("#kpiEarliest", earliestLabel());
-  setText("#kpiSaved", state.saved.size);
+  setText("#kpiSaved", fmt(state.saved.size));
 
   // 已对标卡片的脚注跟随数量变化
   const savedNum = $("#kpiSaved");
@@ -3036,7 +3088,7 @@ function syncKPI() {
   setText("#ctJobs", fmt(k.total));
   setText("#ctNotices", String(NOTICES.length));
   setText("#ctUnits", fmt(k.units));
-  setText("#ctMine", String(state.saved.size));
+  setText("#ctMine", fmt(state.saved.size));
   setText("#ctMe", String(meCount()));
 
   const sub = $("#view-lib .page-head .sub");
@@ -3442,7 +3494,7 @@ const VIEW_LABEL = { lib: "市场岗位库", collect: "情报采集", units: "�
 const SORT_KEYS = ["due", "n", "unit", "role", "type"];
 let __urlMute = false;    /* popstate 重放期间禁止回写，避免自己触发自己 */
 let __urlReady = false;   /* bindEvents 完成后才允许回写 URL */
-let __qRaf = 0;           /* 搜索输入合帧：同一帧只渲染一次 */
+let __qRaf = 0;           /* 搜索输入防抖句柄：连续输入只在停顿后渲染一次 */
 let dwPushed = false;     /* 当前抽屉是否压了一条历史（关闭时要 back 回去） */
 let noticeLink = null;    /* URL 上显式携带的情报采集公告 id */
 
@@ -3600,11 +3652,10 @@ function focusViewPage(v) {
   else setTimeout(run, 0);
 }
 
-/* 搜索输入合帧：同一帧里连打多个字符只渲染一次 */
+/* 搜索输入防抖：连续输入只在停顿 140ms 后渲染一次，避免每个字符全表扫 */
 function scheduleRender() {
-  if (__qRaf) return;
-  const run = () => { __qRaf = 0; render(); };
-  __qRaf = typeof requestAnimationFrame === "function" ? requestAnimationFrame(run) : setTimeout(run, 16);
+  if (__qRaf) clearTimeout(__qRaf);
+  __qRaf = setTimeout(() => { __qRaf = 0; render(); }, 140);
 }
 
 function setView(v, opts) {
@@ -3928,7 +3979,14 @@ function renderMine() {
   }
 
   const shown = state.mineSt ? list.filter(d => stageOf(d.i).k === state.mineSt) : list;
-  box.innerHTML = shown.length ? shown.map(d => {
+  /* 分页：对标量大时（旧版曾一次写入上千条）只画当页 50 行，统计/漏斗/导出仍按全集 */
+  const per = state.pgSize;
+  const mpages = Math.max(1, Math.ceil(shown.length / per));
+  if (state.mPage > mpages - 1) state.mPage = mpages - 1;
+  if (state.mPage < 0) state.mPage = 0;
+  const mfrom = state.mPage * per;
+  const mslice = shown.slice(mfrom, mfrom + per);
+  box.innerHTML = mslice.length ? mslice.map(d => {
     const st = stageOf(d.i), age = ageOf(d.i), left = dleft(d);
     const ageTxt = age == null ? "—" : age === 0 ? "今天" : age + " 天前";
     const dueCls = left == null ? "" : left < 0 ? " expired" : left <= 7 ? " soon" : "";
@@ -3953,6 +4011,21 @@ function renderMine() {
     : (state.mineSt
       ? `<div class="empty"><b>「${esc(STAGE_I[state.mineSt].lb)}」这一档还没有岗位</b>点上面亮着的阶段卡回到全部，或者去市场岗位库把新岗位收进来。</div>`
       : `<div class="empty"><b>对标集还是空的</b>去市场岗位库点一下 ☆，或者在任意岗位的展开行里点一个研判阶段，收进来的岗位会存在本地，刷新也不丢。</div>`);
+  const mp = $("#mpager");
+  if (mp) {
+    if (!shown.length) { mp.innerHTML = ""; }
+    else {
+      const mfirst = (mfrom + 1).toLocaleString("zh-CN");
+      const mlast = Math.min(mfrom + per, shown.length).toLocaleString("zh-CN");
+      mp.innerHTML = `<span class="pg-meta">${mfirst}–${mlast} / 共 ${shown.length.toLocaleString("zh-CN")} 条</span>
+        <div class="pg-nums">
+          <button class="pg-btn pg-prev" data-mpage="${state.mPage > 0 ? state.mPage - 1 : 0}" ${state.mPage === 0 ? "disabled" : ""} aria-label="上一页">‹</button>
+          ${pageWindow(state.mPage, mpages, "mpage")}
+          <button class="pg-btn pg-next" data-mpage="${state.mPage + 1}" ${state.mPage >= mpages - 1 ? "disabled" : ""} aria-label="下一页">›</button>
+        </div>
+        <span class="pg-meta">第 ${state.mPage + 1} / ${mpages} 页 · 每页 ${per}</span>`;
+    }
+  }
 }
 function exportMine() {
   const list = savedJobs();
@@ -4278,7 +4351,7 @@ function bindEvents() {
   });
   on("#major", "change", e => { state.major = e.target.value; persistFilters(); render(); });
   on("#edu", "change", e => { state.edu = e.target.value; persistFilters(); render(); });
-  /* 搜索：非岗位库视图里输入就先切回岗位库；rAF 合帧，连打多个字符只渲染一次 */
+  /* 搜索：非岗位库视图里输入就先切回岗位库；140ms 防抖，连打多个字符只渲染一次 */
   on("#q", "input", e => {
     state.q = e.target.value.trim();
     state.page = 0;
@@ -4293,6 +4366,7 @@ function bindEvents() {
     if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
+      if (__qRaf) { clearTimeout(__qRaf); __qRaf = 0; }
       state.q = "";
       e.target.value = "";
       state.page = 0;
@@ -4312,6 +4386,7 @@ function bindEvents() {
     state.sort = "due";
     state.dir = 1;
     state.noticeFilter = null;
+    state.page = 0;            /* 重置后回到第 1 页，不能停在旧页码 */
     const q = $("#q"); if (q) q.value = "";
     persistFilters();
     mountFilters();
@@ -4442,21 +4517,20 @@ function bindEvents() {
     try { next.scrollIntoView({ block: "nearest" }); } catch (err) { /* 忽略 */ }
   });
   on("#checkAll", "change", e => {
-    const list = filtered();
-    if (e.target.checked) list.forEach(d => state.sel.add(d.i));
-    else list.forEach(d => state.sel.delete(d.i));
+    /* 表头复选框语义是「全选本页」：只动当前页 50 行，不能把 9,200 行全画进 DOM */
+    const page = pageSlice(filtered()).slice;
+    if (e.target.checked) page.forEach(d => state.sel.add(d.i));
+    else page.forEach(d => state.sel.delete(d.i));
     e.target.indeterminate = false;
-    paintRows(list);
-    syncBulk(list);
+    render();
   });
-  on("#clearSel", "click", () => { state.sel.clear(); paintRows(filtered()); syncBulk(); });
+  on("#clearSel", "click", () => { state.sel.clear(); render(); });
   on("#saveSel", "click", () => {
     const list = visibleSelected();
     if (!list.length) { toast("先勾选要对标的岗位"); return; }
     setSavedMany(list, true);
     state.sel.clear();
-    paintRows(filtered());
-    syncBulk();
+    render();
     toast(`已对标 ${list.length} 条岗位`);
   });
   on("#copySel", "click", () => {
@@ -4541,6 +4615,20 @@ function bindEvents() {
     if (row) openDrawer(Number(row.dataset.i), row);
   });
   on("#mineExport", "click", exportMine);
+  /* 对标清单分页：只重画当页，漏斗/统计/导出仍按全集 */
+  on("#mpager", "click", e => {
+    const b = e.target.closest("[data-mpage]");
+    if (!b || b.disabled) return;
+    const p = Number(b.dataset.mpage);
+    if (!isFinite(p) || p === state.mPage) return;
+    state.mPage = Math.max(0, p);
+    renderMine();
+    const wrap = $("#mrows");
+    if (wrap) {
+      const top = wrap.getBoundingClientRect().top + window.scrollY - 96;
+      try { window.scrollTo({ top, behavior: "smooth" }); } catch (err) { window.scrollTo(0, top); }
+    }
+  });
 
   /* 列表分页：换页只重画表格，不重建 DOM 之外的东西 */
   on("#pager", "click", e => {
@@ -4558,9 +4646,11 @@ function bindEvents() {
   });
   /* 竞争雇主分页 + 雇主搜索 */
   on("#upager", "click", e => {
-    const b = e.target.closest("[data-upage]");
+    /* 数字页码由 pageWindow() 生成，带的是 data-page；箭头才是 data-upage。
+       之前只认 data-upage，导致数字页码点了没反应。 */
+    const b = e.target.closest("[data-upage],[data-page]");
     if (!b || b.disabled) return;
-    const p = Number(b.dataset.upage);
+    const p = Number(b.dataset.upage != null && b.dataset.upage !== "" ? b.dataset.upage : b.dataset.page);
     if (!isFinite(p)) return;
     state.uPage = Math.max(0, p);
     renderUnits();
@@ -4617,6 +4707,7 @@ function bindEvents() {
     if (!b) return;
     const k = b.dataset.mst;
     state.mineSt = (state.mineSt === k) ? null : k;
+    state.mPage = 0;
     renderMine();
     syncStatusText();
     const n = state.mineSt ? savedJobs().filter(d => stageOf(d.i).k === state.mineSt).length : savedJobs().length;
@@ -5013,6 +5104,16 @@ window.ME = (function () {
     out.mNote = note ? String(note.value || "").trim() : "";
     return out;
   }
+  let saveTimer = 0;
+  /* 输入防抖：连续打字时 350ms 内只落盘+重绘一次；change/blur/手动保存会立即冲刷 */
+  function scheduleSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { saveTimer = 0; saveProfile(true); }, 350);
+  }
+  function flushSave() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = 0; }
+    saveProfile(true);
+  }
   function saveProfile(quiet) {
     state.profile = Object.assign({}, state.profile, collect());
     state.savedAt = new Date().toLocaleString("zh-CN", { hour12: false });
@@ -5114,6 +5215,7 @@ window.ME = (function () {
       <p class="ps-ft">本表由浏览器本地生成，仅作报名资料整理；正式报名请到公告指定的报名系统提交。</p>`;
   }
   function print() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = 0; }
     saveProfile(true);
     buildPrintSheet();
     document.body.classList.add("printing");
@@ -5136,11 +5238,14 @@ window.ME = (function () {
     }
     const form = $("#meForm");
     if (form) {
-      form.addEventListener("input", () => { saveProfile(true); });
-      form.addEventListener("change", () => { saveProfile(true); });
+      form.addEventListener("input", scheduleSave);
+      form.addEventListener("change", flushSave);
     }
     const save = $("#meSave");
-    if (save) save.addEventListener("click", () => saveProfile(false));
+    if (save) save.addEventListener("click", () => {
+      if (saveTimer) { clearTimeout(saveTimer); saveTimer = 0; }
+      saveProfile(false);
+    });
     const reset = $("#meReset");
     if (reset) reset.addEventListener("click", resetProfile);
     const exp = $("#meExport");
@@ -5632,13 +5737,16 @@ window.ME = (function () {
     state.talent.forEach(function (t) {
       if (t.stage !== "new") return;
       var age = daysFrom(t.updated);
-      if (age == null || age < 2) return;
+      /* daysFrom(d) = 该日期 - 今天：历史时间得到负数，之前写成 age < 2 直接 return，
+         导致“待初筛超过 2 天”永远不会提醒。这里用已等待天数。 */
+      var waited = age == null ? null : -age;
+      if (waited == null || waited < 2) return;
       var key5 = "talent:" + t.id;
       if (seen[key5]) return;
       out.push({
         id: key5, kind: "talent", tone: "warn",
         title: "候选人待初筛 · " + t.name,
-        desc: [t.jobTitle || "未关联职位", "来源 " + (t.source || "手动录入"), "已等待 " + age + " 天"].join(" · "),
+        desc: [t.jobTitle || "未关联职位", "来源 " + (t.source || "手动录入"), "已等待 " + waited + " 天"].join(" · "),
         at: t.updated, view: "talent", param: t.id, icon: "user"
       });
     });
@@ -5820,17 +5928,21 @@ window.ME = (function () {
     document.documentElement.setAttribute("data-view", v);
     applyViewTitle(v);
     /* 视图切换写干净的 ?view=：筛选参数只属于岗位库，别带着走 */
-    try {
-      var u = new URL(location.href);
-      ["q", "pg", "type", "major", "edu", "sort", "dir", "quick", "job", "notice"].forEach(function (k) {
-        u.searchParams.delete(k);
-      });
-      if (v === "lib") u.searchParams.delete("view");
-      else u.searchParams.set("view", v);
-      var next = u.href;
-      if (!_navInit || (opts && opts.initial) || next === location.href) history.replaceState(null, "", next);
-      else history.pushState(null, "", next);
-    } catch (e) { /* file:// 忽略 */ }
+    /* file:// 下 app.js 明确不写地址栏（双击打开时地址栏无意义，写 ?view= 会让
+       切回市场库后残留旧值、刷新落错页），这里保持同一口径。 */
+    if (location.protocol !== "file:") {
+      try {
+        var u = new URL(location.href);
+        ["q", "pg", "type", "major", "edu", "sort", "dir", "quick", "job", "notice"].forEach(function (k) {
+          u.searchParams.delete(k);
+        });
+        if (v === "lib") u.searchParams.delete("view");
+        else u.searchParams.set("view", v);
+        var next = u.href;
+        if (!_navInit || (opts && opts.initial) || next === location.href) history.replaceState(null, "", next);
+        else history.pushState(null, "", next);
+      } catch (e) { /* 旧内核忽略 */ }
+    }
     render(v);
     var main = document.querySelector(".main");
     if (main && main.scrollTop) main.scrollTop = 0;
@@ -6299,10 +6411,12 @@ window.ME = (function () {
     return { added: added, skipped: skipped };
   }
   function talentCSV() {
-    var head = ["姓名", "手机", "邮箱", "来源", "关联职位", "阶段", "备注", "更新时间"];
+    /* 阶段同时导出“人读标签”和“机器 key”，职位带 ID：
+       只导标签会让 round-trip 导入丢阶段/断职位关联（#86）。 */
+    var head = ["姓名", "手机", "邮箱", "来源", "关联职位", "阶段", "阶段Key", "职位ID", "备注", "更新时间"];
     var rows = state.talent.map(function (t) {
       var s = TALENT_STAGES.filter(function (x) { return x.k === t.stage; })[0];
-      return [t.name, t.phone, t.email, t.source, t.jobTitle, s ? s.lb : t.stage, t.note, t.updated];
+      return [t.name, t.phone, t.email, t.source, t.jobTitle, s ? s.lb : t.stage, t.stage, t.jobId || "", t.note, t.updated];
     });
     return [csvLine(head)].concat(rows.map(csvLine)).join("\r\n");
   }
@@ -6346,17 +6460,29 @@ window.ME = (function () {
     var iMail = idx(["邮箱", "email", "e-mail"]);
     var iSrc = idx(["来源", "source", "渠道"]);
     var iJob = idx(["关联职位", "职位", "岗位", "job", "jobtitle"]);
+    var iJobId = idx(["职位id", "jobid"]);
+    var iStageKey = idx(["阶段key", "stagekey", "stage"]);
+    var iStageLb = idx(["阶段", "状态", "status"]);
     var iNote = idx(["备注", "note", "备注信息"]);
     var list = [];
     for (var r = 1; r < rows.length; r++) {
       var any = rows[r].some(function (x) { return String(x).trim() !== ""; });
       if (!any) continue;
+      /* 先按 key 认阶段，再退回中文标签；职位优先用 ID 恢复关联 */
+      var st = iStageKey >= 0 ? String(rows[r][iStageKey] || "").trim() : "";
+      if (!TALENT_STAGES.some(function (s) { return s.k === st; })) {
+        var lb = iStageLb >= 0 ? String(rows[r][iStageLb] || "").trim() : "";
+        var hit = TALENT_STAGES.filter(function (s) { return s.lb === lb; })[0];
+        st = hit ? hit.k : "";
+      }
       list.push({
         name: rows[r][iName],
         phone: iPhone >= 0 ? rows[r][iPhone] : "",
         email: iMail >= 0 ? rows[r][iMail] : "",
         source: iSrc >= 0 ? rows[r][iSrc] : "CSV 导入",
         jobTitle: iJob >= 0 ? rows[r][iJob] : "",
+        jobId: iJobId >= 0 ? String(rows[r][iJobId] || "").trim() : "",
+        stage: st,
         note: iNote >= 0 ? rows[r][iNote] : ""
       });
     }
@@ -6739,6 +6865,7 @@ window.ME = (function () {
     var sections = opts.sections || BRIEF_SECTIONS.reduce(function (o, s) { o[s.k] = s.on; return o; }, {});
     var bench = HR.bench();
     var benchRows = bench.rows;
+    var benchProg = bench.prog || {};   /* 一次读取，别在 map 里反复 HR.bench()（O(n²) 主因） */
     var pool = benchRows;
     var jdList = HR.jd.list();
     var liveJds = jdList.filter(function (j) { return j.status === "live"; });
@@ -6801,7 +6928,7 @@ window.ME = (function () {
       bench: benchRows.map(function (d) {
         return {
           unit: d.u, role: d.r, type: d.t, city: d.city, edu: d.e, cand: d.cand, n: d.n,
-          end: d.end || d.d, left: d.left, stage: HR.stageLabel[HR.bench().prog[d.i] && HR.bench().prog[d.i].st || "saved"] || "待研判"
+          end: d.end || d.d, left: d.left, stage: HR.stageLabel[(benchProg[d.i] && benchProg[d.i].st) || "saved"] || "待研判"
         };
       }),
       jdGaps: gaps,
@@ -6916,6 +7043,10 @@ window.ME = (function () {
     }).join("") + '</div>';
   }
 
+  /* Markdown 表格单元格转义：单位名里可能有「|」，不转义会把表格切坏 */
+  function mdCell(v) {
+    return String(v == null ? "" : v).replace(/\|/g, "\\|").replace(/\r?\n|\r/g, " ");
+  }
   /* Markdown 版：方便贴到 IM / 文档 */
   function briefMD(model) {
     var L = [];
@@ -6940,7 +7071,9 @@ window.ME = (function () {
     else {
       L.push("| 单位 | 岗位 | 学历 | 名额 | 截止 | 阶段 |");
       L.push("| --- | --- | --- | --- | --- | --- |");
-      model.bench.forEach(function (r) { L.push("| " + r.unit + " | " + r.role + " | " + (r.edu || "") + " | " + r.n + " | " + (r.end || "—") + " | " + r.stage + " |"); });
+      model.bench.forEach(function (r) {
+        L.push("| " + mdCell(r.unit) + " | " + mdCell(r.role) + " | " + mdCell(r.edu) + " | " + mdCell(r.n) + " | " + mdCell(r.end || "—") + " | " + mdCell(r.stage) + " |");
+      });
     }
     L.push("");
     L.push("## JD 差距");
@@ -7135,7 +7268,11 @@ window.ME = (function () {
         "</div>" +
         field("岗位职责", '<textarea name="responsibilities" rows="3" maxlength="1200" placeholder="写清做什么、汇报给谁、考核口径">' + esc(v.responsibilities || "") + "</textarea>") +
         field("任职要求", '<textarea name="requirements" rows="3" maxlength="1200" placeholder="学历、专业、证书、能力项">' + esc(v.requirements || "") + "</textarea>") +
-        field("状态", select("status", [{ v: "draft", lb: "草稿（不参与差距核算展示）" }, { v: "live", lb: "在招（进提醒与简报）" }], v.status || "draft")) +
+        field("状态", select("status", (function () {
+          var opts = [{ v: "draft", lb: "草稿（不参与差距核算展示）" }, { v: "live", lb: "在招（进提醒与简报）" }];
+          if (v.status === "closed") opts.push({ v: "closed", lb: "已关闭（保留历史口径）" });
+          return opts;
+        })(), v.status || "draft")) +
       "</div>" +
       (v.versions && v.versions.length
         ? '<div class="hrversions"><b>版本记录</b><ul>' + v.versions.slice(-5).reverse().map(function (x) {
@@ -7181,7 +7318,8 @@ window.ME = (function () {
   }
 
   /* ---------------- JD 视图 ---------------- */
-  function jdCard(j) {
+  function jdCard(j, ro) {
+    ro = ro || "";
     var g = null;
     try { g = HR.market && HR.market.gap ? HR.market.gap(j) : null; } catch (e) { g = null; }
     var meta = [j.dept, j.city, j.type, j.level].filter(Boolean).map(esc).join(" · ");
@@ -7207,10 +7345,10 @@ window.ME = (function () {
         (g.flags.length > 1 ? '<ul class="hrgap-flags">' + g.flags.slice(1).map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul>" : "") +
       "</div>" : "") +
       '<footer class="hjdcard-ft">' +
-        '<button type="button" class="btn ghost" data-hr-act="jd-edit" data-id="' + esc(j.id) + '">编辑</button>' +
-        (j.status !== "closed" ? '<button type="button" class="btn ghost" data-hr-act="jd-status" data-id="' + esc(j.id) + '" data-st="' + (j.status === "live" ? "draft" : "live") + '">' + (j.status === "live" ? "暂停招聘" : "发布在招") + "</button>" : '<button type="button" class="btn ghost" data-hr-act="jd-status" data-id="' + esc(j.id) + '" data-st="live">重新开启</button>') +
+        '<button type="button" class="btn ghost" data-hr-act="jd-edit" data-id="' + esc(j.id) + '"' + ro + '>编辑</button>' +
+        (j.status !== "closed" ? '<button type="button" class="btn ghost" data-hr-act="jd-status" data-id="' + esc(j.id) + '" data-st="' + (j.status === "live" ? "draft" : "live") + '"' + ro + '>' + (j.status === "live" ? "暂停招聘" : "发布在招") + "</button>" : '<button type="button" class="btn ghost" data-hr-act="jd-status" data-id="' + esc(j.id) + '" data-st="live"' + ro + '>重新开启</button>') +
         '<button type="button" class="btn ghost" data-hr-act="jd-copy" data-id="' + esc(j.id) + '">复制 JD</button>' +
-        '<button type="button" class="btn ghost danger" data-hr-act="jd-del" data-id="' + esc(j.id) + '">删除</button>' +
+        '<button type="button" class="btn ghost danger" data-hr-act="jd-del" data-id="' + esc(j.id) + '"' + ro + '>删除</button>' +
         '<small class="hrmeta">更新于 ' + esc(j.updated || j.created || "") + "</small>" +
       "</footer></article>";
   }
@@ -7245,7 +7383,7 @@ window.ME = (function () {
         var rank = { live: 0, draft: 1, closed: 2 };
         return (rank[a.status] - rank[b.status]) || String(b.updated || "").localeCompare(String(a.updated || ""));
       });
-      body = '<div class="hjdlist">' + sorted.map(jdCard).join("") + "</div>";
+      body = '<div class="hjdlist">' + sorted.map(function (j) { return jdCard(j, ro); }).join("") + "</div>";
     }
 
     var rolesHint = HR.canWrite() ? "" :
@@ -7271,7 +7409,7 @@ window.ME = (function () {
         var jj = HR.jd.get(id);
         if (!jj) return;
         var st = b.getAttribute("data-st");
-        HR.jd.setStatus(id, st);
+        if (!HR.jd.setStatus(id, st)) return;   /* 只读角色：requireWrite 已提示，别再报成功 */
         HR.toast("「" + jj.title + "」→ " + (HR.jdStatus[st] || {}).lb);
         renderJd(page);
         return;
@@ -7281,7 +7419,7 @@ window.ME = (function () {
         var jx = HR.jd.get(id);
         if (!jx) return;
         HR.confirm("删除职位", "将删除「" + jx.title + "」及其版本记录，候选人关联不受影响。确定？", function () {
-          HR.jd.remove(id);
+          if (!HR.jd.remove(id)) return;   /* 只读角色：不能假装删除成功 */
           HR.toast("职位已删除");
           renderJd(page);
         }, "删除");
@@ -7574,6 +7712,14 @@ window.ME = (function () {
       renderTalent(page);
     });
     page.addEventListener("click", function (e) {
+      /* 阶段筛选 chip 没有 data-hr-act，必须在通用 action 守卫之前处理 */
+      var f = e.target.closest("[data-hr-stage-filter]");
+      if (f) {
+        e.preventDefault();
+        page.__hrTstage = f.getAttribute("data-hr-stage-filter") || "";
+        renderTalent(page);
+        return;
+      }
       var b = e.target.closest("[data-hr-act]");
       if (!b) return;
       var act = b.getAttribute("data-hr-act");
@@ -7601,12 +7747,6 @@ window.ME = (function () {
         return;
       }
       if (act === "tal-import") { e.preventDefault(); openImport(); return; }
-      var f = e.target.closest("[data-hr-stage-filter]");
-      if (f) {
-        e.preventDefault();
-        page.__hrTstage = f.getAttribute("data-hr-stage-filter") || "";
-        renderTalent(page);
-      }
     });
   }
 
@@ -7725,15 +7865,15 @@ window.ME = (function () {
             '<span class="hrrule-t">' + esc(RULE_TYPE_LB[r.type] || r.type) + "</span>" +
             '<b class="hrrule-v">' + esc(r.value) + "</b>" +
             '<span class="hrrule-n">命中 ' + fmt(n) + " 个岗位" + (ex ? " · 如 " + esc(ex) : "") + "</span>" +
-            toggleSwitch(r.enabled !== false, 'data-hr-act="rule-toggle" data-id="' + esc(r.id) + '" aria-label="启停规则"') +
-            '<button type="button" class="icobtn" data-hr-act="rule-del" data-id="' + esc(r.id) + '" aria-label="删除规则" title="删除规则">' + icon("trash", 14) + "</button>" +
+            toggleSwitch(r.enabled !== false, 'data-hr-act="rule-toggle" data-id="' + esc(r.id) + '"' + ro + ' aria-label="启停规则"') +
+            '<button type="button" class="icobtn" data-hr-act="rule-del" data-id="' + esc(r.id) + '" aria-label="删除规则" title="删除规则"' + ro + '>' + icon("trash", 14) + "</button>" +
             "</div>";
         }).join("") : '<div class="hr-empty small"><b>还没有规则</b><span>加一条「广州」「林学」这样的单位或关键词，新岗位就会进提醒。</span></div>') +
       "</div></div>";
 
     var notifPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>未读动态</b><span>' + (unread ? unread + " 条未读" : "全部已读") + "</span></div>" +
       (unread ? '<div class="hrnotifs">' + notifs.map(function (n) {
-        return '<button type="button" class="hrnotif ' + esc(n.tone || "") + '" data-hr-act="notif-go" data-view="' + esc(n.view) + '" data-param="' + esc(n.param || "") + '">' +
+        return '<button type="button" class="hrnotif ' + esc(n.tone || "") + '" data-hr-act="notif-go" data-nid="' + esc(n.id) + '" data-view="' + esc(n.view) + '" data-param="' + esc(n.param || "") + '">' +
           '<span class="hrnotif-ic">' + icon(kindIcon(n.kind), 16) + "</span>" +
           '<span class="hrnotif-main"><b>' + esc(n.title) + "</b><small>" + esc(n.desc) + "</small></span>" +
           '<span class="hrnotif-at">' + esc(HR.atLabel(n.at)) + "</span>" +
@@ -7914,8 +8054,11 @@ window.ME = (function () {
     var st = HR.state();
     var audit = (st.audit || []).slice(0, 40);
 
+    var ro = HR.canWrite() ? "" : " disabled";
+    var roNote = HR.canWrite() ? "" : '<p class="hrnote-line">' + icon("alert", 13) + " 当前身份「" + esc(HR.role().lb) + "」只读：改招聘方信息、切换角色、清空招聘数据都已禁用。切到「招聘负责人」后再操作。</p>";
+
     var head = '<div class="page-head"><div><h1>设置与合规</h1><p class="sub">这个页面回答三个问题：数据从哪来、谁在动它、接简历会不会踩 PIPL。</p></div>' +
-      '<div class="head-side"><button type="button" class="btn ghost" data-hr-act="set-profile">改招聘方信息</button></div></div>';
+      '<div class="head-side"><button type="button" class="btn ghost" data-hr-act="set-profile"' + ro + ' title="' + (HR.canWrite() ? "修改招聘方信息" : "只读角色：切换到「招聘负责人」后可编辑") + '">改招聘方信息</button></div></div>' + roNote;
 
     /* 数据源台账 */
     var srcPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>数据源台账</b><span>快照 ' + esc(meta.snapshot || "—") + " · 可回溯到公告原文</span></div>" +
@@ -7940,7 +8083,7 @@ window.ME = (function () {
       '<div class="hrroles">' + HR.roles.map(function (r) {
         var on = r.k === HR.roleKey();
         return '<div class="hrrole' + (on ? " on" : "") + '"><div><b>' + esc(r.lb) + "<em>" + esc(r.tag) + "</em></b><small>" + esc(r.desc) + "</small></div>" +
-          (on ? '<span class="chip on">当前</span>' : '<button type="button" class="btn ghost" data-hr-act="set-role" data-role="' + esc(r.k) + '">切换</button>') + "</div>";
+          (on ? '<span class="chip on">当前</span>' : '<button type="button" class="btn ghost" data-hr-act="set-role" data-role="' + esc(r.k) + '"' + ro + ' title="' + (HR.canWrite() ? "切换角色" : "只读角色：切换到「招聘负责人」后可编辑") + '">切换</button>') + "</div>";
       }).join("") + "</div>" +
       '<p class="hrnote-line">' + icon("alert", 13) + ' 权限只在前端做门控（演示版没有账号后端）。真实上线时要接 SSO / RBAC，服务端校验每个写接口。</p></div>';
 
@@ -7973,7 +8116,7 @@ window.ME = (function () {
         kv("对标清单", HR.bench().rows.length + " 个岗位（键 starta-wb-bench，与其他模块共用）") +
         kv("存储位置", "localStorage · starta-hr-v1") +
       "</div>" +
-      '<div class="hrdanger"><button type="button" class="btn ghost danger" data-hr-act="set-clear-hr">清空招聘数据</button>' +
+      '<div class="hrdanger"><button type="button" class="btn ghost danger" data-hr-act="set-clear-hr"' + ro + ' title="' + (HR.canWrite() ? "清空招聘数据" : "只读角色：切换到「招聘负责人」后可编辑") + '">清空招聘数据</button>' +
       '<span class="hrmuted">只删职位 / 候选人 / 规则 / 审计，不动对标清单与求职者资料。</span></div></div>';
 
     /* 审计 */
@@ -8006,6 +8149,10 @@ window.ME = (function () {
       var b = e.target.closest("[data-hr-act]");
       if (!b) return;
       var act = b.getAttribute("data-hr-act");
+      if (!HR.canWrite()) {
+        HR.toast("当前角色「" + HR.role().lb + "」只读，不能修改设置");
+        return;
+      }
       if (act === "set-role") {
         HR.setRole(b.getAttribute("data-role"));
         renderSettings(page);
@@ -8098,10 +8245,14 @@ window.ME = (function () {
     since: 0,             /* 服务端启动时间 */
     asOf: 0,              /* 真实数据截至时间（毫秒） */
     lastBeat: 0,          /* 最近一次服务端心跳 */
-    ready: false
+    ready: false,
+    opened: false,        /* 是否成功连上过实时服务（决定“连接中/重连中”） */
+    gen: 0                /* 连接代号：手动 connect / 重连时作废旧 SSE 回调 */
   };
 
-  var subs = {};
+  /* null 原型：事件名可能来自服务端（任意字符串），用 {} 会让 "constructor" /
+     "__proto__" 这类名字撞上 Object.prototype，dispatch 时直接抛 TypeError。 */
+  var subs = Object.create(null);
   var timers = [];
   var tabId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   var bc = null;
@@ -8125,7 +8276,7 @@ window.ME = (function () {
       return p.join(".");
     }
   }
-  function pad2(n) { return String(n).padStart(2, "0"); }
+  function pad2(n) { n = String(n); return n.length < 2 ? "0" + n : n; }
   function hms(ms) {
     var s = Math.max(0, Math.floor(ms / 1000));
     return pad2(Math.floor(s / 3600)) + ":" + pad2(Math.floor(s % 3600 / 60)) + ":" + pad2(s % 60);
@@ -8162,8 +8313,16 @@ window.ME = (function () {
     var t = Date.parse(s.replace(" ", "T"));
     return t;
   }
-  function dispatch(type, payload, from) {
-    var list = (subs[type] || []).concat(subs["*"] || []);
+  function alive(node) {
+    if (!node) return false;
+    if (typeof node.isConnected === "boolean") return node.isConnected;
+    /* IE11 / 旧内核没有 isConnected：退回 DOM 树查询 */
+    return !!(doc.documentElement && doc.documentElement.contains(node));
+  }
+  function dispatch(type, payload, from, noStar) {
+    var base = Array.isArray(subs[type]) ? subs[type] : [];
+    var list = base.slice();
+    if (!noStar && type !== "*" && Array.isArray(subs["*"])) list = list.concat(subs["*"]);
     for (var i = 0; i < list.length; i++) {
       try { list[i](payload, type, from || "local"); } catch (e) { if (global.console) console.error("[Live]", e); }
     }
@@ -8260,7 +8419,6 @@ window.ME = (function () {
       return;
     }
     dispatch(msg.t, msg.p, "peer");
-    dispatch("*", msg.p, "peer");
   }
   function initChannel() {
     try {
@@ -8298,9 +8456,16 @@ window.ME = (function () {
     var candidates = resolveCandidates();
     state.serverTried = candidates.join(" / ");
     if (!candidates.length) { setMode("sync"); return; }
-    setMode(state.ready ? "reconnecting" : "connecting");
+    /* 新一轮连接先掐掉旧的 SSE 和待执行的退避定时器：
+       否则手动 connect() / 重复 init 会让旧连接继续挂着，服务端在线数虚高、事件重复。 */
+    var gen = (state.gen || 0) + 1;
+    state.gen = gen;
+    if (state.es) { try { state.es.close(); } catch (e) { } state.es = null; }
+    if (state.retryTimer) { clearTimeout(state.retryTimer); state.retryTimer = 0; }
+    setMode(state.opened ? "reconnecting" : "connecting");
     var idx = 0;
     (function next() {
+      if (gen !== state.gen) return;
       if (idx >= candidates.length) {
         setMode("sync");
         scheduleRetry();
@@ -8312,13 +8477,16 @@ window.ME = (function () {
       catch (e) { next(); return; }
       var opened = false;
       var guard = setTimeout(function () {
-        if (opened) return;
+        if (opened || gen !== state.gen) return;
         try { es.close(); } catch (e) { }
         next();
       }, 2600);
       es.onopen = function () {
+        /* 这条连接已经被新一轮 connect() 取代：安静关掉，不要污染新状态 */
+        if (gen !== state.gen) { try { es.close(); } catch (e) { } return; }
         opened = true;
         clearTimeout(guard);
+        state.opened = true;
         state.es = es;
         state.server = base;
         state.ready = true;
@@ -8326,11 +8494,13 @@ window.ME = (function () {
         setMode("live");
       };
       es.onmessage = function (ev) {
+        if (gen !== state.gen) return;
         var msg;
         try { msg = JSON.parse(ev.data); } catch (e) { return; }
         handleServer(msg);
       };
       es.onerror = function () {
+        if (gen !== state.gen) { try { es.close(); } catch (e) { } return; }
         clearTimeout(guard);
         try { es.close(); } catch (e) { }
         if (state.es === es) state.es = null;
@@ -8370,6 +8540,8 @@ window.ME = (function () {
         dispatch("heartbeat", msg, "server");
         break;
       case "data":
+        /* 数据文件变了：同步“数据截至”的真实时间，别让页面停在旧扫描时间 */
+        if (msg.asOf && !cfg.localAsOf) { state.asOf = Number(msg.asOf) || state.asOf; pillRender(); }
         dispatch("data", msg, "server");
         break;
       case "session":
@@ -8379,12 +8551,11 @@ window.ME = (function () {
         /* 统一约定：on('event', fn) 拿到完整信封（含 name / at / replay）；
            on('<name>', fn) 拿到其中的 payload。 */
         dispatch("event", msg, "server");
-        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server");
+        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server", true);
         break;
       default:
         dispatch(msg.type, msg, "server");
     }
-    dispatch("*", msg, "server");
   }
 
   /* ---------------- 真实的“N 分钟前” ---------------- */
@@ -8397,7 +8568,7 @@ window.ME = (function () {
     var prefix = opts.prefix == null ? "" : opts.prefix;
     if (node.__liveTimer) clearInterval(node.__liveTimer);
     function paint() {
-      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
       var t = typeof ts === "function" ? ts() : ts;
       if (t == null || t === "") { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
       var ms = typeof t === "number" ? t : toDate(t);
@@ -8422,7 +8593,7 @@ window.ME = (function () {
     var ms = typeof deadline === "number" ? deadline : toDate(deadline);
     if (node.__liveTimer) clearInterval(node.__liveTimer);
     function paint() {
-      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
       if (!isFinite(ms)) { node.textContent = "—"; return; }
       var left = ms - Date.now();
       if (left <= 0) {
@@ -8536,7 +8707,7 @@ window.ME = (function () {
     /* 同一个节点重复绑（页面重渲染、胶囊重建）先掐掉旧定时器，别越积越多 */
     if (node.__liveClockTimer) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; }
     function paint() {
-      if (!node.isConnected) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
+      if (!alive(node)) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
       var d = new Date();
       var s = pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + (opts.seconds === false ? "" : ":" + pad2(d.getSeconds()));
       node.textContent = s;
@@ -8676,7 +8847,9 @@ window.ME = (function () {
     if (!pill) return;
     pill.classList.add(ok ? "live-flash" : "live-flash-warn");
     setTimeout(function () {
-      pill.classList.remove("live-flash", "live-flash-warn");
+      /* 分开 remove：IE11 的 DOMTokenList.remove 只吃一个参数，多参会抛错 */
+      pill.classList.remove("live-flash");
+      pill.classList.remove("live-flash-warn");
     }, 1200);
   }
 

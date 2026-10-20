@@ -124,6 +124,7 @@ const state = {
   quick: null, /* null | "urgent" | "open" | "saved"：点 KPI 卡进来的快捷筛选 */
   prog: {}, /* i -> { st, at }：研判阶段 + 最后一次改动日期 */
   mineSt: null, /* 对标清单页的阶段筛选 */
+  mPage: 0, /* 对标清单当前页（0 起） */
   page: 0, /* 市场岗位库当前页（0 起） */
   pgSize: 50, /* 一页 50 条：9,200 行不可能一次画完 */
   uPage: 0, /* 竞争雇主当前页 */
@@ -467,7 +468,8 @@ function pageSlice(list) {
   return { slice: all.slice(from, from + state.pgSize), from, total: all.length, pages, page: state.page };
 }
 /* 页码窗口：当前页两侧各 2 页，首尾固定带省略号 */
-function pageWindow(cur, pages) {
+function pageWindow(cur, pages, attr) {
+  const key = attr || "page";
   const out = [];
   const push = v => { if (out[out.length - 1] !== v) out.push(v); };
   push(0);
@@ -476,7 +478,7 @@ function pageWindow(cur, pages) {
   const html = [];
   out.forEach((p, idx) => {
     if (idx && p - out[idx - 1] > 1) html.push(`<span class="pg-gap">…</span>`);
-    html.push(`<button class="pg-btn${p === cur ? " on" : ""}" data-page="${p}" aria-label="第 ${p + 1} 页" aria-current="${p === cur ? "page" : "false"}">${p + 1}</button>`);
+    html.push(`<button class="pg-btn${p === cur ? " on" : ""}" data-${key}="${p}" aria-label="第 ${p + 1} 页" aria-current="${p === cur ? "page" : "false"}">${p + 1}</button>`);
   });
   return html.join("");
 }
@@ -485,7 +487,8 @@ function syncPager(list) {
   if (!box) return;
   const s = pageSlice(list);
   if (!s.total) { box.innerHTML = `<span class="pg-meta">共 0 条</span>`; return; }
-  const first = s.from + 1, last = Math.min(s.from + state.pgSize, s.total);
+  const first = (s.from + 1).toLocaleString("zh-CN");
+  const last = Math.min(s.from + state.pgSize, s.total).toLocaleString("zh-CN");
   box.innerHTML = `<span class="pg-meta">${first}–${last} / 共 ${s.total.toLocaleString("zh-CN")} 条</span>
     <div class="pg-nums">
       <button class="pg-btn pg-prev" data-page="${s.pages > 1 ? s.page - 1 : 0}" ${s.page === 0 ? "disabled" : ""} aria-label="上一页">‹</button>
@@ -600,7 +603,7 @@ function syncKPI() {
   setText("#kpiTypes", uniq(DATA.map(d => d && d.t)).length);
   setText("#kpiUrgent", fmt(k.open));
   setText("#kpiEarliest", earliestLabel());
-  setText("#kpiSaved", state.saved.size);
+  setText("#kpiSaved", fmt(state.saved.size));
 
   // 已对标卡片的脚注跟随数量变化
   const savedNum = $("#kpiSaved");
@@ -626,7 +629,7 @@ function syncKPI() {
   setText("#ctJobs", fmt(k.total));
   setText("#ctNotices", String(NOTICES.length));
   setText("#ctUnits", fmt(k.units));
-  setText("#ctMine", String(state.saved.size));
+  setText("#ctMine", fmt(state.saved.size));
   setText("#ctMe", String(meCount()));
 
   const sub = $("#view-lib .page-head .sub");
@@ -1032,7 +1035,7 @@ const VIEW_LABEL = { lib: "市场岗位库", collect: "情报采集", units: "�
 const SORT_KEYS = ["due", "n", "unit", "role", "type"];
 let __urlMute = false;    /* popstate 重放期间禁止回写，避免自己触发自己 */
 let __urlReady = false;   /* bindEvents 完成后才允许回写 URL */
-let __qRaf = 0;           /* 搜索输入合帧：同一帧只渲染一次 */
+let __qRaf = 0;           /* 搜索输入防抖句柄：连续输入只在停顿后渲染一次 */
 let dwPushed = false;     /* 当前抽屉是否压了一条历史（关闭时要 back 回去） */
 let noticeLink = null;    /* URL 上显式携带的情报采集公告 id */
 
@@ -1190,11 +1193,10 @@ function focusViewPage(v) {
   else setTimeout(run, 0);
 }
 
-/* 搜索输入合帧：同一帧里连打多个字符只渲染一次 */
+/* 搜索输入防抖：连续输入只在停顿 140ms 后渲染一次，避免每个字符全表扫 */
 function scheduleRender() {
-  if (__qRaf) return;
-  const run = () => { __qRaf = 0; render(); };
-  __qRaf = typeof requestAnimationFrame === "function" ? requestAnimationFrame(run) : setTimeout(run, 16);
+  if (__qRaf) clearTimeout(__qRaf);
+  __qRaf = setTimeout(() => { __qRaf = 0; render(); }, 140);
 }
 
 function setView(v, opts) {
@@ -1518,7 +1520,14 @@ function renderMine() {
   }
 
   const shown = state.mineSt ? list.filter(d => stageOf(d.i).k === state.mineSt) : list;
-  box.innerHTML = shown.length ? shown.map(d => {
+  /* 分页：对标量大时（旧版曾一次写入上千条）只画当页 50 行，统计/漏斗/导出仍按全集 */
+  const per = state.pgSize;
+  const mpages = Math.max(1, Math.ceil(shown.length / per));
+  if (state.mPage > mpages - 1) state.mPage = mpages - 1;
+  if (state.mPage < 0) state.mPage = 0;
+  const mfrom = state.mPage * per;
+  const mslice = shown.slice(mfrom, mfrom + per);
+  box.innerHTML = mslice.length ? mslice.map(d => {
     const st = stageOf(d.i), age = ageOf(d.i), left = dleft(d);
     const ageTxt = age == null ? "—" : age === 0 ? "今天" : age + " 天前";
     const dueCls = left == null ? "" : left < 0 ? " expired" : left <= 7 ? " soon" : "";
@@ -1543,6 +1552,21 @@ function renderMine() {
     : (state.mineSt
       ? `<div class="empty"><b>「${esc(STAGE_I[state.mineSt].lb)}」这一档还没有岗位</b>点上面亮着的阶段卡回到全部，或者去市场岗位库把新岗位收进来。</div>`
       : `<div class="empty"><b>对标集还是空的</b>去市场岗位库点一下 ☆，或者在任意岗位的展开行里点一个研判阶段，收进来的岗位会存在本地，刷新也不丢。</div>`);
+  const mp = $("#mpager");
+  if (mp) {
+    if (!shown.length) { mp.innerHTML = ""; }
+    else {
+      const mfirst = (mfrom + 1).toLocaleString("zh-CN");
+      const mlast = Math.min(mfrom + per, shown.length).toLocaleString("zh-CN");
+      mp.innerHTML = `<span class="pg-meta">${mfirst}–${mlast} / 共 ${shown.length.toLocaleString("zh-CN")} 条</span>
+        <div class="pg-nums">
+          <button class="pg-btn pg-prev" data-mpage="${state.mPage > 0 ? state.mPage - 1 : 0}" ${state.mPage === 0 ? "disabled" : ""} aria-label="上一页">‹</button>
+          ${pageWindow(state.mPage, mpages, "mpage")}
+          <button class="pg-btn pg-next" data-mpage="${state.mPage + 1}" ${state.mPage >= mpages - 1 ? "disabled" : ""} aria-label="下一页">›</button>
+        </div>
+        <span class="pg-meta">第 ${state.mPage + 1} / ${mpages} 页 · 每页 ${per}</span>`;
+    }
+  }
 }
 function exportMine() {
   const list = savedJobs();
@@ -1868,7 +1892,7 @@ function bindEvents() {
   });
   on("#major", "change", e => { state.major = e.target.value; persistFilters(); render(); });
   on("#edu", "change", e => { state.edu = e.target.value; persistFilters(); render(); });
-  /* 搜索：非岗位库视图里输入就先切回岗位库；rAF 合帧，连打多个字符只渲染一次 */
+  /* 搜索：非岗位库视图里输入就先切回岗位库；140ms 防抖，连打多个字符只渲染一次 */
   on("#q", "input", e => {
     state.q = e.target.value.trim();
     state.page = 0;
@@ -1883,6 +1907,7 @@ function bindEvents() {
     if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
+      if (__qRaf) { clearTimeout(__qRaf); __qRaf = 0; }
       state.q = "";
       e.target.value = "";
       state.page = 0;
@@ -1902,6 +1927,7 @@ function bindEvents() {
     state.sort = "due";
     state.dir = 1;
     state.noticeFilter = null;
+    state.page = 0;            /* 重置后回到第 1 页，不能停在旧页码 */
     const q = $("#q"); if (q) q.value = "";
     persistFilters();
     mountFilters();
@@ -2032,21 +2058,20 @@ function bindEvents() {
     try { next.scrollIntoView({ block: "nearest" }); } catch (err) { /* 忽略 */ }
   });
   on("#checkAll", "change", e => {
-    const list = filtered();
-    if (e.target.checked) list.forEach(d => state.sel.add(d.i));
-    else list.forEach(d => state.sel.delete(d.i));
+    /* 表头复选框语义是「全选本页」：只动当前页 50 行，不能把 9,200 行全画进 DOM */
+    const page = pageSlice(filtered()).slice;
+    if (e.target.checked) page.forEach(d => state.sel.add(d.i));
+    else page.forEach(d => state.sel.delete(d.i));
     e.target.indeterminate = false;
-    paintRows(list);
-    syncBulk(list);
+    render();
   });
-  on("#clearSel", "click", () => { state.sel.clear(); paintRows(filtered()); syncBulk(); });
+  on("#clearSel", "click", () => { state.sel.clear(); render(); });
   on("#saveSel", "click", () => {
     const list = visibleSelected();
     if (!list.length) { toast("先勾选要对标的岗位"); return; }
     setSavedMany(list, true);
     state.sel.clear();
-    paintRows(filtered());
-    syncBulk();
+    render();
     toast(`已对标 ${list.length} 条岗位`);
   });
   on("#copySel", "click", () => {
@@ -2131,6 +2156,20 @@ function bindEvents() {
     if (row) openDrawer(Number(row.dataset.i), row);
   });
   on("#mineExport", "click", exportMine);
+  /* 对标清单分页：只重画当页，漏斗/统计/导出仍按全集 */
+  on("#mpager", "click", e => {
+    const b = e.target.closest("[data-mpage]");
+    if (!b || b.disabled) return;
+    const p = Number(b.dataset.mpage);
+    if (!isFinite(p) || p === state.mPage) return;
+    state.mPage = Math.max(0, p);
+    renderMine();
+    const wrap = $("#mrows");
+    if (wrap) {
+      const top = wrap.getBoundingClientRect().top + window.scrollY - 96;
+      try { window.scrollTo({ top, behavior: "smooth" }); } catch (err) { window.scrollTo(0, top); }
+    }
+  });
 
   /* 列表分页：换页只重画表格，不重建 DOM 之外的东西 */
   on("#pager", "click", e => {
@@ -2148,9 +2187,11 @@ function bindEvents() {
   });
   /* 竞争雇主分页 + 雇主搜索 */
   on("#upager", "click", e => {
-    const b = e.target.closest("[data-upage]");
+    /* 数字页码由 pageWindow() 生成，带的是 data-page；箭头才是 data-upage。
+       之前只认 data-upage，导致数字页码点了没反应。 */
+    const b = e.target.closest("[data-upage],[data-page]");
     if (!b || b.disabled) return;
-    const p = Number(b.dataset.upage);
+    const p = Number(b.dataset.upage != null && b.dataset.upage !== "" ? b.dataset.upage : b.dataset.page);
     if (!isFinite(p)) return;
     state.uPage = Math.max(0, p);
     renderUnits();
@@ -2207,6 +2248,7 @@ function bindEvents() {
     if (!b) return;
     const k = b.dataset.mst;
     state.mineSt = (state.mineSt === k) ? null : k;
+    state.mPage = 0;
     renderMine();
     syncStatusText();
     const n = state.mineSt ? savedJobs().filter(d => stageOf(d.i).k === state.mineSt).length : savedJobs().length;
