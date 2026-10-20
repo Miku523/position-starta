@@ -1,10 +1,10 @@
 /* =====================================================================
    个人中心 / 投递记录（assets/me.js）
-   —— 只做本地持久化（localStorage "strata-me-v1"），不发请求
+   —— 只做本地持久化（localStorage "starta-me-v1"），不发请求
    —— 依赖 app.js 暴露的全局：esc / toast / $ / noticeOf / noticeUrl / csvDownload / todayDate
    ===================================================================== */
 window.ME = (function () {
-  const KEY = "strata-me-v1";
+  const KEY = "starta-me-v1";
   const APP_STATUS = ["已投递", "已确认", "笔试", "面试", "已录取", "未通过"];
   /* 字段 → 权重（合计 100），完整度按填了哪些算 */
   const FIELDS = [

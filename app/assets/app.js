@@ -32,12 +32,12 @@ function meCount() {
 }
 
 const LS = {
-  theme: "strata-wb-theme",
-  density: "strata-wb-density",
-  fs: "strata-wb-fs",
-  /* 对标集：旧键 strata-wb-saved 存的是候选人时期的收藏，按新口径另起一个键，不迁移 */
-  saved: "strata-wb-bench",
-  filters: "strata-wb-filters"
+  theme: "starta-wb-theme",
+  density: "starta-wb-density",
+  fs: "starta-wb-fs",
+  /* 对标集：早期版本存过候选人时期的收藏，按新口径另起一个键，不迁移 */
+  saved: "starta-wb-bench",
+  filters: "starta-wb-filters"
 };
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 隐私模式忽略 */ } }
@@ -1036,12 +1036,12 @@ let __qRaf = 0;           /* 搜索输入合帧：同一帧只渲染一次 */
 let dwPushed = false;     /* 当前抽屉是否压了一条历史（关闭时要 back 回去） */
 let noticeLink = null;    /* URL 上显式携带的情报采集公告 id */
 
-/* 标题：hr-core 在 HR 视图里会调 window.strataTitle(v)，这里对 11 个视图都给出唯一标题 */
-function strataTitle(v) {
+/* 标题：hr-core 在 HR 视图里会调 window.startaTitle(v)，这里对 11 个视图都给出唯一标题 */
+function startaTitle(v) {
   document.title = (VIEW_LABEL[v] || VIEW_LABEL.lib) + " · 星他 招聘情报台";
   return document.title;
 }
-window.strataTitle = strataTitle;
+window.startaTitle = startaTitle;
 
 /* 从地址栏读一份状态；null = 参数没出现（启动时保留 localStorage），空串语义只给 q */
 function readUrlState() {
@@ -1165,7 +1165,7 @@ function syncUrlState(mode, opts) {
   const next = url.href;
   if (next === location.href) return "";
   try {
-    const st = { strata: 1, view: state.view, drawer: dwIndex != null ? 1 : 0 };
+    const st = { starta: 1, view: state.view, drawer: dwIndex != null ? 1 : 0 };
     if (mode === "push") history.pushState(st, "", next);
     else history.replaceState(st, "", next);
     return next;
@@ -1216,7 +1216,7 @@ function setView(v, opts) {
   else if (v === "mine") renderMine();
   else if (v === "skill") renderSkill();
   else if (v === "me" && window.ME && typeof window.ME.render === "function") window.ME.render();
-  strataTitle(v);   /* silent 也要设：hr-core 的 hardSwitch 依赖它 */
+  startaTitle(v);   /* silent 也要设：hr-core 的 hardSwitch 依赖它 */
   if (!(opts && opts.silent)) {
     syncUrlState(prevView !== v ? "push" : "replace", { onlyView: true });
     focusViewPage(v);

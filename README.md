@@ -1,7 +1,7 @@
 # 岗位要求的地层 · 一次可回放的云端采样
 
-> **报告：** https://mikuascendlog.com/position-strata/
-> **招聘工作台：** https://mikuascendlog.com/position-strata/app/
+> **报告：** https://mikuascendlog.com/position-starta/
+> **招聘工作台：** https://mikuascendlog.com/position-starta/app/
 > Lexmount 云平台真实任务挑战 · 参赛作品材料包 · 提交日期：2026-10-20
 
 ## 页面怎么进
@@ -79,8 +79,8 @@ HR／求职者想知道「这批岗位到底卡什么」，只能一张张表翻
 
 | 材料 | 位置 |
 | --- | --- |
-| **在线报告（Pages）** | **https://mikuascendlog.com/position-strata/** |
-| **招聘工作台（Pages）** | **https://mikuascendlog.com/position-strata/app/** |
+| **在线报告（Pages）** | **https://mikuascendlog.com/position-starta/** |
+| **招聘工作台（Pages）** | **https://mikuascendlog.com/position-starta/app/** |
 | 报告（单文件 HTML，双击即开） | `index.html` |
 | 报告 PDF | `技能地层采样报告.pdf` |
 | 归一后的岗位底表（9,200 行 CSV） | `data/岗位表_统一字段.csv` |
@@ -121,7 +121,7 @@ HR／求职者想知道「这批岗位到底卡什么」，只能一张张表翻
 | 对标简报 | 招聘负责人 | 七个章节勾选（招聘画像 / 对标清单 / JD 差距 / 提醒 / 建议动作 / 口径与来源），A4 预览即打印，导出独立 HTML 或复制 Markdown，给老板/用人经理一页纸 |
 | 设置·合规 | 全员 | 数据源台账（含公告原文回链）、角色与权限（招聘负责人 / 用人经理 / 只读观察者）、四个集成占位、PIPL 清单、本地数据大小与清空、最近操作日志 |
 
-实现上不动原有六视图：新增 `hr-core.js`（状态/角色/审计/提醒/弹层/桥接）、`hr-market.js`（市场基准与简报）、`hr-views-a.js`（职位与人才）、`hr-views-b.js`（提醒/简报/设置）与 `hr.css`；`app.js` 零改动，导航与铃铛由捕获层接管。本地键 `starta-hr-v1`，与求职者的 `strata-me-v1`、对标清单 `strata-wb-bench` 互不影响。
+实现上不动原有六视图：新增 `hr-core.js`（状态/角色/审计/提醒/弹层/桥接）、`hr-market.js`（市场基准与简报）、`hr-views-a.js`（职位与人才）、`hr-views-b.js`（提醒/简报/设置）与 `hr.css`；`app.js` 零改动，导航与铃铛由捕获层接管。本地键 `starta-hr-v1`，与求职者的 `starta-me-v1`、对标清单 `starta-wb-bench` 互不影响。
 
 ## 五、复现
 

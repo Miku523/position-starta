@@ -16,7 +16,7 @@
      5) setSaved() / setStage() 写审计 HR.audit()
 
    存储：localStorage['starta-hr-v1']；与 app.js 的
-   strata-wb-bench（对标清单）只读兼容，互不改写。
+   starta-wb-bench（对标清单）只读兼容，互不改写。
    ===================================================================== */
 (function () {
   "use strict";
@@ -136,7 +136,7 @@
 
   /* ---------------- 常量 ---------------- */
   var HR_KEY = "starta-hr-v1";
-  var BENCH_KEY = "strata-wb-bench";
+  var BENCH_KEY = "starta-wb-bench";
 
   var ROLES = [
     { k: "hr", lb: "招聘负责人", tag: "HR", desc: "建职位、导人才、改提醒规则、出简报", write: true, note: true },
@@ -587,10 +587,10 @@
      这样 app.js 可以保持零改动，减少与其它工具并发写同一文件的冲突。 */
   var _navInit = false;
   var HR_TITLES = { jd: "我的职位", talent: "人才库", watch: "变化提醒", brief: "对标简报", settings: "设置与合规" };
-  /* 每视图标题：优先用 app.js 暴露的 window.strataTitle（11 个视图统一格式），失败再回退自有映射 */
+  /* 每视图标题：优先用 app.js 暴露的 window.startaTitle（11 个视图统一格式），失败再回退自有映射 */
   function applyViewTitle(v) {
-    if (typeof window.strataTitle === "function") {
-      try { window.strataTitle(v); return; } catch (e) { /* 回退下方映射 */ }
+    if (typeof window.startaTitle === "function") {
+      try { window.startaTitle(v); return; } catch (e) { /* 回退下方映射 */ }
     }
     document.title = (HR_TITLES[v] || VIEW_LB[v] || "星他") + " · 星他 招聘情报台";
   }

@@ -75,14 +75,16 @@ h2.sec{font-family:var(--serif);font-weight:600;font-size:clamp(26px,3.4vw,40px)
 section > .wrap{position:relative;z-index:1}
 
 /* ---------- 01 首屏 ---------- */
-.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding:64px 0 40px}
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding:48px 0 36px}
+/* 首屏截图限高，保证下方三个大数字完整落在首屏内 */
+.hero-win .body img{max-height:50vh;object-fit:cover;object-position:top}
 .hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
 .kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
 h1{font-family:var(--serif);font-weight:600;font-size:clamp(46px,7vw,86px);line-height:1.06;margin:20px 0 0;letter-spacing:-.01em}
 h1 em{font-style:normal;color:var(--orange)}
 .hero p{max-width:46ch;margin:26px 0 0;font-size:15px;line-height:2;color:var(--dim)}
 .hero p u{text-decoration:none;border-bottom:1px solid var(--orange);padding-bottom:2px;color:var(--paper2)}
-.hero-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:44px;border-top:1px solid var(--lineD)}
+.hero-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:30px;border-top:1px solid var(--lineD)}
 .hero-metrics div{padding:20px 18px 0 0;border-right:1px solid var(--lineD2)}
 .hero-metrics div:last-child{border-right:0}
 .hero-metrics b{display:block;font-family:var(--serif);font-size:clamp(30px,3.6vw,44px);font-weight:600;letter-spacing:-.01em;white-space:nowrap}
@@ -179,7 +181,7 @@ h1 em{font-style:normal;color:var(--orange)}
 .flip:hover .f{border-color:rgba(228,87,46,.55)}
 
 /* 分类条 / 地层剖面 */
-.strata{margin-top:34px;border-top:1px solid var(--lineL)}
+.starta{margin-top:34px;border-top:1px solid var(--lineL)}
 .srow{display:grid;grid-template-columns:132px 1fr 74px;align-items:center;gap:14px;
   padding:13px 0;border-bottom:1px solid var(--lineL2);transition:background .18s}
 .srow:hover{background:rgba(228,87,46,.05)}
@@ -245,9 +247,12 @@ details.acc summary:hover{color:var(--orange);padding-left:6px}
 details.acc summary .n{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--dim2)}
 details.acc summary .ico{font-family:var(--mono);color:var(--dim2);transition:transform .2s}
 details.acc[open] summary .ico{transform:rotate(45deg)}
-details.acc .body{padding:0 0 22px;font-size:12.5px;line-height:2;color:var(--dim)}
+details.acc .body{padding:0 0 22px;font-size:12.5px;line-height:2;color:#BCC2CA;overflow-x:auto}
 details.acc .body table{font-size:12px}
-details.acc .body th,details.acc .body td{border-color:var(--lineD2);color:var(--dim)}
+details.acc .body th,details.acc .body td{border-color:var(--lineD2);color:#D2D7DD}
+details.acc .body th{color:#9FA6AE}
+/* 表格横向滚动容器（窄屏） */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 /* ---------- 目录 ---------- */
 .toc{position:fixed;left:max(20px,calc(50vw - 590px - 210px));top:50%;transform:translateY(-50%);
@@ -263,6 +268,8 @@ details.acc .body th,details.acc .body td{border-color:var(--lineD2);color:var(-
 .tocbtn{display:none}
 @media (max-width:1499px){
   .toc{display:none}
+  /* 目录浮钮固定在右下角，页脚留出避让空间 */
+  .foot{padding-bottom:82px}
   .tocbtn{display:flex;position:fixed;right:16px;bottom:16px;z-index:55;align-items:center;gap:8px;
     border:1px solid var(--lineD);background:rgba(10,11,12,.9);color:var(--paper);backdrop-filter:blur(8px);
     font-family:var(--mono);font-size:10px;letter-spacing:.16em;padding:13px 16px;min-height:44px;cursor:pointer}
@@ -328,6 +335,10 @@ details.acc .body th,details.acc .body td{border-color:var(--lineD2);color:var(-
   .bar{padding:14px 18px;font-size:9px;letter-spacing:.1em}
   h1{font-size:clamp(38px,11vw,54px)}
   .hint{left:12px;right:12px;bottom:74px}
+  /* 窄屏表格改为横向滚动，不再逐字折行 */
+  .tw table,.acc .body table{min-width:520px}
+  table{min-width:100%}
+  .foot{padding-bottom:88px}
 }
 
 /* 触屏：禁 hover 幻影，改用 tap 反馈 */
@@ -365,12 +376,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
 <div class="progress" id="prog"></div>
 
 <header class="bar">
-  <div><b>岗位要求的地层</b> &nbsp;/&nbsp; SKILL STARTA SURVEY</div>
+  <div title="岗位要求的地层 / SKILL STARTA SURVEY"><b>岗位要求的地层</b> &nbsp;/&nbsp; SKILL STARTA SURVEY</div>
   <div class="r">
     <span class="keep">19 SITES · 29 SUBMITS</span>
     <span class="keep">9,200 POSITIONS</span>
     <span class="keep">2026-10-20</span>
-    <a class="lang" href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">招聘工作台 ↗</a>
+    <a class="lang" href="https://mikuascendlog.com/position-starta/app/" target="_blank" rel="noopener">招聘工作台 ↗</a>
     <a class="lang" href="#s06">数据下载</a>
   </div>
 </header>
@@ -415,7 +426,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
       <div class="card metric"><div class="no">E-01</div><div class="v">本科<small>最高频学历</small></div><div class="u">6,681 / 9,200 个岗位卡本科及以上</div></div>
       <div class="card metric"><div class="no">E-02</div><div class="v">湛江<small>岗位最密</small></div><div class="u">1,320 个岗位，占 14.3%——不是广州</div></div>
       <div class="card metric"><div class="no">E-03</div><div class="v">15.5%<small>只招应届</small></div><div class="u">1,426 个岗位卡应届，其余 84.5% 不限</div></div>
-      <div class="card metric"><div class="no">E-04</div><div class="v">31%<small>提交失败率</small></div><div class="u">29 次提交里 9 次失败，其中 8 次是导航超时</div></div>
+      <div class="card metric"><div class="no">E-04</div><div class="v">31%<small>提交失败率</small></div><div class="u">29 次提交里 9 次失败——<b style="color:var(--paper2);font-weight:500">9 次全部来自 hrss.gd.gov.cn 一台服务器</b>，其中 8 次是导航超时。不是采集器的问题，是那台服务器不稳定（详见 A-02）</div></div>
     </div>
 
     <div class="grid g2" style="margin-top:14px">
@@ -433,7 +444,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
     <h2 class="sec">采样方案：为什么是这 19 个地址</h2>
     <p class="lede">不抓商业招聘平台（反爬风控与合规都不适合公开演示），只抓公开但难抓的源：政府公告、事业单位招聘详情页、挂 xlsx／pdf 附件的通知。它们共同的特征是——页面要靠浏览器渲染、附件藏在链接里、同一台服务器时好时坏。</p>
 
-    <table style="margin-top:30px">
+    <div class="tw" style="margin-top:30px">
+    <table>
       <thead><tr><th>源</th><th>地址</th><th>为什么选它</th><th>拿到什么</th></tr></thead>
       <tbody>
         <tr><td>国家林草局 · 公告列表 + 详情</td><td class="mono">10</td><td>列表→详情两段跳，附件是 PDF 岗位表</td><td class="mono">8 页正文 · 2 个 PDF</td></tr>
@@ -441,6 +453,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
         <tr><td>浙江省人社厅 · 招聘列表</td><td class="mono">1</td><td>换一个省份，检验是否只在广东能跑</td><td class="mono">页面能开，但内容空</td></tr>
       </tbody>
     </table>
+    </div>
 
     <div class="fail" style="margin-top:26px">
       <div class="stamp">未采到 · 9 次尝试</div>
@@ -455,6 +468,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
 
     <h4 style="margin:40px 0 6px">同一套字段，吃两种源</h4>
     <p class="cap" style="border:0;padding:0 0 12px">两类源的表头完全不同：一边是 xlsx 里的「考区／单位代码／岗位代码」，一边是 PDF 里的「序号 / 单位／岗 位／学历要求」。归一器把它们映射到同一套 11 个字段，于是可以并排放进一张表。</p>
+    <div class="tw">
     <table>
       <thead><tr><th>源</th><th>类型</th><th>表数</th><th>行数</th><th>这一源真填上的字段</th></tr></thead>
       <tbody>
@@ -463,6 +477,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
         <tr><td><b>归一后</b></td><td class="mono">同批 2 个来源</td><td class="mono">6</td><td class="mono">9,200</td><td>11 个字段，缺的那列留空、不猜</td></tr>
       </tbody>
     </table>
+    </div>
     <p class="cap" style="border:0;padding:10px 0 0">证据：<span class="mono">session_5eac7377（广东，5.2 s）</span> + <span class="mono">session_b881d097（林草，7.5 s）</span>，同批 <span class="mono">batch-1792437271749</span>。归一表里 <b>岗位 空 9,167 行</b>——因为广东那份公告只有岗位代码与岗位职责，没有岗位名称；这个空格不拿别的东西填。</p>
   </div>
 </section>
@@ -473,9 +488,9 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
   <div class="wrap sect-pad" style="padding-top:0">
     <div class="eyebrow">04 — Profile</div>
     <h2 class="sec">剖面：门槛是怎么沉下去的</h2>
-    <p class="lede">同一份数据，画成折线是趋势，画成柱是排序，画成环是占比——选错图，结论就会被读错。所以先交代每种图被用在哪里、为什么，再给图。</p>
+    <p class="lede">同一份数据，画成折线是趋势，画成柱是排序，画成环是占比——选错图，结论就会被读错。所以先交代每种图该用在哪、这次用了没用，再给图。</p>
 
-    <div class="strata" id="strata">
+    <div class="starta" id="starta">
       <div class="srow"><div class="nm">学科教学硕士</div><div class="bar"><i style="--w:1.00"></i></div><div class="ct">1,414 岗</div></div>
       <div class="srow hot"><div class="nm">课程与教学论</div><div class="bar"><i style="--w:0.65"></i></div><div class="ct">919 岗</div></div>
       <div class="srow"><div class="nm">临床医学</div><div class="bar"><i style="--w:0.57"></i></div><div class="ct">808 岗</div></div>
@@ -488,15 +503,16 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
       <span>DEPTH · 要求该专业的岗位数</span><span>FIG.01 — MAJOR FREQUENCY · N=9200</span>
     </div>
 
-    <h3 style="font-family:var(--serif);font-size:22px;margin:52px 0 0;font-weight:600">六种图，六个口径</h3>
+    <h3 style="font-family:var(--serif);font-size:22px;margin:52px 0 0;font-weight:600">六种图，这次用了三种</h3>
+    <p class="cap" style="border:0;padding:8px 0 0;max-width:70ch">下面六张卡翻面是「这张图该怎么用、这次用在哪」。折线、环、散点这次<b>没有画</b>——不是忘了，是这次的数据撑不起它们的口径，背面上写了原因。</p>
     <p class="lede" style="margin-top:10px">点一下卡片翻面，背面写的是“为什么这张图只能这么用”。</p>
     <div class="grid g3" style="margin-top:22px">
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>趋势 → 折线</b><span>同一省按发布日排周，看招聘季是涨是退。</span></div><div class="b"><i>USED IN 02</i><p>时间连续、间隔相等，才配用折线。缺一周数据就得断笔，不能连。</p></div></div></div>
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>对比 → 柱形</b><span>岗位数按考区排序，一眼看出湛江占 14.3%。</span></div><div class="b"><i>USED IN 04</i><p>类别之间没有顺序关系时用柱；若强行排序成折线，会伪造出“趋势”。</p></div></div></div>
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>占比 → 环</b><span>学历构成：本科 72.6 ／ 硕士 14.6 ／ 大专 8.0 ／ 博士 4.5。</span></div><div class="b"><i>USED IN 04</i><p>只有“部分相加等于整体”时才配用环，且类别不超过五项。</p></div></div></div>
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>分布 → 散点</b><span>单位 × 岗位数：谁只招 1 个岗，谁招了 37 个。</span></div><div class="b"><i>USED IN 04</i><p>散点不接受“平均”，它要的是离群点：谁在远处，为什么在远处。</p></div></div></div>
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>明细 → 表格</b><span>9,200 条岗位明细，逐条能追回附件原件。</span></div><div class="b"><i>USED IN 05 / 07</i><p>表格不是退化形式。要让人能核对，就必须给行，不能给摘要。</p></div></div></div>
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>指标 → 卡片</b><span>9,200 岗位、4,519 家单位、失败率 31%。</span></div><div class="b"><i>USED IN 01 / 03</i><p>一张卡只放一个数。放两个数，读者就只记住一个。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>趋势 → 折线</b><span>同一省按发布日排周，看招聘季是涨是退。</span></div><div class="b"><i>NOT USED · 没有时间轴</i><p>折线要时间连续、间隔相等，缺一周就得断笔。本次只有 2026-10-20 一个快照，画折线等于凭空造趋势，所以不画。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>对比 → 柱形</b><span>岗位数按考区排序，一眼看出湛江占 14.3%。</span></div><div class="b"><i>USED · FIG.01 / 04</i><p>类别之间没有顺序关系时用柱；若强行排序成折线，会伪造出“趋势”。上面专业榜这张就是柱形（横排）。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>占比 → 环</b><span>学历构成：本科 72.6 ／ 硕士 14.6 ／ 大专 8.0 ／ 博士 4.5。</span></div><div class="b"><i>NOT USED · 已用文字给过</i><p>环只用于“部分相加等于整体”。这组学历占比已经写在 02 节与 E-01 卡里，再画一个环只是重复同一组数，不新增信息。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>分布 → 散点</b><span>单位 × 岗位数：谁只招 1 个岗，谁招了 37 个。</span></div><div class="b"><i>NOT USED · 缺逐单位明细</i><p>散点要的是离群点，得有每个单位的岗位数。本次只输出了单位总数 4,519，没有逐单位分布，硬画就是拿总数冒充分布。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>明细 → 表格</b><span>9,200 条岗位明细，逐条能追回附件原件。</span></div><div class="b"><i>USED · 03 / 07</i><p>表格不是退化形式。要让人能核对，就必须给行，不能给摘要。03 节归一表、07 节会话台账都是它。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>指标 → 卡片</b><span>9,200 岗位、4,519 家单位、失败率 31%。</span></div><div class="b"><i>USED · 01 / 03</i><p>一张卡只放一个数。放两个数，读者就只记住一个。首屏三个大数字与 03 节的账目卡都是它。</p></div></div></div>
     </div>
   </div>
 </section>
@@ -633,7 +649,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
       <button class="btn" id="csv">下载专业榜 CSV · 8 行</button>
       <button class="btn ghost" id="json">下载 JSON · 含证据字段</button>
       <a class="btn ghost" href="https://browser.lexmount.cn/zh/docs" target="_blank" rel="noopener">看这套流程怎么跑 ↗</a>
-      <a class="btn ghost" href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">打开招聘工作台 demo ↗</a>
+      <a class="btn ghost" href="https://mikuascendlog.com/position-starta/app/" target="_blank" rel="noopener">打开招聘工作台 demo ↗</a>
     </div>
     <p style="font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--dim2);margin-top:14px">
       表来自 2026-10-20 凌晨的 29 次真实提交；失败与重试记录见 03 与 07。</p>
@@ -684,7 +700,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
     <div class="foot">
       <span>岗位要求的地层 / SKILL STARTA SURVEY</span>
       <span>数据由 Lexmount 云浏览器 20 个 Session 产出 · 2026-10-20</span>
-      <span><a href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">招聘工作台 demo →</a></span>
+      <span><a href="https://mikuascendlog.com/position-starta/app/" target="_blank" rel="noopener">招聘工作台 demo →</a></span>
     </div>
   </div>
 </section>
@@ -786,7 +802,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
   var si=new IntersectionObserver(function(es){
     es.forEach(function(e){
       if(e.isIntersecting){
-        $$('#strata .bar i').forEach(function(b,i){
+        $$('#starta .bar i').forEach(function(b,i){
           b.style.transitionDelay=(i*70)+'ms';
           b.style.transform='scaleX('+(b.parentElement.parentElement.classList.contains('hot')?1:1)+')';
           b.style.transform='scaleX(1)';
@@ -795,7 +811,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
       }
     });
   },{threshold:.25});
-  if($('#strata')) si.observe($('#strata'));
+  if($('#starta')) si.observe($('#starta'));
 
   /* ---------- 连线：进入视口后流动 ---------- */
   var graph=$('#graph');

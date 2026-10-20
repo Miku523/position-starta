@@ -306,7 +306,7 @@
     var localPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>本地数据</b><span>只存在这台设备的浏览器里</span></div>' +
       '<div class="hrkvs">' +
         kv("招聘数据", size + " KB（职位 " + st.jd.length + " · 候选人 " + st.talent.length + " · 规则 " + st.rules.length + "）") +
-        kv("对标清单", HR.bench().rows.length + " 个岗位（键 strata-wb-bench，与其他模块共用）") +
+        kv("对标清单", HR.bench().rows.length + " 个岗位（键 starta-wb-bench，与其他模块共用）") +
         kv("存储位置", "localStorage · starta-hr-v1") +
       "</div>" +
       '<div class="hrdanger"><button type="button" class="btn ghost danger" data-hr-act="set-clear-hr">清空招聘数据</button>' +

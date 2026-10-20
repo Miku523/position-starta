@@ -1713,7 +1713,7 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></svg>
       </button>
       <span class="divider"></span>
-      <a class="btn ghost report-link" href="https://mikuascendlog.com/position-strata/" target="_blank" rel="noopener" title="看线上采样报告">
+      <a class="btn ghost report-link" href="https://mikuascendlog.com/position-starta/" target="_blank" rel="noopener" title="看线上采样报告">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
         <span class="rl-full">采样报告</span>
       </a>
@@ -1959,10 +1959,10 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
 
   <!-- ============ 状态栏 ============ -->
   <footer class="statusbar">
-    <span>星他 情报台 v1.0</span>
+    <span>星他 情报台 v1.1</span>
     <span class="hideSm">·</span>
     <span id="statusMeta">数据源 2 份公告 · 9,200 条真实岗位</span>
-    <a class="report-link-sm" href="https://mikuascendlog.com/position-strata/" target="_blank" rel="noopener">采样报告 ↗</a>
+    <a class="report-link-sm" href="https://mikuascendlog.com/position-starta/" target="_blank" rel="noopener">采样报告 ↗</a>
     <a class="report-link-sm" id="dualLinkSm" href="双端/index.html" target="_blank" rel="noopener">双端 ↗</a>
     <span class="sp"></span>
     <span class="hideSm">Ctrl K 搜索</span>
@@ -2288,12 +2288,12 @@ function meCount() {
 }
 
 const LS = {
-  theme: "strata-wb-theme",
-  density: "strata-wb-density",
-  fs: "strata-wb-fs",
-  /* 对标集：旧键 strata-wb-saved 存的是候选人时期的收藏，按新口径另起一个键，不迁移 */
-  saved: "strata-wb-bench",
-  filters: "strata-wb-filters"
+  theme: "starta-wb-theme",
+  density: "starta-wb-density",
+  fs: "starta-wb-fs",
+  /* 对标集：早期版本存过候选人时期的收藏，按新口径另起一个键，不迁移 */
+  saved: "starta-wb-bench",
+  filters: "starta-wb-filters"
 };
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 隐私模式忽略 */ } }
@@ -3292,12 +3292,12 @@ let __qRaf = 0;           /* 搜索输入合帧：同一帧只渲染一次 */
 let dwPushed = false;     /* 当前抽屉是否压了一条历史（关闭时要 back 回去） */
 let noticeLink = null;    /* URL 上显式携带的情报采集公告 id */
 
-/* 标题：hr-core 在 HR 视图里会调 window.strataTitle(v)，这里对 11 个视图都给出唯一标题 */
-function strataTitle(v) {
+/* 标题：hr-core 在 HR 视图里会调 window.startaTitle(v)，这里对 11 个视图都给出唯一标题 */
+function startaTitle(v) {
   document.title = (VIEW_LABEL[v] || VIEW_LABEL.lib) + " · 星他 招聘情报台";
   return document.title;
 }
-window.strataTitle = strataTitle;
+window.startaTitle = startaTitle;
 
 /* 从地址栏读一份状态；null = 参数没出现（启动时保留 localStorage），空串语义只给 q */
 function readUrlState() {
@@ -3421,7 +3421,7 @@ function syncUrlState(mode, opts) {
   const next = url.href;
   if (next === location.href) return "";
   try {
-    const st = { strata: 1, view: state.view, drawer: dwIndex != null ? 1 : 0 };
+    const st = { starta: 1, view: state.view, drawer: dwIndex != null ? 1 : 0 };
     if (mode === "push") history.pushState(st, "", next);
     else history.replaceState(st, "", next);
     return next;
@@ -3472,7 +3472,7 @@ function setView(v, opts) {
   else if (v === "mine") renderMine();
   else if (v === "skill") renderSkill();
   else if (v === "me" && window.ME && typeof window.ME.render === "function") window.ME.render();
-  strataTitle(v);   /* silent 也要设：hr-core 的 hardSwitch 依赖它 */
+  startaTitle(v);   /* silent 也要设：hr-core 的 hardSwitch 依赖它 */
   if (!(opts && opts.silent)) {
     syncUrlState(prevView !== v ? "push" : "replace", { onlyView: true });
     focusViewPage(v);
@@ -4746,11 +4746,11 @@ function initA11y() {
 <script>
 /* =====================================================================
    个人中心 / 投递记录（assets/me.js）
-   —— 只做本地持久化（localStorage "strata-me-v1"），不发请求
+   —— 只做本地持久化（localStorage "starta-me-v1"），不发请求
    —— 依赖 app.js 暴露的全局：esc / toast / $ / noticeOf / noticeUrl / csvDownload / todayDate
    ===================================================================== */
 window.ME = (function () {
-  const KEY = "strata-me-v1";
+  const KEY = "starta-me-v1";
   const APP_STATUS = ["已投递", "已确认", "笔试", "面试", "已录取", "未通过"];
   /* 字段 → 权重（合计 100），完整度按填了哪些算 */
   const FIELDS = [
@@ -5060,7 +5060,7 @@ window.ME = (function () {
      5) setSaved() / setStage() 写审计 HR.audit()
 
    存储：localStorage['starta-hr-v1']；与 app.js 的
-   strata-wb-bench（对标清单）只读兼容，互不改写。
+   starta-wb-bench（对标清单）只读兼容，互不改写。
    ===================================================================== */
 (function () {
   "use strict";
@@ -5180,7 +5180,7 @@ window.ME = (function () {
 
   /* ---------------- 常量 ---------------- */
   var HR_KEY = "starta-hr-v1";
-  var BENCH_KEY = "strata-wb-bench";
+  var BENCH_KEY = "starta-wb-bench";
 
   var ROLES = [
     { k: "hr", lb: "招聘负责人", tag: "HR", desc: "建职位、导人才、改提醒规则、出简报", write: true, note: true },
@@ -5631,10 +5631,10 @@ window.ME = (function () {
      这样 app.js 可以保持零改动，减少与其它工具并发写同一文件的冲突。 */
   var _navInit = false;
   var HR_TITLES = { jd: "我的职位", talent: "人才库", watch: "变化提醒", brief: "对标简报", settings: "设置与合规" };
-  /* 每视图标题：优先用 app.js 暴露的 window.strataTitle（11 个视图统一格式），失败再回退自有映射 */
+  /* 每视图标题：优先用 app.js 暴露的 window.startaTitle（11 个视图统一格式），失败再回退自有映射 */
   function applyViewTitle(v) {
-    if (typeof window.strataTitle === "function") {
-      try { window.strataTitle(v); return; } catch (e) { /* 回退下方映射 */ }
+    if (typeof window.startaTitle === "function") {
+      try { window.startaTitle(v); return; } catch (e) { /* 回退下方映射 */ }
     }
     document.title = (HR_TITLES[v] || VIEW_LB[v] || "星他") + " · 星他 招聘情报台";
   }
@@ -7816,7 +7816,7 @@ window.ME = (function () {
     var localPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>本地数据</b><span>只存在这台设备的浏览器里</span></div>' +
       '<div class="hrkvs">' +
         kv("招聘数据", size + " KB（职位 " + st.jd.length + " · 候选人 " + st.talent.length + " · 规则 " + st.rules.length + "）") +
-        kv("对标清单", HR.bench().rows.length + " 个岗位（键 strata-wb-bench，与其他模块共用）") +
+        kv("对标清单", HR.bench().rows.length + " 个岗位（键 starta-wb-bench，与其他模块共用）") +
         kv("存储位置", "localStorage · starta-hr-v1") +
       "</div>" +
       '<div class="hrdanger"><button type="button" class="btn ghost danger" data-hr-act="set-clear-hr">清空招聘数据</button>' +

@@ -181,7 +181,7 @@ h1 em{font-style:normal;color:var(--orange)}
 .flip:hover .f{border-color:rgba(228,87,46,.55)}
 
 /* 分类条 / 地层剖面 */
-.strata{margin-top:34px;border-top:1px solid var(--lineL)}
+.starta{margin-top:34px;border-top:1px solid var(--lineL)}
 .srow{display:grid;grid-template-columns:132px 1fr 74px;align-items:center;gap:14px;
   padding:13px 0;border-bottom:1px solid var(--lineL2);transition:background .18s}
 .srow:hover{background:rgba(228,87,46,.05)}
@@ -381,7 +381,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
     <span class="keep">19 SITES · 29 SUBMITS</span>
     <span class="keep">9,200 POSITIONS</span>
     <span class="keep">2026-10-20</span>
-    <a class="lang" href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">招聘工作台 ↗</a>
+    <a class="lang" href="https://mikuascendlog.com/position-starta/app/" target="_blank" rel="noopener">招聘工作台 ↗</a>
     <a class="lang" href="#s06">数据下载</a>
   </div>
 </header>
@@ -490,7 +490,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
     <h2 class="sec">剖面：门槛是怎么沉下去的</h2>
     <p class="lede">同一份数据，画成折线是趋势，画成柱是排序，画成环是占比——选错图，结论就会被读错。所以先交代每种图该用在哪、这次用了没用，再给图。</p>
 
-    <div class="strata" id="strata">
+    <div class="starta" id="starta">
       <div class="srow"><div class="nm">学科教学硕士</div><div class="bar"><i style="--w:1.00"></i></div><div class="ct">1,414 岗</div></div>
       <div class="srow hot"><div class="nm">课程与教学论</div><div class="bar"><i style="--w:0.65"></i></div><div class="ct">919 岗</div></div>
       <div class="srow"><div class="nm">临床医学</div><div class="bar"><i style="--w:0.57"></i></div><div class="ct">808 岗</div></div>
@@ -649,7 +649,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
       <button class="btn" id="csv">下载专业榜 CSV · 8 行</button>
       <button class="btn ghost" id="json">下载 JSON · 含证据字段</button>
       <a class="btn ghost" href="https://browser.lexmount.cn/zh/docs" target="_blank" rel="noopener">看这套流程怎么跑 ↗</a>
-      <a class="btn ghost" href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">打开招聘工作台 demo ↗</a>
+      <a class="btn ghost" href="https://mikuascendlog.com/position-starta/app/" target="_blank" rel="noopener">打开招聘工作台 demo ↗</a>
     </div>
     <p style="font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--dim2);margin-top:14px">
       表来自 2026-10-20 凌晨的 29 次真实提交；失败与重试记录见 03 与 07。</p>
@@ -700,7 +700,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
     <div class="foot">
       <span>岗位要求的地层 / SKILL STARTA SURVEY</span>
       <span>数据由 Lexmount 云浏览器 20 个 Session 产出 · 2026-10-20</span>
-      <span><a href="https://mikuascendlog.com/position-strata/app/" target="_blank" rel="noopener">招聘工作台 demo →</a></span>
+      <span><a href="https://mikuascendlog.com/position-starta/app/" target="_blank" rel="noopener">招聘工作台 demo →</a></span>
     </div>
   </div>
 </section>
@@ -802,7 +802,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
   var si=new IntersectionObserver(function(es){
     es.forEach(function(e){
       if(e.isIntersecting){
-        $$('#strata .bar i').forEach(function(b,i){
+        $$('#starta .bar i').forEach(function(b,i){
           b.style.transitionDelay=(i*70)+'ms';
           b.style.transform='scaleX('+(b.parentElement.parentElement.classList.contains('hot')?1:1)+')';
           b.style.transform='scaleX(1)';
@@ -811,7 +811,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
       }
     });
   },{threshold:.25});
-  if($('#strata')) si.observe($('#strata'));
+  if($('#starta')) si.observe($('#starta'));
 
   /* ---------- 连线：进入视口后流动 ---------- */
   var graph=$('#graph');
