@@ -614,9 +614,18 @@ a.ext:hover{background:var(--accent-soft)}
 .rvscore{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .rvnote{margin:0;font-size:.82rem;line-height:1.65;color:var(--ink2)}
 .revbox .btn{align-self:flex-start}
+.upbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px 10px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:.86rem;color:var(--ink2);line-height:1.5;box-shadow:inset 3px 0 0 var(--accent)}
+.upbar b{color:var(--ink);font-weight:600}
+.upbar span{min-width:0}
 .ivbox.col{align-items:stretch}
 .ivbox .btn{align-self:flex-start}
-.ivbox.col>.btn{align-self:stretch;text-align:center;justify-content:center}
+.ivbox.col>.btn{align-self:stretch;text-align:center;justify-content:center}
+.ivhist{margin:6px 0 0;font-size:.78rem;color:var(--warn);line-height:1.5}
+.ivres{margin-left:0;vertical-align:1px;align-self:flex-start}
+.ivhint{margin:4px 0 0;font-size:.8rem;color:var(--ok);line-height:1.55}
+.ivhint.bad{color:var(--bad)}
+.ivtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ivtop b{min-width:0}
 .mrow.m3{grid-template-columns:repeat(3,minmax(0,1fr))}
 </style>
 </head>
@@ -1025,8 +1034,14 @@ function normInterviews(list, legacy){
   const pushOne=function(x){
     const iv=normInterview(x);
     if(!iv) return;
-    out.push({no:out.length+1,date:iv.date,time:iv.time,mode:iv.mode,place:iv.place,
-              note:String(x.note||"").slice(0,60),feedback:String(x.feedback||"").slice(0,80)});
+    const rec={no:out.length+1,date:iv.date,time:iv.time,mode:iv.mode,place:iv.place,
+              note:String(x.note||"").slice(0,60),feedback:String(x.feedback||"").slice(0,80),
+              result:["待面","通过","未通过"].indexOf(x.result)>=0?x.result:"待面"};
+    if(Array.isArray(x.history)&&x.history.length){
+      rec.history=x.history.slice(0,8).map(function(h){return {at:String(h.at||""),reason:String(h.reason||""),
+        from:{date:String((h.from||{}).date||""),time:String((h.from||{}).time||""),mode:String((h.from||{}).mode||""),place:String((h.from||{}).place||"")}}});
+    }
+    out.push(rec);
   };
   if(Array.isArray(list) && list.length){ list.forEach(pushOne); }
   else if(legacy){ pushOne(legacy); }
@@ -1307,7 +1322,7 @@ function topbarHtml(){
 function statusbarHtml(){
   const pub=JOBS.filter(j=>j.src==="发布").length;
   return '<span>示例数据 · '+JOBS.length+' 个岗位（'+(JOBS.length-pub)+' 采集 + '+pub+' 发布）</span>'+
-         '<span>本地存储 · 刷新不丢 · 演示版 v0.9</span>';
+         '<span>本地存储 · 刷新不丢 · 演示版 v0.11</span>';
 }
 
 /* ================= 主视图 ================= */
@@ -1499,10 +1514,12 @@ function interviewBlock(a, mode){
   const rows=list.map(function(iv){
     return '<div class="ivrow">'+
       '<div class="ivno">第 '+iv.no+' 轮</div>'+
-      '<div class="ivmain"><b>'+esc(iv.date)+' '+esc(iv.time)+' · '+esc(iv.mode)+'</b>'+
+      '<div class="ivmain"><div class="ivtop"><b>'+esc(iv.date)+' '+esc(iv.time)+' · '+esc(iv.mode)+'</b>'+
+        (iv.result&&iv.result!=="待面"?'<span class="badge '+(iv.result==="通过"?"ok":"bad")+' ivres">'+esc(iv.result)+'</span>':'')+'</div>'+
         (iv.place?'<span>'+esc(iv.place)+'</span>':'')+
         (iv.note?'<p>'+esc(iv.note)+'</p>':'')+
         (iv.feedback?'<p class="ivfb">本轮反馈：'+esc(iv.feedback)+'</p>':'')+
+        (iv.history&&iv.history.length?'<p class="ivhist">改期 '+iv.history.length+' 次 · 原定 '+esc(iv.history[0].from.date)+' '+esc(iv.history[0].from.time)+(iv.history[0].reason?'（'+esc(iv.history[0].reason)+'）':'')+'</p>':'')+
       '</div>'+
       (isHr?'<button class="btn ghost sm" data-act="interview" data-app="'+a.id+'" data-no="'+iv.no+'">改</button>':'')+
     '</div>';
@@ -1510,7 +1527,13 @@ function interviewBlock(a, mode){
   const add=(isHr && a.status==="面试")
     ? '<button class="btn ghost sm" data-act="interview" data-app="'+a.id+'" data-no="'+(list.length+1)+'">再加一轮</button>'
     : '';
-  return '<div class="ivbox col">'+rows+add+'</div>';
+  const decided=list.filter(function(iv){return iv.result && iv.result!=="待面"}).pop();
+  const hint=(isHr && a.status==="面试" && decided)
+    ? (decided.result==="通过"
+        ? '<p class="ivhint">第 '+decided.no+' 轮已通过：可以「再加一轮」，也可以直接发放录用。</p>'
+        : '<p class="ivhint bad">第 '+decided.no+' 轮未通过：可以再约一轮，或直接淘汰。</p>')
+    : '';
+  return '<div class="ivbox col">'+rows+add+hint+'</div>';
 }
 function reviewBlock(a, mode){
   const rv=a.review;
@@ -1554,6 +1577,7 @@ function viewMine(){
   const mine=state.apps.filter(a=>a.mine).sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
   return '<div class="page">'+
     '<div class="page-head"><div><h1>我的投递</h1><p class="sub">每一张投递单，你看到的是它的一面；招聘方看到的是另一面。状态一变，这里立刻跟着变。</p></div></div>'+
+    upbarHtml("cand")+
     (mine.length
       ? '<div class="pool" style="margin-top:16px">'+mine.map(appCard).join("")+'</div>'
       : '<div class="empty" style="margin-top:16px"><div class="eic">投</div><h3>还没有投递</h3><p>先去「对口岗位」看看，符合资格的直接投；简历不出门也能先自查。</p><button class="btn primary" data-act="nav" data-view="jobs">去看对口岗位</button></div>')+
@@ -1655,6 +1679,7 @@ function viewPool(){
   const statuses=["全部","已投递","初筛","面试","已录用","已淘汰"];
   return '<div class="page">'+
     '<div class="page-head"><div><h1>候选人池</h1><p class="sub">同一批投递单的另一面：求职者投的是它，你筛的也是它。推进或淘汰，对面立刻看到。</p></div></div>'+
+    upbarHtml("hr")+
     '<div class="kpis k6">'+
       '<button class="kpi" data-act="pool-status" data-status="全部"><div class="lb">收到投递</div><div class="v">'+apps.length+'</div><div class="ft">含全部岗位</div></button>'+
       '<button class="kpi" data-act="pool-status" data-status="已投递"><div class="lb">待处理</div><div class="v">'+count("已投递")+'</div><div class="ft">还没筛过</div></button>'+
@@ -1876,7 +1901,6 @@ function openPostModal(){
     '</div>'+
     '<label class="mfield">职责 / 要求<textarea id="ppDesc" rows="2" maxlength="120">负责日常财务核算与报表编制，熟悉 Excel 与用友软件。</textarea></label>'+
     '<p class="muted small" id="ppErr" style="margin-top:8px" role="alert" hidden>单位和岗位名称要填，名额至少 1 人</p>'+
-    '<div class="mfoot"><button class="btn ghost" data-act="close-modal">取消</button>'+
     '<button class="btn primary" data-act="post-submit">发布</button></div>');
 }
 function formVal(id){ const el=$("#"+id); return el?String(el.value||"").trim():""; }
@@ -2129,7 +2153,7 @@ function openInterview(id, no){
     def=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   }
   openModal('<div class="mhead"><h2>第 '+idx+' 轮面试 · '+esc(a.candidate.name)+'</h2><span class="badge">'+esc(j.u)+'</span></div>'+
-    '<p class="mtext">排完求职端「我的投递」里立刻出现这一轮，多轮会按顺序列出来。</p>'+
+    '<p class="mtext">'+(list[idx-1]?'改动会立刻同步给求职者，并留下一条改期记录。':'排完求职端「我的投递」里立刻出现这一轮，多轮会按顺序列出来。')+'</p>'+
     '<div class="mrow">'+
       '<label class="mfield">日期<input id="ivDate" type="date" value="'+esc(def)+'"></label>'+
       '<label class="mfield">时间<input id="ivTime" type="time" value="'+esc(cur.time||"14:00")+'"></label>'+
@@ -2138,6 +2162,9 @@ function openInterview(id, no){
     '<label class="mfield">地点 / 会议链接<input id="ivPlace" type="text" maxlength="60" value="'+esc(cur.place)+'" placeholder="例：广州市天河区体育西路 / 腾讯会议 123-456-789"></label>'+
     '<label class="mfield">给候选人的话（可选）<input id="ivNote" type="text" maxlength="60" value="'+esc(cur.note)+'" placeholder="例：带一份项目材料"></label>'+
     '<label class="mfield">本轮反馈（可选，面完再填）<input id="ivFb" type="text" maxlength="80" value="'+esc(cur.feedback||"")+'" placeholder="例：基础不错，下一轮重点聊项目深度"></label>'+
+    (list[idx-1]?'<label class="mfield">改期原因（可选，会同步给求职者）<input id="ivReason" type="text" maxlength="40" placeholder="例：面试官时间冲突"></label>':'')+
+    '<label class="mfield">本轮结果<select id="ivResult">'+["待面","通过","未通过"].map(function(x){return '<option'+(cur.result===x?" selected":"")+'>'+x+'</option>'}).join("")+'</select></label>'+
+    '<div class="mfoot"><button class="btn ghost" data-act="close-modal">取消</button>'+
     '<div class="mfoot"><button class="btn ghost" data-act="close-modal">取消</button>'+
     '<button class="btn primary" data-act="interview-save" data-app="'+a.id+'" data-no="'+idx+'">保存这轮</button></div>');
 }
@@ -2150,7 +2177,16 @@ function saveInterview(id, no){
   const list=(a.interviews||[]).slice();
   const iv={no:idx,date:date,time:time,mode:formVal("ivMode")||"现场",
     place:formVal("ivPlace").slice(0,60),note:formVal("ivNote").slice(0,60),
-    feedback:formVal("ivFb").slice(0,80)};
+    feedback:formVal("ivFb").slice(0,80),result:formVal("ivResult")||"待面"};
+  const prev=list[idx-1];
+  const moved=!!prev && (prev.date!==iv.date || prev.time!==iv.time || prev.mode!==iv.mode || prev.place!==iv.place);
+  if(prev){
+    iv.history=(prev.history||[]).slice();
+    if(moved){
+      iv.history.push({at:nowISO(), reason:(formVal("ivReason")||"").slice(0,40),
+        from:{date:prev.date, time:prev.time, mode:prev.mode, place:prev.place}});
+    }
+  }
   list[idx-1]=iv;
   const clean=list.filter(Boolean).map(function(x,i){ return Object.assign({},x,{no:i+1}); });
   a.interviews=clean;
@@ -2160,7 +2196,7 @@ function saveInterview(id, no){
   closeModal();
   renderApp();
   openCandDrawer(a.id);
-  toast("第 "+idx+" 轮面试已保存 · 求职端「我的投递」里已经能看到");
+  toast(moved ? ("第 "+idx+" 轮已改期 · 求职端会看到新时间和改期记录") : ("第 "+idx+" 轮面试已保存 · 求职端「我的投递」里已经能看到"));
 }
 function openReview(id){
   const a=state.apps.find(x=>x.id===id);
@@ -2535,6 +2571,31 @@ function switchRole(role){
   closeDrawer(); closeModal();
   renderApp();
   toast(role==="candidate"?"已切换到求职者端 · 林一":"已切换到招聘方端 · 陈晓");
+}
+function upcomingInterviews(days){
+  const t=new Date(); t.setHours(0,0,0,0);
+  const lim=new Date(t); lim.setDate(lim.getDate()+(days||7));
+  const out=[];
+  state.apps.forEach(function(a){
+    (a.interviews||[]).forEach(function(iv){
+      if(!iv.date) return;
+      const d=new Date(iv.date+"T"+(iv.time||"00:00")+":00");
+      if(isNaN(d.getTime())) return;
+      if(d>=t && d<=lim) out.push({app:a,iv:iv,at:d});
+    });
+  });
+  return out.sort(function(x,y){ return x.at-y.at; });
+}
+function upbarHtml(scope){
+  const list=upcomingInterviews(7);
+  if(!list.length) return "";
+  const next=list[0];
+  const j=jobById(next.app.jobId);
+  const when=next.iv.date+" "+next.iv.time;
+  if(scope==="hr"){
+    return '<div class="upbar"><b>未来 7 天 '+list.length+' 场面试</b><span>最近：'+esc(when)+' · '+esc(next.app.candidate.name)+'（'+esc(j?j.u+" · "+j.r:"")+'）</span></div>';
+  }
+  return '<div class="upbar"><b>你最近一场面试</b><span>'+esc(when)+' · '+esc(j?j.u+" · "+j.r:"")+' · '+esc(next.iv.mode)+(next.iv.place?' · '+esc(next.iv.place):'')+'</span></div>';
 }
 function timelineHtml(a){
   return '<div class="tl">'+a.events.map(e=>
