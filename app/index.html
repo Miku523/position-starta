@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>星他 · 招聘工作台</title>
+<title>星他 · 招聘情报台</title>
 <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
@@ -13,32 +13,36 @@
   <aside class="rail">
     <div class="logo">
       <span class="mark">ST</span>
-      <div><b>星他</b><small>STARTA · RECRUIT OPS</small></div>
+      <div><b>星他</b><small>STARTA · RECRUIT INTEL</small></div>
     </div>
     <div class="rail-scroll">
-      <div class="rail-sec">工作区</div>
+      <div class="rail-sec">情报工作区</div>
       <nav class="navi" aria-label="主导航">
-        <a href="#" data-view="lib" data-nav="岗位库" aria-label="岗位库" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>岗位库</span><span class="ct" id="ctJobs">24</span></a>
-        <a href="#" data-view="collect" data-nav="公告采集" aria-label="公告采集"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span>公告采集</span><span class="ct" id="ctNotices">13</span></a>
-        <a href="#" data-view="units" data-nav="单位库" aria-label="单位库"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-5h6v5"/></svg><span>单位库</span><span class="ct" id="ctUnits">18</span></a>
-        <a href="#" data-view="mine" data-nav="我的投递" aria-label="我的投递"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m8 12 3 3 5-6"/></svg><span>我的投递</span><span class="ct" id="ctMine">0</span></a>
-        <a href="#" data-view="skill" data-nav="技能剖面" aria-label="技能剖面"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>技能剖面</span></a>
+        <a href="#" data-view="lib" data-nav="市场岗位库" aria-label="市场岗位库" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>市场岗位库</span><span class="ct" id="ctJobs">—</span></a>
+        <a href="#" data-view="collect" data-nav="情报采集" aria-label="情报采集"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span>情报采集</span><span class="ct" id="ctNotices">—</span></a>
+        <a href="#" data-view="units" data-nav="竞争雇主" aria-label="竞争雇主"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-5h6v5"/></svg><span>竞争雇主</span><span class="ct" id="ctUnits">—</span></a>
+        <a href="#" data-view="mine" data-nav="对标清单" aria-label="对标清单"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m8 12 3 3 5-6"/></svg><span>对标清单</span><span class="ct" id="ctMine">0</span></a>
+        <a href="#" data-view="skill" data-nav="门槛基准" aria-label="门槛基准"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>门槛基准</span></a>
       </nav>
-          </div>
+      <div class="rail-sec">我的 · 求职者视角</div>
+      <nav class="navi" aria-label="个人中心导航">
+        <a href="#" data-view="me" data-nav="个人中心" aria-label="个人中心"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg><span>个人中心</span><span class="ct" id="ctMe">0</span></a>
+      </nav>
+    </div>
     <div class="rail-foot">
       <div class="user">
-        <span class="av">HR</span>
-        <div><div class="nm">陈晓</div><div class="rl">管理员</div></div>
+        <span class="av">陈</span>
+        <div><div class="nm">陈晓</div><div class="rl">求职者 · 情报研究员</div></div>
       </div>
     </div>
   </aside>
 
   <!-- ============ 顶栏 ============ -->
   <header class="topbar">
-    <div class="crumb"><span>工作区</span><i>/</i><b>岗位库</b></div>
+    <div class="crumb"><span>工作区</span><i>/</i><b>市场岗位库</b></div>
     <label class="search">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
-      <input id="q" type="search" placeholder="搜索单位、岗位或专业…" aria-label="搜索单位、岗位或专业" autocomplete="off">
+      <input id="q" type="search" placeholder="搜索单位、岗位、专业或岗位代码…" aria-label="搜索单位、岗位、专业或岗位代码" autocomplete="off">
       <kbd>Ctrl K</kbd>
     </label>
     <div class="actions">
@@ -49,7 +53,7 @@
         <button class="icobtn" id="fsMinus" title="缩小字号" aria-label="缩小字号">A−</button>
         <button class="icobtn" id="fsPlus" title="放大字号" aria-label="放大字号">A+</button>
       </span>
-      <button class="icobtn" id="bellBtn" title="通知（示例）" aria-label="通知">
+      <button class="icobtn" id="bellBtn" title="报名提醒" aria-label="报名提醒">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></svg>
       </button>
       <span class="divider"></span>
@@ -65,36 +69,37 @@
   <!-- ============ 主区 ============ -->
   <main class="main">
     <div class="page" id="view-lib">
+      <div class="banner" id="banner" hidden>
+        <span class="bdot"></span>
+        <div class="btxt" id="bannerText"></div>
+        <button class="btn ghost bclose" id="bannerClose" aria-label="关闭提醒">关闭</button>
+      </div>
       <div class="page-head">
         <div>
-          <h1>岗位库</h1>
-          <p class="sub">从 <b>13 份公告</b> 拆出的 <b>24 个在招岗位</b>，全库共 <b>147</b> 个，按单位性质、专业、学历分好类——找得到，才投得了。</p>
+          <h1>市场岗位库</h1>
+          <p class="sub">全库 <b>9,200</b> 个岗位，来自 <b>2 份真实公告</b> 的岗位表——按单位性质、专业门类、学历分好类，点开任意一条都能跳到公告原文和附件原件。</p>
         </div>
         <div class="right">
-          <span class="tag" style="height:26px;border-style:dashed">数据源 13 份公告</span>
-          <span class="tag" style="height:26px"><span class="dot"></span>示例数据</span>
+          <span class="tag" style="height:26px;border-style:dashed">数据源 2 份公告</span>
+          <span class="tag" style="height:26px"><span class="dot"></span>真实数据</span>
         </div>
       </div>
 
       <section class="kpis" aria-label="关键指标（可点，点了就筛）">
-        <div class="kpi" role="button" tabindex="0" data-quick="all" aria-pressed="true" aria-label="全部在招岗位"><div class="lb">在招岗位 / POSITIONS</div><div class="v num"><span id="kpiOpen">24</span><i>个</i></div><div class="ft"><span class="dot"></span>本周新增 <span id="kpiWeekNew">5</span> · 点此看全部</div></div>
-        <div class="kpi" role="button" tabindex="0" data-goview="units" aria-label="覆盖单位，跳转单位库"><div class="lb">覆盖单位 / UNITS</div><div class="v num"><span id="kpiUnits">18</span><i>家</i></div><div class="ft"><span class="dot"></span><span id="kpiTypes">6</span> 类性质 · 去单位库 →</div></div>
-        <div class="kpi" role="button" tabindex="0" data-quick="urgent" aria-pressed="false" aria-label="只看 7 天内截止的岗位"><div class="lb">7 天内截止 / URGENT</div><div class="v num"><span id="kpiUrgent">3</span><i>个</i></div><div class="ft"><span class="dot warn"></span>最早 <span id="kpiEarliest">10-23</span> · 点此只筛这些</div></div>
-        <div class="kpi" role="button" tabindex="0" data-quick="saved" aria-pressed="false" aria-label="只看已收藏的岗位"><div class="lb">已收藏 / SAVED</div><div class="v num"><span id="kpiSaved">0</span><i>个</i></div><div class="ft"><span class="dot"></span>点星标即收藏</div></div>
+        <div class="kpi" role="button" tabindex="0" data-quick="all" aria-pressed="true" aria-label="全部岗位"><div class="lb">全库岗位 / POSITIONS</div><div class="v num"><span id="kpiOpen">9,200</span><i>个</i></div><div class="ft"><span class="dot"></span>来自 <span id="kpiWeekNew">2</span> 份公告 · 点此看全部</div></div>
+        <div class="kpi" role="button" tabindex="0" data-goview="units" aria-label="覆盖雇主，跳转竞争雇主"><div class="lb">覆盖雇主 / EMPLOYERS</div><div class="v num"><span id="kpiUnits">4,519</span><i>家</i></div><div class="ft"><span class="dot"></span><span id="kpiTypes">2</span> 类性质 · 去竞争雇主 →</div></div>
+        <div class="kpi" role="button" tabindex="0" data-quick="open" aria-pressed="false" aria-label="只看正在报名的岗位"><div class="lb">报名中 / OPEN</div><div class="v num"><span id="kpiUrgent">31</span><i>个</i></div><div class="ft"><span class="dot warn"></span>最近截止 <span id="kpiEarliest">10-26</span> · 点此只筛这些</div></div>
+        <div class="kpi" role="button" tabindex="0" data-quick="saved" aria-pressed="false" aria-label="只看已对标的岗位"><div class="lb">已对标 / BENCHMARK</div><div class="v num"><span id="kpiSaved">0</span><i>个</i></div><div class="ft"><span class="dot"></span>点星标即对标</div></div>
       </section>
 
       <section class="panel">
         <div class="toolbar">
           <div class="chips" id="typebar" role="group" aria-label="按单位性质筛选">
-            <button class="chip" data-type="全部" aria-pressed="true">全部<span class="ct">24</span></button>
-            <button class="chip" data-type="央企" aria-pressed="false">央企<span class="ct">7</span></button>
-            <button class="chip" data-type="国企" aria-pressed="false">国企<span class="ct">3</span></button>
-            <button class="chip" data-type="事业单位" aria-pressed="false">事业单位<span class="ct">8</span></button>
-            <button class="chip" data-type="公务员" aria-pressed="false">公务员<span class="ct">2</span></button>
-            <button class="chip" data-type="民营" aria-pressed="false">民营<span class="ct">2</span></button>
-            <button class="chip" data-type="外企" aria-pressed="false">外企<span class="ct">2</span></button>
+            <button class="chip" data-type="全部" aria-pressed="true">全部<span class="ct">9,200</span></button>
+            <button class="chip" data-type="事业单位" aria-pressed="false">事业单位<span class="ct">9,169</span></button>
+            <button class="chip" data-type="国企" aria-pressed="false">国企<span class="ct">31</span></button>
           </div>
-          <span class="sel"><select id="major" aria-label="专业方向"></select></span>
+          <span class="sel"><select id="major" aria-label="专业门类"></select></span>
           <span class="sel"><select id="edu" aria-label="学历"></select></span>
           <span class="sel"><select id="sort" aria-label="排序">
             <option value="due">按截止排序</option>
@@ -106,14 +111,15 @@
             <button class="dbtn" data-den="loose" aria-pressed="true" title="宽松行高，读起来轻松">宽松</button>
             <button class="dbtn" data-den="tight" aria-pressed="false" title="一屏看更多">紧凑</button>
           </span>
-          <span class="meta" id="count">24 / 147</span>
+          <span class="meta" id="count">9,200 / 9,200</span>
           <button class="btn ghost" id="resetBtn">重置</button>
         </div>
 
         <div class="bulkbar" id="bulkbar">
           <b id="bulkNum">0</b><span>条已选</span>
-          <button class="btn ghost" id="saveSel">批量收藏</button>
-          <button class="btn ghost" id="copySel">复制报名入口</button>
+          <button class="btn ghost" id="saveSel">批量对标</button>
+          <button class="btn ghost" id="applySel">批量投递</button>
+          <button class="btn ghost" id="copySel">复制报名渠道</button>
           <div class="sp"></div>
           <button class="btn ghost" id="clearSel">取消选择</button>
         </div>
@@ -122,33 +128,34 @@
           <table>
             <thead>
               <tr>
-                <th style="width:36px"><input type="checkbox" id="checkAll" aria-label="全选"></th>
-                <th>单位</th>
-                <th style="width:170px">岗位</th>
-                <th style="width:100px">性质</th>
-                <th>专业</th>
-                <th style="width:124px">学历 / 经验</th>
-                <th style="width:74px;text-align:right" class="sortable" data-sort="n" tabindex="0" aria-label="按名额排序" aria-sort="none">名额<span class="srt" data-arrow="n"></span></th>
-                <th style="width:116px" class="sortable" data-sort="due" tabindex="0" aria-label="按截止日期排序" aria-sort="ascending">截止<span class="srt" data-arrow="due"></span></th>
-                <th style="width:132px"></th>
+                <th style="width:36px"><input type="checkbox" id="checkAll" aria-label="全选本页"></th>
+                <th style="width:212px">单位 / 地区</th>
+                <th style="width:164px">岗位</th>
+                <th style="width:92px">性质</th>
+                <th>专业要求</th>
+                <th style="width:120px">学历 · 类别</th>
+                <th style="width:62px;text-align:right" class="sortable" data-sort="n" tabindex="0" aria-label="按名额排序" aria-sort="none">名额<span class="srt" data-arrow="n"></span></th>
+                <th style="width:104px" class="sortable" data-sort="due" tabindex="0" aria-label="按截止日期排序" aria-sort="ascending">截止<span class="srt" data-arrow="due"></span></th>
+                <th style="width:166px"></th>
               </tr>
             </thead>
             <tbody id="rows"></tbody>
           </table>
         </div>
+        <div class="pager" id="pager"></div>
       </section>
     </div>
 
-    <!-- ============ 视图二：公告采集 ============ -->
+    <!-- ============ 视图二：情报采集 ============ -->
     <div class="page" id="view-collect" hidden>
       <div class="page-head">
         <div>
-          <h1>公告采集</h1>
-          <p class="sub">粘公告地址 → 抓附件 → 抽岗位表。<b>左选右看</b>，解析完的岗位直接进岗位库。</p>
+          <h1>情报采集</h1>
+          <p class="sub">公告原文 → 附件原件 → 岗位表。<b>左选右看</b>：每条记录都能打开政府网原文、下载 xlsx/pdf/docx 附件，岗位表逐行落到市场岗位库。</p>
         </div>
         <div class="right">
-          <span class="tag" style="height:26px"><span class="dot"></span>抓取代理正常</span>
-          <span class="tag" style="height:26px;border-style:dashed">13 来源 · 12 已解析</span>
+          <span class="tag" style="height:26px"><span class="dot"></span>Lexmount 抓取链路</span>
+          <span class="tag" style="height:26px;border-style:dashed">2 来源 · 2 已解析</span>
         </div>
       </div>
 
@@ -161,9 +168,9 @@
           <div class="toolbar findbar">
             <label class="search" style="flex:1">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
-              <input id="cq" type="search" placeholder="搜索标题或单位…" aria-label="搜索标题或单位" autocomplete="off">
+              <input id="cq" type="search" placeholder="搜索标题或发布单位…" aria-label="搜索标题或发布单位" autocomplete="off">
             </label>
-            <span class="meta" id="cCount" aria-live="polite">13</span>
+            <span class="meta" id="cCount" aria-live="polite">2</span>
           </div>
           <div class="citems" id="citems" role="listbox" aria-label="公告列表"></div>
         </section>
@@ -171,34 +178,43 @@
         <section class="panel cinfo" id="cinfo" aria-label="公告详情"></section>
       </div>
     </div>
+
     <div class="page" id="view-units" hidden>
       <div class="page-head">
         <div>
-          <h1>单位库</h1>
-          <p class="lede">按单位聚合：一家单位几条在招、什么性质、最新截止。点单位看它的全部岗位。</p>
+          <h1>竞争雇主</h1>
+          <p class="lede">按雇主聚合：一家单位挂了几条、什么性质、在哪个地区、最近关窗哪天。点雇主看它的全部岗位。</p>
+        </div>
+        <div class="head-side">
+          <label class="search" style="width:230px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+            <input id="uq" type="search" placeholder="搜单位名或地区…" aria-label="搜索单位" autocomplete="off">
+          </label>
         </div>
       </div>
       <div class="panel">
         <div class="toolbar">
-          <div class="chips" id="unitchips" role="group" aria-label="按性质筛选单位"></div>
+          <div class="chips" id="unitchips" role="group" aria-label="按性质筛选雇主"></div>
           <span class="grow"></span>
           <span class="tnums"><b id="uCount">0</b> 家</span>
         </div>
         <div class="tablewrap"><div class="table u"><div class="thead" id="uhead"></div><div class="rows" id="urows"></div></div></div>
+        <div class="pager" id="upager"></div>
       </div>
     </div>
 
     <div class="page" id="view-mine" hidden>
       <div class="page-head">
         <div>
-          <h1>我的投递</h1>
-          <p class="lede">不是收藏夹，是跟进清单——每条岗位标到「已投 / 笔试 / 面试 / 结果」，并记下最后一次改动是哪天。</p>
+          <h1>对标清单</h1>
+          <p class="lede">不是收藏夹，是研判清单——每条岗位标到「待研判 / 已对标 / 已进简报 / 已汇报 / 已落地」，并记下最后一次改动是哪天。</p>
         </div>
         <div class="head-side">
-          <button class="btn" id="mineExport">导出投递清单</button>
+          <button class="btn" id="mineExport">导出对标清单</button>
         </div>
       </div>
-      <div class="funnel" id="mfunnel" role="group" aria-label="按投递阶段筛选" hidden></div>
+      <div class="brief" id="mbrief" hidden></div>
+      <div class="funnel" id="mfunnel" role="group" aria-label="按研判阶段筛选" hidden></div>
       <div class="panel">
         <div class="tablewrap"><div class="table m"><div class="thead" id="mhead"></div><div class="rows" id="mrows"></div></div></div>
       </div>
@@ -207,12 +223,69 @@
     <div class="page" id="view-skill" hidden>
       <div class="page-head">
         <div>
-          <h1>技能剖面</h1>
-          <p class="lede">当前库里的要求在哪儿扎堆、在哪儿断掉。数字由岗位表现算，改数据就会变。</p>
+          <h1>门槛基准</h1>
+          <p class="lede">9,200 条真实岗位表算出来的门槛分布：学历卡在哪、学位要不要、专业按门类怎么分、名额堆在哪个地区。数字全部由数据现算，换公告就换基准。</p>
         </div>
       </div>
       <div class="panel">
-        <div class="skillwrap"><div class="chips sk-types" id="skillTypes" role="group" aria-label="按单位性质切分技能口径"></div><div id="skillBars"></div></div>
+        <div class="skillwrap"><div class="chips sk-types" id="skillTypes" role="group" aria-label="按单位性质切分门槛口径"></div><div id="skillBars"></div></div>
+      </div>
+    </div>
+
+    <!-- ============ 视图六：个人中心（求职者侧） ============ -->
+    <div class="page" id="view-me" hidden>
+      <div class="page-head">
+        <div>
+          <h1>个人中心</h1>
+          <p class="lede">资料填一次，投岗位时自动带出；投递记录、当前状态、报名截止都在这条线上跟进。数据只存在这台机器的浏览器里，不会上传。</p>
+        </div>
+        <div class="head-side">
+          <button class="btn" id="meExport">导出投递记录</button>
+          <button class="btn primary" id="mePrint">打印报名信息表</button>
+        </div>
+      </div>
+
+      <div class="me-grid">
+        <section class="panel me-card">
+          <div class="panel-hd">
+            <h2>个人信息</h2>
+            <span class="score" id="meScore">完整度 <b>0%</b></span>
+          </div>
+          <div class="me-form" id="meForm">
+            <label class="fld"><span>姓名</span><input id="mName" type="text" autocomplete="name" placeholder="陈晓"></label>
+            <label class="fld"><span>性别</span><select id="mGender"><option value="">请选择</option><option>男</option><option>女</option></select></label>
+            <label class="fld"><span>出生年月</span><input id="mBirth" type="month"></label>
+            <label class="fld"><span>政治面貌</span><select id="mPolitics"><option value="">请选择</option><option>中共党员</option><option>中共预备党员</option><option>共青团员</option><option>群众</option><option>其他</option></select></label>
+            <label class="fld"><span>手机号</span><input id="mPhone" type="tel" autocomplete="tel" inputmode="numeric" placeholder="13800138000" maxlength="11"></label>
+            <label class="fld"><span>电子邮箱</span><input id="mEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
+            <label class="fld"><span>身份证号</span><input id="mIdcard" type="text" autocomplete="off" placeholder="18 位（仅本机保存）" maxlength="18"></label>
+            <label class="fld"><span>最高学历</span><select id="mEdu"><option value="">请选择</option><option>大专以上</option><option>大专</option><option>本科以上</option><option>本科</option><option>硕士研究生以上</option><option>硕士研究生</option><option>博士研究生</option><option>高中及以上</option></select></label>
+            <label class="fld"><span>学位</span><select id="mDegree"><option value="">请选择</option><option>学士</option><option>硕士</option><option>博士</option><option>无</option></select></label>
+            <label class="fld"><span>毕业院校</span><input id="mSchool" type="text" placeholder="广东工业大学"></label>
+            <label class="fld"><span>所学专业</span><input id="mMajor" type="text" placeholder="计算机科学与技术"></label>
+            <label class="fld"><span>毕业时间</span><input id="mGrad" type="month"></label>
+            <label class="fld"><span>工作年限</span><select id="mYears"><option value="">请选择</option><option>应届毕业生</option><option>1 年以内</option><option>1-3 年</option><option>3-5 年</option><option>5 年以上</option></select></label>
+            <label class="fld"><span>现居城市</span><input id="mCity" type="text" placeholder="广州"></label>
+            <label class="fld"><span>期望地区</span><input id="mWant" type="text" placeholder="广州 / 湛江 / 省直"></label>
+            <label class="fld"><span>求职意向</span><input id="mIntent" type="text" placeholder="综合岗 · 文字综合"></label>
+            <label class="fld wide"><span>简历附件</span><span class="filewrap"><input id="mResume" type="file" accept=".pdf,.doc,.docx"><b id="mResumeName">未选择</b></span></label>
+            <label class="fld wide"><span>备注</span><textarea id="mNote" rows="2" placeholder="残疾类别及等级、退役士兵、服务基层项目等需要说明的情况"></textarea></label>
+          </div>
+          <div class="me-actions">
+            <button class="btn primary" id="meSave">保存资料</button>
+            <button class="btn ghost" id="meReset">清空资料</button>
+            <span class="meta" id="meSavedAt">未保存</span>
+          </div>
+        </section>
+
+        <section class="panel me-apps">
+          <div class="panel-hd">
+            <h2>我的投递</h2>
+            <span class="meta" id="meAppCount">0 条</span>
+          </div>
+          <div class="me-tip" id="meAppEmpty">还没有投递记录。去 <a href="#" data-view="lib">市场岗位库</a> 找一条岗位，点行尾「投递」，记录就落在这一栏。</div>
+          <div class="me-applist" id="meAppList"></div>
+        </section>
       </div>
     </div>
 
@@ -220,14 +293,14 @@
 
   <!-- ============ 状态栏 ============ -->
   <footer class="statusbar">
-    <span>星他 工作台 v0.9</span>
+    <span>星他 情报台 v1.0</span>
     <span class="hideSm">·</span>
-    <span id="statusMeta">数据源 13 份公告 · 示例数据</span>
+    <span id="statusMeta">数据源 2 份公告 · 9,200 条真实岗位</span>
     <a class="report-link-sm" href="https://mikuascendlog.com/position-strata/" target="_blank" rel="noopener">采样报告 ↗</a>
     <span class="sp"></span>
     <span class="hideSm">Ctrl K 搜索</span>
     <span class="hideSm">Esc 关闭</span>
-    <span id="statusCount" role="status" aria-live="polite" aria-atomic="true">显示 24 / 147 条</span>
+    <span id="statusCount" role="status" aria-live="polite" aria-atomic="true">共 9,200 条</span>
   </footer>
 </div>
 
@@ -247,12 +320,17 @@
   <div class="drawer-bd">
     <dl class="kv" id="dwKv"></dl>
     <div class="sect">
-      <h3>要求摘要</h3>
+      <h3>职责与备注</h3>
       <p id="dwDesc"></p>
     </div>
+    <div class="sect" id="dwSrcSect">
+      <h3>数据来源</h3>
+      <p class="src-line" id="dwSrcLine"></p>
+      <div class="attlist" id="dwAtts"></div>
+    </div>
     <div class="sect">
-      <h3>投递进度</h3>
-      <div class="stchips" id="dwStages" role="group" aria-label="设置投递进度"></div>
+      <h3>研判阶段</h3>
+      <div class="stchips" id="dwStages" role="group" aria-label="设置研判阶段"></div>
       <p class="st-note" id="dwStageNote"></p>
     </div>
     <div class="sect">
@@ -262,14 +340,20 @@
     </div>
   </div>
   <div class="drawer-ft">
-    <button class="btn" id="dwSave">收藏</button>
-    <button class="btn primary" id="dwGo">前往报名</button>
+    <button class="btn ghost" id="dwSave">对标</button>
+    <button class="btn" id="dwApply">投递这个岗位</button>
+    <button class="btn primary" id="dwGo">打开公告原文</button>
   </div>
 </aside>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="print-only" id="printSheet" aria-hidden="true"></div>
 
+<script src="assets/jobs.data.js"></script>
+<script src="assets/notices.data.js"></script>
+<script src="assets/collect.data.js"></script>
 <script src="assets/data.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/me.js"></script>
 </body>
 </html>
