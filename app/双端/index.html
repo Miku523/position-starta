@@ -940,6 +940,14 @@ a.ext:hover{background:var(--accent-soft)}
     }
   }
   function every(ms, fn) { var t = setInterval(fn, ms); timers.push(t); return t; }
+  /* 定时器登记簿：节点被替换/移除时连同句柄一起注销，避免 timers 无界增长（P3） */
+  function forget(timer) { var i = timers.indexOf(timer); if (i >= 0) timers.splice(i, 1); }
+  function stopNodeTimer(node) {
+    if (!node.__liveTimer) return;
+    clearInterval(node.__liveTimer);
+    forget(node.__liveTimer);
+    node.__liveTimer = null;
+  }
 
   /* ---------------- 状态胶囊 ---------------- */
   var pillEl = null, pillParts = null;
@@ -1178,9 +1186,9 @@ a.ext:hover{background:var(--accent-soft)}
     if (!node) return null;
     opts = opts || {};
     var prefix = opts.prefix == null ? "" : opts.prefix;
-    if (node.__liveTimer) clearInterval(node.__liveTimer);
+    if (node.__liveTimer) stopNodeTimer(node);
     function paint() {
-      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
+      if (!alive(node)) { stopNodeTimer(node); return; }
       var t = typeof ts === "function" ? ts() : ts;
       if (t == null || t === "") { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
       var ms = typeof t === "number" ? t : toDate(t);
@@ -1203,9 +1211,9 @@ a.ext:hover{background:var(--accent-soft)}
     if (!node) return null;
     opts = opts || {};
     var ms = typeof deadline === "number" ? deadline : toDate(deadline);
-    if (node.__liveTimer) clearInterval(node.__liveTimer);
+    if (node.__liveTimer) stopNodeTimer(node);
     function paint() {
-      if (!alive(node)) { clearInterval(node.__liveTimer); node.__liveTimer = null; return; }
+      if (!alive(node)) { stopNodeTimer(node); return; }
       if (!isFinite(ms)) { node.textContent = "—"; return; }
       var left = ms - Date.now();
       if (left <= 0) {
