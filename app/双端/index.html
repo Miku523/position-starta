@@ -625,9 +625,165 @@ a.ext:hover{background:var(--accent-soft)}
 .ivhint{margin:4px 0 0;font-size:.8rem;color:var(--ok);line-height:1.55}
 .ivhint.bad{color:var(--bad)}
 .ivtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.ivtop b{min-width:0}
+.ivtop b{min-width:0}
+.ivby{color:var(--ink2)}
+.ivbox .ivhint+.btn{margin-top:6px}
 .mrow.m3{grid-template-columns:repeat(3,minmax(0,1fr))}
 </style>
+<!-- LIVE_CSS_START -->
+<style>
+/* =====================================================================
+   星他 STARTA · 实时数据层 样式 Live v1.0
+   ---------------------------------------------------------------------
+   不绑定配色：一切颜色继承 currentColor，只在“状态点/增量标签”上用固定
+   语义色。这样同一套组件能同时活在工作台的浅色纸面、双端的米白、报告
+   的深色版面上，不需要各自覆写。
+   ===================================================================== */
+
+/* ---------- 状态胶囊 ---------- */
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .08em;
+  color: inherit;
+  opacity: .92;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+.live-pill:hover { opacity: 1; }
+
+.live-pill .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #9ca3af;
+  transition: background .3s ease;
+}
+
+.live-pill .live-state { font-weight: 700; letter-spacing: .1em; }
+.live-pill .live-sep { opacity: .4; margin: 0 -1px; }
+.live-pill .live-clock { font-variant-numeric: tabular-nums; opacity: .85; }
+.live-pill .live-meta { opacity: .62; }
+
+/* 各状态：点色 + 呼吸动画（只对真连接呼吸） */
+.live-pill.is-live .live-dot { background: #12a150; }
+.live-pill.is-live .live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid rgba(18, 161, 80, .55);
+  animation: livePing 1.8s cubic-bezier(.2, .6, .35, 1) infinite;
+}
+.live-pill .live-dot { position: relative; }
+.live-pill.is-connecting .live-dot,
+.live-pill.is-reconnecting .live-dot { background: #e08a00; animation: liveBlink 1s steps(2, start) infinite; }
+.live-pill.is-sync .live-dot { background: #0e8fa3; }
+.live-pill.is-snapshot .live-dot { background: #9ca3af; }
+.live-pill.is-reconnecting .live-state { opacity: .75; }
+
+@keyframes livePing {
+  0% { transform: scale(.7); opacity: .9; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes liveBlink { to { opacity: .3; } }
+
+/* 若宿主支持 color-mix，再补一层极淡的底，不破坏任何主题 */
+@supports (color: color-mix(in srgb, currentColor 10%, transparent)) {
+  .live-pill { padding: 3px 7px 3px 6px; border-radius: 999px; }
+  .live-pill:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+  .live-pill.is-live { background: color-mix(in srgb, #12a150 9%, transparent); }
+}
+
+/* ---------- 数字 ---------- */
+.live-num { font-variant-numeric: tabular-nums; }
+.live-bump { animation: liveBump .5s cubic-bezier(.2, .7, .3, 1); }
+@keyframes liveBump {
+  0% { opacity: .35; filter: blur(.3px); }
+  100% { opacity: 1; filter: none; }
+}
+
+/* 真实 +N / -N 增量标签（由 Live.delta 生成） */
+.live-delta {
+  position: absolute;
+  top: -13px;
+  right: 0;
+  z-index: 5;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: .04em;
+  color: #fff;
+  pointer-events: none;
+  animation: liveDelta 1.6s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+.live-delta.up { background: #12a150; }
+.live-delta.down { background: #c2410c; }
+@keyframes liveDelta {
+  0% { opacity: 0; transform: translateY(4px) scale(.9); }
+  18% { opacity: 1; transform: translateY(0) scale(1); }
+  72% { opacity: 1; transform: translateY(-1px); }
+  100% { opacity: 0; transform: translateY(-7px); }
+}
+
+/* ---------- 倒计时 / 相对时间 ---------- */
+.live-cd, .live-ago { font-variant-numeric: tabular-nums; }
+.live-cd.is-hot { font-weight: 700; }
+.live-cd.is-over, .live-ago.is-over { opacity: .55; }
+
+/* 给报告深色版面用的一点统一微调（仍不写颜色，只写字距） */
+.live-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.live-strip .live-ago { font-family: var(--mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .06em; opacity: .7; }
+
+/* 尊重系统的“减少动态效果” */
+@media (prefers-reduced-motion: reduce) {
+  .live-pill .live-dot::after { animation: none; opacity: 0; }
+  .live-bump { animation: none; }
+  .live-delta { display: none; }
+  .live-pill .live-dot { animation: none !important; }
+}
+
+/* ---------- 紧凑变体：状态栏 / 报告页眉 ---------- */
+.live-pill--sm { font-size: 9.5px; letter-spacing: .06em; gap: 5px; }
+.live-pill--sm .live-dot { width: 5px; height: 5px; }
+.live-asof {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  opacity: .58;
+}
+.live-pill.live-flash,
+.live-pill.live-flash-warn { animation: liveFlash .9s ease; }
+@keyframes liveFlash {
+  0% { opacity: .35; }
+  40% { opacity: 1; }
+  70% { opacity: .55; }
+  100% { opacity: .92; }
+}
+/* 数字滚动时轻微提亮，让“变化”被看见但不抢注意力 */
+.live-num.live-bump, .live-cd.live-bump { will-change: contents; }
+
+/* 报告页眉：窄屏时统计口径让位给标题与实时状态（pill / 数据截至 / 倒计时仍在） */
+@media (max-width:1280px){.bar .r .stat-k{display:none}}
+</style>
+<!-- LIVE_CSS_END -->
 </head>
 <body>
 <div class="app" id="app"></div>
@@ -636,6 +792,582 @@ a.ext:hover{background:var(--accent-soft)}
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="详情"></aside>
 <div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<!-- LIVE_JS_START -->
+<script>
+/* =====================================================================
+   星他 STARTA · 实时数据层 Live v1.0
+   ---------------------------------------------------------------------
+   三条铁律（这个组件不造假）：
+   1. 时钟 / 倒计时 / “数据截至 N 小时前” 全部来自真实时间；
+   2. 连接数、数据文件变化、探活结果来自真实 SSE 服务；连不上就明说“静态快照”，
+      不会偷偷用一个定时器把数字往上拨；
+   3. 数字滚动只是呈现：目标值永远来自真实数据，动画不改事实。
+
+   无依赖，ES5 语法，挂到 window.Live。
+   页面接入：
+     页面 head 引 assets/live.css，body 尾引 assets/live.js（引导脚本放它后面）
+     Live.init({channel:'starta-live', pill:'#livePill', asOf:'2026-10-20T03:14:31+08:00'})
+   ===================================================================== */
+(function (global) {
+  "use strict";
+
+  var VERSION = "1.0.0";
+  var doc = global.document;
+  var reduce = false;
+  try { reduce = global.matchMedia && global.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { reduce = false; }
+
+  var cfg = {
+    channel: "starta-live",
+    server: "auto",       /* "auto" | "" | "http://127.0.0.1:8790" */
+    asOf: null,           /* 真实数据采集时间：ISO 字符串 / 毫秒 / Date */
+    pill: null,           /* 状态胶囊的容器：选择器或元素 */
+    heartbeatEvery: 5000, /* 服务端心跳间隔（仅用于“心跳 N 秒前”的判定） */
+    tabLabel: "页面",
+    autostart: true
+  };
+
+  var state = {
+    mode: "snapshot",     /* snapshot | sync | connecting | live | reconnecting */
+    server: "",
+    es: null,
+    clients: 0,           /* 服务端在线页签数 */
+    peers: {},            /* BroadcastChannel 同源页签：id -> lastSeen */
+    since: 0,             /* 服务端启动时间 */
+    asOf: 0,              /* 真实数据截至时间（毫秒） */
+    lastBeat: 0,          /* 最近一次服务端心跳 */
+    ready: false
+  };
+
+  var subs = {};
+  var timers = [];
+  var tabId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  var bc = null;
+  var LS_KEY = "__starta_live__";
+
+  /* ---------------- 小工具 ---------------- */
+  function elOf(x) {
+    if (!x) return null;
+    if (typeof x === "string") { try { return doc.querySelector(x); } catch (e) { return null; } }
+    return x.nodeType === 1 ? x : null;
+  }
+  function fmtNum(n, dec) {
+    dec = dec == null ? 0 : dec;
+    var v = Number(n);
+    if (!isFinite(v)) return String(n);
+    try {
+      return v.toLocaleString("zh-CN", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    } catch (e) {
+      var s = v.toFixed(dec), p = s.split(".");
+      p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return p.join(".");
+    }
+  }
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function hms(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    return pad2(Math.floor(s / 3600)) + ":" + pad2(Math.floor(s % 3600 / 60)) + ":" + pad2(s % 60);
+  }
+  function agoText(ms) {
+    var s = Math.floor(ms / 1000);
+    if (s < 0) s = 0;
+    if (s < 5) return "刚刚";
+    if (s < 60) return s + " 秒前";
+    if (s < 3600) return Math.floor(s / 60) + " 分 " + (s % 60) + " 秒前";
+    if (s < 86400) return Math.floor(s / 3600) + " 小时 " + Math.floor(s % 3600 / 60) + " 分前";
+    return Math.floor(s / 86400) + " 天前";
+  }
+  /* 真实日期解析：只吃页面里真有的写法，猜不到就返回 NaN（显示“—”，绝不编时间）。
+     "2026-10-26 17:00" → 本地时间；"10-26" → 今天之后最近的 10 月 26 日；"长期" → NaN */
+  function toDate(str) {
+    if (str == null || str === "") return NaN;
+    if (str instanceof Date) return str.getTime();
+    if (typeof str === "number") return str;
+    var s = String(str).trim();
+    if (!/\d/.test(s)) return NaN;
+    var m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/.exec(s);
+    if (m) {
+      var d1 = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4] || 0), Number(m[5] || 0), Number(m[6] || 0));
+      return isNaN(d1.getTime()) ? NaN : d1.getTime();
+    }
+    m = /^(\d{1,2})-(\d{1,2})$/.exec(s);
+    if (m) {
+      var now = new Date(), y = now.getFullYear();
+      var d2 = new Date(y, Number(m[1]) - 1, Number(m[2]));
+      if (d2.getTime() < new Date(y, now.getMonth(), now.getDate()).getTime()) d2 = new Date(y + 1, Number(m[1]) - 1, Number(m[2]));
+      return d2.getTime();
+    }
+    var t = Date.parse(s.replace(" ", "T"));
+    return t;
+  }
+  function dispatch(type, payload, from) {
+    var list = (subs[type] || []).concat(subs["*"] || []);
+    for (var i = 0; i < list.length; i++) {
+      try { list[i](payload, type, from || "local"); } catch (e) { if (global.console) console.error("[Live]", e); }
+    }
+  }
+  function every(ms, fn) { var t = setInterval(fn, ms); timers.push(t); return t; }
+
+  /* ---------------- 状态胶囊 ---------------- */
+  var pillEl = null, pillParts = null;
+  function pillRender() {
+    if (!pillEl) return;
+    if (!pillParts) {
+      pillEl.innerHTML =
+        '<i class="live-dot" aria-hidden="true"></i>' +
+        '<b class="live-state">快照</b>' +
+        '<span class="live-sep" aria-hidden="true">·</span>' +
+        '<span class="live-clock">--:--:--</span>' +
+        '<span class="live-meta"></span>';
+      pillParts = {
+        state: pillEl.querySelector(".live-state"),
+        clock: pillEl.querySelector(".live-clock"),
+        meta: pillEl.querySelector(".live-meta")
+      };
+    }
+    pillEl.className = "live-pill is-" + state.mode;
+    var label = { live: "实时", sync: "同步", connecting: "连接中", reconnecting: "重连中", snapshot: "快照" }[state.mode] || "快照";
+    pillParts.state.textContent = label;
+    var meta = "";
+    if (state.mode === "live") {
+      meta = state.clients > 1 ? state.clients + " 端在线" : "已连接";
+    } else if (state.mode === "sync") {
+      var n = Object.keys(state.peers).length + 1;
+      meta = n > 1 ? n + " 标签页同步" : "仅本页签 · 未连服务";
+    } else if (state.mode === "snapshot") {
+      meta = "静态数据";
+    }
+    pillParts.meta.textContent = meta ? " · " + meta : "";
+    pillEl.title = pillTitle();
+    pillEl.setAttribute("data-live-mode", state.mode);
+    /* 页面重渲染会换掉胶囊 DOM：新时钟节点要立刻接上，否则停在 --:--:-- */
+    if (pillParts && pillParts.clock && !pillParts.clock.__liveClockTimer) clock(pillParts.clock);
+  }
+  function pillTitle() {
+    var parts = [];
+    if (state.mode === "live") {
+      parts.push("实时服务已连接：" + state.server);
+      parts.push(state.clients + " 个页面在线");
+      parts.push("心跳 " + (state.lastBeat ? agoText(Date.now() - state.lastBeat) : "等待首包"));
+    } else if (state.mode === "sync") {
+      parts.push("未连上实时服务，已降级为同源多标签同步");
+      parts.push("时钟与倒计时来自真实时间，数字不做模拟滚动");
+      if (state.serverTried) parts.push("尝试过：" + state.serverTried);
+    } else if (state.mode === "snapshot") {
+      parts.push("静态快照：本页数字来自真实数据，不模拟增长");
+      if (state.asOf) parts.push("数据截至 " + new Date(state.asOf).toLocaleString("zh-CN") + "（" + agoText(Date.now() - state.asOf) + "）");
+    } else {
+      parts.push("正在连接实时服务…");
+    }
+    return parts.join(" · ");
+  }
+  function setMode(mode) {
+    if (state.mode === mode) return;
+    state.mode = mode;
+    pillRender();
+    dispatch("mode", { mode: mode, clients: state.clients, server: state.server }, "live");
+  }
+
+  /* ---------------- 同源页签在线（真实存在，不做假） ---------------- */
+  function peersCount() { return Object.keys(state.peers).length + 1; }
+  function presenceTick() {
+    var now = Date.now();
+    Object.keys(state.peers).forEach(function (id) { if (now - state.peers[id] > 12000) delete state.peers[id]; });
+    broadcastRaw({ t: "presence", id: tabId, label: cfg.tabLabel, at: now });
+    pillRender();
+    dispatch("peers", { count: peersCount() }, "live");
+  }
+
+  /* ---------------- BroadcastChannel / storage 兜底 ---------------- */
+  function broadcastRaw(msg) {
+    msg.at = msg.at || Date.now();
+    msg.from = tabId;
+    try {
+      if (bc) { bc.postMessage(msg); return; }
+      localStorage.setItem(LS_KEY, JSON.stringify(msg));
+      localStorage.removeItem(LS_KEY);
+    } catch (e) { /* 忽略：隐私模式 / file:// 限制 */ }
+  }
+  function onChannel(msg) {
+    if (!msg || msg.from === tabId) return;
+    if (msg.t === "presence") {
+      var isNew = !state.peers[msg.id];
+      state.peers[msg.id] = msg.at || Date.now();
+      if (isNew) { broadcastRaw({ t: "presence", id: tabId, label: cfg.tabLabel }); pillRender(); }
+      dispatch("peers", { count: peersCount() }, "live");
+      return;
+    }
+    dispatch(msg.t, msg.p, "peer");
+    dispatch("*", msg.p, "peer");
+  }
+  function initChannel() {
+    try {
+      if (global.BroadcastChannel) {
+        bc = new BroadcastChannel("starta-bc-" + cfg.channel);
+        bc.onmessage = function (ev) { onChannel(ev.data); };
+      }
+    } catch (e) { bc = null; }
+    global.addEventListener("storage", function (ev) {
+      if (ev.key !== LS_KEY || !ev.newValue) return;
+      try { onChannel(JSON.parse(ev.newValue)); } catch (e) { /* 忽略坏消息 */ }
+    });
+    global.addEventListener("starta:live", function (ev) { onChannel(ev.detail); });
+  }
+
+  /* ---------------- SSE：真连接，真推送 ---------------- */
+  function resolveCandidates() {
+    if (cfg.server && cfg.server !== "auto") return [String(cfg.server).replace(/\/$/, "")];
+    var out = [];
+    var proto = global.location ? global.location.protocol : "";
+    var port = global.location ? global.location.port : "";
+    var host = global.location ? global.location.hostname : "";
+    if (proto === "http:" || proto === "https:") {
+      if (port === "8790") out.push(global.location.origin);
+      else if (proto === "http:" && (host === "127.0.0.1" || host === "localhost")) out.push(global.location.origin);
+      /* https 页面不能连 http://127.0.0.1（混合内容会被浏览器拦掉），
+         只试同源，避免控制台一堆无意义的红字。 */
+      if (proto === "http:" && port !== "8790") out.push("http://127.0.0.1:8790");
+    } else if (proto === "file:") {
+      out.push("http://127.0.0.1:8790");
+    }
+    return out;
+  }
+  function connect() {
+    var candidates = resolveCandidates();
+    state.serverTried = candidates.join(" / ");
+    if (!candidates.length) { setMode("sync"); return; }
+    setMode(state.ready ? "reconnecting" : "connecting");
+    var idx = 0;
+    (function next() {
+      if (idx >= candidates.length) {
+        setMode("sync");
+        scheduleRetry();
+        return;
+      }
+      var base = candidates[idx++];
+      var es;
+      try { es = new global.EventSource(base + "/live/stream?ch=" + encodeURIComponent(cfg.channel) + "&tab=" + tabId); }
+      catch (e) { next(); return; }
+      var opened = false;
+      var guard = setTimeout(function () {
+        if (opened) return;
+        try { es.close(); } catch (e) { }
+        next();
+      }, 2600);
+      es.onopen = function () {
+        opened = true;
+        clearTimeout(guard);
+        state.es = es;
+        state.server = base;
+        state.ready = true;
+        state.retry = 0;
+        setMode("live");
+      };
+      es.onmessage = function (ev) {
+        var msg;
+        try { msg = JSON.parse(ev.data); } catch (e) { return; }
+        handleServer(msg);
+      };
+      es.onerror = function () {
+        clearTimeout(guard);
+        try { es.close(); } catch (e) { }
+        if (state.es === es) state.es = null;
+        if (opened) { setMode("reconnecting"); scheduleRetry(); }
+        else next();
+      };
+    })();
+  }
+  function scheduleRetry() {
+    if (state.retryTimer) return;
+    state.retry = (state.retry || 0) + 1;
+    var wait = Math.min(30000, 4000 * state.retry);
+    state.retryTimer = setTimeout(function () {
+      state.retryTimer = 0;
+      connect();
+    }, wait);
+  }
+  function handleServer(msg) {
+    if (!msg || !msg.type) return;
+    switch (msg.type) {
+      case "hello":
+        state.clients = Number(msg.clients) || state.clients;
+        state.since = Number(msg.since) || 0;
+        /* 页面自己带着“真实写入时间”的（双端状态存 localStorage），保留页面口径 */
+        if (msg.asOf && !cfg.localAsOf) state.asOf = Number(msg.asOf) || state.asOf;
+        state.lastBeat = Date.now();
+        pillRender();
+        dispatch("hello", msg, "server");
+        break;
+      case "clients":
+        state.clients = Number(msg.n) || 0;
+        pillRender();
+        dispatch("clients", { count: state.clients }, "server");
+        break;
+      case "heartbeat":
+        state.lastBeat = Date.now();
+        dispatch("heartbeat", msg, "server");
+        break;
+      case "data":
+        dispatch("data", msg, "server");
+        break;
+      case "session":
+        dispatch("session", msg, "server");
+        break;
+      case "event":
+        /* 统一约定：on('event', fn) 拿到完整信封（含 name / at / replay）；
+           on('<name>', fn) 拿到其中的 payload。 */
+        dispatch("event", msg, "server");
+        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server");
+        break;
+      default:
+        dispatch(msg.type, msg, "server");
+    }
+    dispatch("*", msg, "server");
+  }
+
+  /* ---------------- 真实的“N 分钟前” ---------------- */
+  var agoBinds = [];
+  function el(x) { return typeof x === "string" ? document.querySelector(x) : x; }
+  function bindAgo(node, ts, opts) {
+    node = el(node);
+    if (!node) return null;
+    opts = opts || {};
+    var prefix = opts.prefix == null ? "" : opts.prefix;
+    if (node.__liveTimer) clearInterval(node.__liveTimer);
+    function paint() {
+      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      var t = typeof ts === "function" ? ts() : ts;
+      if (t == null || t === "") { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
+      var ms = typeof t === "number" ? t : toDate(t);
+      if (!isFinite(ms)) { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
+      node.textContent = prefix + agoText(Date.now() - ms);
+      node.title = new Date(ms).toLocaleString("zh-CN") + "（真实记录时间）";
+      node.setAttribute("data-live-ago", String(ms));
+    }
+    paint();
+    var timer = every(1000, paint);
+    node.__liveTimer = timer;
+    agoBinds.push({ node: node, timer: timer, paint: paint });
+    return { refresh: paint };
+  }
+
+  /* ---------------- 真实倒计时（到真实截止时间） ---------------- */
+  var cdBinds = [];
+  function bindCountdown(node, deadline, opts) {
+    node = el(node);
+    if (!node) return null;
+    opts = opts || {};
+    var ms = typeof deadline === "number" ? deadline : toDate(deadline);
+    if (node.__liveTimer) clearInterval(node.__liveTimer);
+    function paint() {
+      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!isFinite(ms)) { node.textContent = "—"; return; }
+      var left = ms - Date.now();
+      if (left <= 0) {
+        node.textContent = opts.expiredText || "已截止";
+        node.setAttribute("data-live-over", "1");
+        node.className = (node.className.replace(/\s*is-hot|\s*is-over/g, "")) + " is-over";
+        return;
+      }
+      node.removeAttribute("data-live-over");
+      var s = Math.floor(left / 1000);
+      var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+      var txt = (d > 0 ? d + " 天 " : "") + pad2(h) + ":" + pad2(m) + ":" + pad2(sec);
+      node.textContent = (opts.prefix || "") + txt;
+      var cls = node.className.replace(/\s*is-hot|\s*is-over/g, "");
+      node.className = cls + (left < 86400000 ? " is-hot" : "");
+      node.title = "真实截止时间：" + new Date(ms).toLocaleString("zh-CN");
+    }
+    paint();
+    var timer = every(1000, paint);
+    node.__liveTimer = timer;
+    cdBinds.push({ node: node, timer: timer, paint: paint });
+    return { refresh: paint };
+  }
+
+  /* ---------------- 数字滚动（呈现层：目标值来自真实数据） ---------------- */
+  function parseNum(text) {
+    var v = String(text == null ? "" : text).replace(/[^\d.-]/g, "");
+    var n = parseFloat(v);
+    return isFinite(n) ? n : NaN;
+  }
+  function tween(node, target, opts) {
+    opts = opts || {};
+    var dec = opts.decimals == null ? (String(target).indexOf(".") >= 0 ? 1 : 0) : opts.decimals;
+    var from = opts.from != null ? Number(opts.from) : node.__liveVal;
+    if (from == null) from = parseNum(node.textContent);
+    if (!isFinite(from)) from = 0;
+    node.__liveVal = target;
+    node.__liveTarget = target;
+    var dur = opts.duration == null ? 720 : opts.duration;
+    var start = null;
+    var delta = target - from;
+    if (opts.instant || reduce || dur <= 0 || !delta) {
+      node.textContent = fmtNum(target, dec);
+      node.classList.add("live-num");
+      return;
+    }
+    if (node.__liveRAF) { cancelAnimationFrame(node.__liveRAF); node.__liveRAF = 0; }
+    node.classList.add("live-num");
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min(1, (ts - start) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      node.textContent = fmtNum(from + delta * e, dec);
+      if (p < 1) { node.__liveRAF = requestAnimationFrame(step); }
+      else {
+        node.__liveRAF = 0;
+        node.textContent = fmtNum(target, dec);
+        node.classList.remove("live-bump");
+        void node.offsetWidth;
+        node.classList.add("live-bump");
+      }
+    }
+    node.__liveRAF = requestAnimationFrame(step);
+  }
+  function num(x, value, opts) {
+    var node = elOf(x);
+    if (!node) return;
+    opts = opts || {};
+    if (typeof value === "string" && !/[0-9]/.test(value)) { node.textContent = value; return; }
+    var target = Number(value);
+    if (!isFinite(target)) { node.textContent = String(value); return; }
+    tween(node, target, opts);
+  }
+  function autoNum(root) {
+    var scope = root ? elOf(root) : doc;
+    if (!scope) return;
+    var nodes = scope.querySelectorAll("[data-live-num]");
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      var raw = n.getAttribute("data-live-value");
+      if (raw == null) raw = n.getAttribute("data-live-num");
+      var v = Number(raw);
+      if (!isFinite(v)) continue;
+      var from = n.getAttribute("data-live-from");
+      num(n, v, { decimals: Number(n.getAttribute("data-live-dec") || 0), from: from != null ? Number(from) : undefined });
+    }
+  }
+
+  /* ---------------- 数字增量提示（真实 +N/-N） ---------------- */
+  function delta(x, amount, opts) {
+    var node = elOf(x);
+    if (!node) return;
+    var n = Number(amount);
+    if (!isFinite(n) || !n) return;
+    opts = opts || {};
+    var host = node.parentNode;
+    if (!host) return;
+    if (getComputedStyle(host).position === "static") host.style.position = "relative";
+    var span = doc.createElement("span");
+    span.className = "live-delta " + (n > 0 ? "up" : "down");
+    span.textContent = (n > 0 ? "+" : "") + n;
+    host.appendChild(span);
+    setTimeout(function () { if (span.parentNode) span.parentNode.removeChild(span); }, opts.ttl || 1600);
+  }
+
+  /* ---------------- 时钟（真实本地时间） ---------------- */
+  function clock(x, opts) {
+    var node = elOf(x);
+    if (!node) return;
+    opts = opts || {};
+    /* 同一个节点重复绑（页面重渲染、胶囊重建）先掐掉旧定时器，别越积越多 */
+    if (node.__liveClockTimer) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; }
+    function paint() {
+      if (!node.isConnected) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
+      var d = new Date();
+      var s = pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + (opts.seconds === false ? "" : ":" + pad2(d.getSeconds()));
+      node.textContent = s;
+      if (opts.date) {
+        node.title = d.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + s;
+      }
+    }
+    paint();
+    node.__liveClockTimer = setInterval(paint, 1000);
+    return { refresh: paint, stop: function () { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; } };
+  }
+
+  /* ---------------- 初始化 ---------------- */
+  function init(opts) {
+    opts = opts || {};
+    for (var k in opts) if (opts.hasOwnProperty(k)) cfg[k] = opts[k];
+    if (cfg.asOf) {
+      var t = typeof cfg.asOf === "number" ? cfg.asOf : Date.parse(cfg.asOf);
+      state.asOf = isFinite(t) ? t : 0;
+    }
+    if (cfg.localAsOf) cfg.localAsOf = true;
+    if (state.ready) return Live;
+    state.ready = true;
+    state.readyAt = Date.now();
+
+    initChannel();
+    presenceTick();
+    every(5000, presenceTick);
+
+    pillEl = elOf(cfg.pill);
+    if (pillEl) { pillRender(); clock(pillEl.querySelector(".live-clock") || (function () { pillRender(); return pillEl.querySelector(".live-clock"); })()); }
+
+    if (cfg.autostart) connect();
+    autoNum(doc);
+    /* 推迟一个 tick：让页面在 init() 之后挂的监听也能收到 ready */
+    setTimeout(function () { dispatch("ready", { version: VERSION }, "local"); }, 0);
+    return Live;
+  }
+
+  /* ---------------- 对外 API ---------------- */
+  var Live = {
+    version: VERSION,
+    init: init,
+    on: function (type, fn) {
+      (subs[type] = subs[type] || []).push(fn);
+      return function () { Live.off(type, fn); };
+    },
+    off: function (type, fn) {
+      var list = subs[type];
+      if (!list) return;
+      var i = list.indexOf(fn);
+      if (i >= 0) list.splice(i, 1);
+    },
+    emit: function (type, payload) {
+      broadcastRaw({ t: type, p: payload });
+      dispatch(type, payload, "local");
+    },
+    /* 服务端事件 → 页面的统一入口：Live.event('session', fn) 等价于 on */
+    event: function (type, fn) { return Live.on(type, fn); },
+    /* 数字 */
+    num: num,
+    fmt: fmtNum,
+    delta: delta,
+    autonum: autoNum,
+    autoNum: autoNum,
+    /* 时间 */
+    clock: clock,
+    toDate: toDate,
+    ago: bindAgo,
+    countdown: bindCountdown,
+    /* 状态 */
+    state: function () { return { mode: state.mode, clients: state.clients, peers: peersCount(), server: state.server, asOf: state.asOf, since: state.since, lastBeat: state.lastBeat }; },
+    mode: function () { return state.mode; },
+    tabId: tabId,
+    /* 手动 */
+    connect: connect,
+    pill: function (x) {
+      var prev = pillEl; cfg.pill = x; pillEl = elOf(x); pillParts = null;
+      pillRender();
+      if (pillParts && pillParts.clock) clock(pillParts.clock);
+      return prev;
+    },
+    /* 供页面自定义：手动注入一条“同源实时”事件（仍会广播到其它标签页） */
+    ping: function () { presenceTick(); return true; }
+  };
+
+  global.Live = Live;
+
+  if (doc.readyState === "loading") {
+    doc.addEventListener("DOMContentLoaded", function () { autoNum(doc); });
+  }
+})(typeof window !== "undefined" ? window : this);
+</script>
+<!-- LIVE_JS_END -->
 <script>
 (function(){
 "use strict";
@@ -1036,7 +1768,8 @@ function normInterviews(list, legacy){
     if(!iv) return;
     const rec={no:out.length+1,date:iv.date,time:iv.time,mode:iv.mode,place:iv.place,
               note:String(x.note||"").slice(0,60),feedback:String(x.feedback||"").slice(0,80),
-              result:["待面","通过","未通过"].indexOf(x.result)>=0?x.result:"待面"};
+              result:["待面","通过","未通过"].indexOf(x.result)>=0?x.result:"待面",
+              by:String(x.by||"").slice(0,12)};
     if(Array.isArray(x.history)&&x.history.length){
       rec.history=x.history.slice(0,8).map(function(h){return {at:String(h.at||""),reason:String(h.reason||""),
         from:{date:String((h.from||{}).date||""),time:String((h.from||{}).time||""),mode:String((h.from||{}).mode||""),place:String((h.from||{}).place||"")}}});
@@ -1175,7 +1908,7 @@ function commit(){
   try{ window.dispatchEvent(new CustomEvent("starta:change")); }catch(e){}
 }
 function save(){
-  try{ localStorage.setItem(KEY,JSON.stringify(state)); }
+  try{ localStorage.setItem(KEY,JSON.stringify(state)); localStorage.setItem(KEY+":at",String(Date.now())); }
   catch(e){
     // 隐私模式 / 配额满：静默失败会让演示看起来「操作成功但刷新就没了」
     if(!persistWarned){ persistWarned=true; toast("本机存储写入失败：刷新后这次的改动可能不保留"); }
@@ -1246,6 +1979,7 @@ function renderApp(){
     '<main class="main" id="main"></main>'+
     '<footer class="statusbar">'+statusbarHtml()+'</footer>';
   renderMain();
+  if(window.__liveRebind) window.__liveRebind();
   applyTheme();
 }
 function renderLanding(){
@@ -1309,20 +2043,23 @@ function topbarHtml(){
   const isC=state.role==="candidate";
   return '<div class="crumb"><span>工作区</span><i>/</i><b>'+C[ui.view]+'</b></div>'+
     '<span class="m-brand"><span class="mark">ST</span><b>星他</b></span>'+
-    '<span class="spacer"></span>'+BACK_LINK+
+    '<span class="spacer"></span>'+
+    '<span id="livePill" class="live-pill live-pill--sm" role="status" aria-live="polite"></span>'+
+    '<span class="divider"></span>'+BACK_LINK+
     '<div class="roleSwitch" role="group" aria-label="切换身份">'+
       '<button data-act="role" data-role="candidate" aria-pressed="'+(isC?"true":"false")+'">求职者</button>'+
       '<button data-act="role" data-role="hr" aria-pressed="'+(isC?"false":"true")+'">招聘方</button>'+
     '</div>'+
     '<span class="divider"></span>'+
-    '<button class="icobtn" data-act="help" title="演示路径 · 30 秒闭环" aria-label="演示路径">'+ICONS.help+'</button>'+
+    '<button class="icobtn" data-act="help" title="演示路径 · 两分钟闭环" aria-label="演示路径">'+ICONS.help+'</button>'+
     '<button class="icobtn" data-act="theme" title="切换明暗" aria-label="切换明暗">'+(state.theme==="dark"?ICONS.sun:ICONS.moon)+'</button>'+
     '<button class="icobtn" data-act="reset" title="重置演示数据" aria-label="重置演示数据">'+ICONS.reset+'</button>';
 }
 function statusbarHtml(){
   const pub=JOBS.filter(j=>j.src==="发布").length;
   return '<span>示例数据 · '+JOBS.length+' 个岗位（'+(JOBS.length-pub)+' 采集 + '+pub+' 发布）</span>'+
-         '<span>本地存储 · 刷新不丢 · 演示版 v0.11</span>';
+         '<span>本地存储 · 刷新不丢 · 演示版 v0.13</span>'+
+         '<span id="liveAsOf" class="live-asof" title="最后一次写入本机的时间"></span>';
 }
 
 /* ================= 主视图 ================= */
@@ -1453,7 +2190,7 @@ function viewJobs(){
       '<div class="chips" id="typeChips">'+types.map(t=>'<button class="chip'+(ui.jobs.type===t?" on":"")+'" data-act="type" data-type="'+t+'">'+t+'</button>').join("")+'</div>'+
       '<button class="chip'+(ui.jobs.only?" on":"")+'" data-act="toggle-only" aria-pressed="'+(ui.jobs.only?"true":"false")+'">只看对口</button>'+
     '</div>'+
-    '<div class="listmeta"><span id="jobCount">显示 '+filteredJobs().length+' / '+JOBS.length+' 个岗位</span><span>符合资格的排在前面 · 点卡片看对口分怎么来的</span></div>'+
+    '<div class="listmeta"><span id="jobCount">显示 <span id="jobCountNum">'+filteredJobs().length+'</span> / '+JOBS.length+' 个岗位</span><span>符合资格的排在前面 · 点卡片看对口分怎么来的</span></div>'+
     '<div class="pool" id="jobList">'+jobListHtml()+'</div>'+
   '</div>';
 }
@@ -1461,7 +2198,10 @@ function renderJobList(){
   const box=$("#jobList");
   if(box) box.innerHTML=jobListHtml();
   const c=$("#jobCount");
-  if(c) c.textContent="显示 "+filteredJobs().length+" / "+JOBS.length+" 个岗位";
+  const n=filteredJobs().length;
+  const cn=$("#jobCountNum");
+  if(cn) cn.textContent=n;
+  else if(c) c.textContent="显示 "+n+" / "+JOBS.length+" 个岗位";
 }
 
 /* ---------- 求职者：我的投递 ---------- */
@@ -1501,6 +2241,49 @@ function stepperDone(a){
   }
   return Math.max(0,order.indexOf(a.status));
 }
+function icsPad(n){ return String(n).padStart(2,"0"); }
+function icsStart(date,time){
+  const d=String(date||"").replace(/-/g,"");
+  const t=String(time||"09:00").replace(/:/g,"");
+  return d+"T"+(t.length===4?t+"00":t)+"00";
+}
+function icsEnd(date,time){
+  const d0=new Date(String(date||"")+"T"+String(time||"09:00")+":00");
+  if(isNaN(d0.getTime())) return icsStart(date,time);
+  d0.setMinutes(d0.getMinutes()+60);
+  return String(d0.getFullYear())+icsPad(d0.getMonth()+1)+icsPad(d0.getDate())+"T"+icsPad(d0.getHours())+icsPad(d0.getMinutes())+"00";
+}
+function icsEsc(x){
+  return String(x||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
+}
+function exportIcs(id, no){
+  const a=state.apps.find(function(x){return x.id===id});
+  if(!a) return;
+  const iv=(a.interviews||[])[(parseInt(no,10)||1)-1];
+  if(!iv) return;
+  const j=jobById(a.jobId)||{};
+  const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
+  const lines=[
+    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//STARTA//dual demo//CN","CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    "UID:"+a.id+"-"+iv.no+"@starta.demo",
+    "DTSTAMP:"+stamp,
+    "DTSTART:"+icsStart(iv.date,iv.time),
+    "DTEND:"+icsEnd(iv.date,iv.time),
+    "SUMMARY:"+icsEsc("面试 · "+(j.u||"")+" · "+(j.r||"")),
+    "LOCATION:"+icsEsc(iv.place||iv.mode||""),
+    "DESCRIPTION:"+icsEsc("第 "+iv.no+" 轮 · "+iv.mode+(iv.by?" · 面试官 "+iv.by:"")+(iv.note?"\n"+iv.note:"")),
+    "END:VEVENT","END:VCALENDAR"
+  ];
+  const blob=new Blob([lines.join("\r\n")+"\r\n"],{type:"text/calendar;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const el=document.createElement("a");
+  el.href=url;
+  el.download="面试-"+(j.u||"岗位")+"-第"+iv.no+"轮.ics";
+  document.body.appendChild(el); el.click(); el.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },2000);
+  toast("已导出 .ics · 双击就能加进手机或电脑日历");
+}
 function interviewBlock(a, mode){
   const list=a.interviews||[];
   const isHr=mode==="hr";
@@ -1517,11 +2300,12 @@ function interviewBlock(a, mode){
       '<div class="ivmain"><div class="ivtop"><b>'+esc(iv.date)+' '+esc(iv.time)+' · '+esc(iv.mode)+'</b>'+
         (iv.result&&iv.result!=="待面"?'<span class="badge '+(iv.result==="通过"?"ok":"bad")+' ivres">'+esc(iv.result)+'</span>':'')+'</div>'+
         (iv.place?'<span>'+esc(iv.place)+'</span>':'')+
+        (iv.by?'<span class="ivby">面试官：'+esc(iv.by)+'</span>':'')+
         (iv.note?'<p>'+esc(iv.note)+'</p>':'')+
         (iv.feedback?'<p class="ivfb">本轮反馈：'+esc(iv.feedback)+'</p>':'')+
         (iv.history&&iv.history.length?'<p class="ivhist">改期 '+iv.history.length+' 次 · 原定 '+esc(iv.history[0].from.date)+' '+esc(iv.history[0].from.time)+(iv.history[0].reason?'（'+esc(iv.history[0].reason)+'）':'')+'</p>':'')+
       '</div>'+
-      (isHr?'<button class="btn ghost sm" data-act="interview" data-app="'+a.id+'" data-no="'+iv.no+'">改</button>':'')+
+      (isHr?'<button class="btn ghost sm" data-act="interview" data-app="'+a.id+'" data-no="'+iv.no+'">改</button>':'<button class="btn ghost sm" data-act="ics" data-app="'+a.id+'" data-no="'+iv.no+'">加进日历</button>')+
     '</div>';
   }).join("");
   const add=(isHr && a.status==="面试")
@@ -1531,7 +2315,8 @@ function interviewBlock(a, mode){
   const hint=(isHr && a.status==="面试" && decided)
     ? (decided.result==="通过"
         ? '<p class="ivhint">第 '+decided.no+' 轮已通过：可以「再加一轮」，也可以直接发放录用。</p>'
-        : '<p class="ivhint bad">第 '+decided.no+' 轮未通过：可以再约一轮，或直接淘汰。</p>')
+        : '<p class="ivhint bad">第 '+decided.no+' 轮未通过：可以再约一轮，或直接结束流程。</p>'+
+          '<button class="btn ghost sm danger" data-act="close-by-round" data-app="'+a.id+'" data-no="'+decided.no+'">按第 '+decided.no+' 轮结果结束流程</button>')
     : '';
   return '<div class="ivbox col">'+rows+add+hint+'</div>';
 }
@@ -2159,6 +2944,7 @@ function openInterview(id, no){
       '<label class="mfield">时间<input id="ivTime" type="time" value="'+esc(cur.time||"14:00")+'"></label>'+
     '</div>'+
     '<label class="mfield">方式<select id="ivMode">'+["现场","线上","电话"].map(m=>'<option'+(cur.mode===m?" selected":"")+'>'+m+'</option>').join("")+'</select></label>'+
+    '<label class="mfield">面试官（可选）<input id="ivBy" type="text" maxlength="12" value="'+esc(cur.by||"")+'" placeholder="例：陈晓"></label>'+
     '<label class="mfield">地点 / 会议链接<input id="ivPlace" type="text" maxlength="60" value="'+esc(cur.place)+'" placeholder="例：广州市天河区体育西路 / 腾讯会议 123-456-789"></label>'+
     '<label class="mfield">给候选人的话（可选）<input id="ivNote" type="text" maxlength="60" value="'+esc(cur.note)+'" placeholder="例：带一份项目材料"></label>'+
     '<label class="mfield">本轮反馈（可选，面完再填）<input id="ivFb" type="text" maxlength="80" value="'+esc(cur.feedback||"")+'" placeholder="例：基础不错，下一轮重点聊项目深度"></label>'+
@@ -2177,7 +2963,8 @@ function saveInterview(id, no){
   const list=(a.interviews||[]).slice();
   const iv={no:idx,date:date,time:time,mode:formVal("ivMode")||"现场",
     place:formVal("ivPlace").slice(0,60),note:formVal("ivNote").slice(0,60),
-    feedback:formVal("ivFb").slice(0,80),result:formVal("ivResult")||"待面"};
+    feedback:formVal("ivFb").slice(0,80),result:formVal("ivResult")||"待面",
+    by:(formVal("ivBy")||"").slice(0,12)};
   const prev=list[idx-1];
   const moved=!!prev && (prev.date!==iv.date || prev.time!==iv.time || prev.mode!==iv.mode || prev.place!==iv.place);
   if(prev){
@@ -2197,6 +2984,27 @@ function saveInterview(id, no){
   renderApp();
   openCandDrawer(a.id);
   toast(moved ? ("第 "+idx+" 轮已改期 · 求职端会看到新时间和改期记录") : ("第 "+idx+" 轮面试已保存 · 求职端「我的投递」里已经能看到"));
+}
+function closeByRound(id, no){
+  const a=state.apps.find(function(x){return x.id===id});
+  if(!a || a.status!=="面试") return;
+  const n=Math.max(1, parseInt(no,10)||1);
+  const prevStatus=a.status, prevReason=a.reason, prevUpd=a.updatedAt, prevLen=a.events.length;
+  a.status="已淘汰";
+  a.reason="面试未通过";
+  a.updatedAt=nowISO();
+  a.events.push({status:"已淘汰", at:a.updatedAt, note:"第 "+n+" 轮未通过"});
+  commit();
+  renderApp();
+  openCandDrawer(a.id);
+  toast("第 "+n+" 轮未通过 · 已结束流程 · 求职端会看到", {label:"撤销", fn:function(){
+    const b=state.apps.find(function(x){return x.id===id});
+    if(!b || b.status!=="已淘汰" || b.events.length!==prevLen+1) return;
+    b.status=prevStatus; b.reason=prevReason; b.updatedAt=prevUpd;
+    b.events.length=prevLen;
+    commit(); renderApp(); openCandDrawer(id);
+    toast("已撤销 · 回到「面试中」");
+  }});
 }
 function openReview(id){
   const a=state.apps.find(x=>x.id===id);
@@ -2389,7 +3197,7 @@ function openGov(job){
   const mats=govMaterials(job);
   openModal('<div class="mhead"><h2>'+esc(job.u+" · "+job.r)+'</h2><span class="badge warn">编制岗</span></div>'+
     '<p class="mtext">编制岗由主管部门统一组织报名与考试：平台只做资格自查、材料清单和入口跳转，这张「投递单」不会进入企业筛选。</p>'+
-    '<div class="govstatus"><span class="'+cd.tone+'">'+esc(cd.text)+'</span><span>'+esc(job.t)+'</span><span>招 '+job.n+' 人</span><span>'+(on?'已设报名提醒':'未设提醒')+'</span></div>'+
+    '<div class="govstatus"><span class="'+cd.tone+'">'+esc(cd.text)+'</span><span id="govCd" class="live-cd"></span><span>'+esc(job.t)+'</span><span>招 '+job.n+' 人</span><span>'+(on?'已设报名提醒':'未设提醒')+'</span></div>'+
     '<div class="kv"><span>报名入口</span><b><a class="ext" href="'+esc(govEntryUrl(job))+'" target="_blank" rel="noopener noreferrer">'+esc(job.w)+' ↗</a></b></div>'+
     '<div class="kv"><span>截止</span><b>'+esc(job.d==="长期"?"长期开放":job.d)+' · '+esc(deadlineText(job))+'</b></div>'+
     '<div class="dsec" style="margin:14px 0 6px">报名材料清单</div>'+
@@ -2399,20 +3207,25 @@ function openGov(job){
     '<button class="btn primary" data-act="close-modal">知道了</button></div>');
   const rb=$('#modal [data-act="gov-remind"]');
   if(rb) rb.focus();
+  const cdEl=$("#govCd");
+  if(cdEl && window.Live) Live.countdown(cdEl, jobDeadline(job), {prefix:"剩余 ", expiredText:"已截止"});
 }
 function openHelp(){
-  openModal('<h2>演示路径 · 30 秒闭环</h2>'+
-    '<p class="mtext">一条路径走完数据飞轮：HR 改门槛 → 求职端可投变多 → 投递 → 淘汰 → 理由回到下一轮门槛。每步都写明下一步点哪。</p>'+
+  openModal('<h2>演示路径 · 两分钟闭环</h2>'+
+    '<p class="mtext">一条路径走完：改门槛 → 对面能投 → 投递 → 约面 → 面评 → 淘汰进漏斗 → 回到门槛。每步都写明下一步点哪。</p>'+
     '<ol class="steps">'+
-      '<li><b>01</b>切「招聘方」→「岗位管理」，找「中国石油 · 财务核算」，点门槛「本科 · 1-3 年」。</li>'+
-      '<li><b>02</b>把经验改成「应届」：预览里候选池符合人数立刻变多；保存。公告原文不会被覆盖。</li>'+
-      '<li><b>03</b>切「求职者」→「对口岗位」：可投从 5 变 6，那张卡从「经验不足」变成「可投」。同一份数据，两端一起变。</li>'+
-      '<li><b>04</b>点它投递 → 切回「招聘方」→ 候选人池点林一 → 抽屉右上角切「求职者看到的样子」：对面看到的就是这块进度条。</li>'+
-      '<li><b>05</b>在抽屉里淘汰她（理由选「经验不匹配」）→ 进「招聘漏斗」：理由进入淘汰原因分布。</li>'+
-      '<li><b>06</b>回「岗位管理」再调一格门槛，对照分布判断这条门槛该不该改——闭环到此走完。</li>'+
+      '<li><b>01</b>切「招聘方」→「岗位管理」，点「中国石油 · 财务核算」的门槛，把经验改成「应届」：预览里符合人数立刻变多，保存。</li>'+
+      '<li><b>02</b>切「求职者」→「对口岗位」：可投从 5 变 6，那张卡从「经验不足」变成「可投」。同一份数据，两端一起变。</li>'+
+      '<li><b>03</b>投递它，切回「招聘方」→「候选人池」点林一；抽屉右上角切「求职者看到的样子」，对照组看到的就是这一块。</li>'+
+      '<li><b>04</b>推进到「初筛」再推进到「面试」，点「安排面试」排第 1 轮（可填面试官），再点「再加一轮」排第 2 轮。</li>'+
+      '<li><b>05</b>点第 1 轮的「改」，把日期挪一天并填改期原因：行内立刻出现「改期 1 次 · 原定 …」，求职端同步看到。</li>'+
+      '<li><b>06</b>把第 1 轮结果标成「通过」：底部提示可以再加一轮或直接发放录用；改成「未通过」则出现「按第 1 轮结果结束流程」。面评的 1–10 分只留招聘方，求职者只看到结论和那段反馈。</li>'+
+      '<li><b>07</b>进「招聘漏斗」：淘汰原因分布按岗位给出「门槛建议」，点采纳，门槛回到岗位管理，求职端同一帧重算。</li>'+
     '</ol>'+
-    '<p class="muted small" style="margin-top:14px">编制岗是刻意例外：卡片点「去官方报名」，有倒计时、材料清单和本机报名提醒，但不进企业投递闭环。数据只存本机 localStorage；右上角 ↺ 随时重置。</p>'+
+    '<p class="muted small" style="margin-top:14px">编制岗是刻意例外：卡片点「去官方报名」，有倒计时、材料清单和本机提醒，但不进企业投递闭环。数据只存本机 localStorage；右上角 ↺ 随时重置。</p>'+
+    '<p class="muted small">求职端「我的投递」顶部会提示最近一场面试，24 小时内带「今天 / 明天」；每轮面试都能导出 .ics 加进自己的日历。</p>'+
     '<div class="mfoot"><button class="btn primary" data-act="close-modal">从第一步开始</button></div>');
+
 }
 function openReset(){
   openModal('<h2>重置演示数据？</h2><p>会清空本机的投递、进度和画像，回到最初状态。这个动作不影响仓库里的任何文件。</p>'+
@@ -2483,6 +3296,8 @@ document.addEventListener("click",function(e){
   if(act==="withdraw-confirm"){ confirmWithdraw(el.getAttribute("data-app")); return; }
   if(act==="interview"){ openInterview(el.getAttribute("data-app"), el.getAttribute("data-no")); return; }
   if(act==="interview-save"){ saveInterview(el.getAttribute("data-app"), el.getAttribute("data-no")); return; }
+  if(act==="close-by-round"){ closeByRound(el.getAttribute("data-app"), el.getAttribute("data-no")); return; }
+  if(act==="ics"){ exportIcs(el.getAttribute("data-app"), el.getAttribute("data-no")); return; }
   if(act==="review"){ openReview(el.getAttribute("data-app")); return; }
   if(act==="review-save"){ saveReview(el.getAttribute("data-app")); return; }
   if(act==="reject"){ openReject(el.getAttribute("data-app")); return; }
@@ -2527,10 +3342,49 @@ document.addEventListener("keydown",function(e){
 });
 $("#scrim").addEventListener("click",closeDrawer);
 $("#modal").addEventListener("click",function(e){ if(e.target===$("#modal")) closeModal(); });
+/* ================= 实时数据层（组件在页面顶部的 live.js）================= */
+const SAVE_AT_KEY=KEY+":at";
+function readSaveAt(){
+  try{ const v=Number(localStorage.getItem(SAVE_AT_KEY)||0); return isFinite(v)&&v>0?v:null; }catch(e){ return null; }
+}
+// 岗位截止时间：公告里怎么写的就怎么解析（"2026-10-26 17:00" / "10-26" / "长期"）
+function jobDeadline(job){
+  if(!job||!job.d||job.d==="长期") return NaN;
+  return window.Live?Live.toDate(String(job.d)):NaN;
+}
+// renderApp 会重刷顶栏/状态栏，胶囊与“写入于”要重新绑到新节点上
+function livePillRebind(){
+  if(!window.Live) return;
+  const pill=document.querySelector("#livePill");
+  if(pill){
+    Live.pill(pill);
+    const clockEl=pill.querySelector(".live-clock");
+    if(clockEl) Live.clock(clockEl);
+  }
+  const ao=document.querySelector("#liveAsOf");
+  if(ao) Live.ago(ao, readSaveAt, {prefix:"状态写入于 ", emptyText:"尚未写入本机"});
+  if(!window.__liveCounted && pill){
+    window.__liveCounted=true;
+    Live.autoNum(document.querySelector("#app")||document.body);
+  }
+}
+window.__liveRebind=livePillRebind;
+function initLive(){
+  if(!window.Live||window.__liveStarted) return;
+  window.__liveStarted=true;
+  Live.init({channel:"starta-live",pill:"#livePill",tabLabel:"双端演示",localAsOf:true});
+  livePillRebind();
+}
 window.addEventListener("storage",function(e){
-  if(e.key!==KEY) return;
+  if(e.key!==KEY && e.key!==KEY+":at") return;
+  const before=state.apps.length;
   state=loadState(); syncPostedJobs(); renderApp();
-  toast("已同步另一个标签页的改动");
+  const delta=state.apps.length-before;
+  const pill=document.querySelector("#livePill");
+  if(pill){ pill.classList.add("live-flash"); setTimeout(function(){pill.classList.remove("live-flash");},1000); }
+  if(pill && window.Live) Live.pill(pill);
+  toast("已同步另一个标签页的改动"+(delta?" · 投递 "+(delta>0?"+":"")+delta:"")+
+        " · "+new Date().toLocaleTimeString("zh-CN",{hour12:false}));
 });
 
 function applyJob(id){
@@ -2592,10 +3446,13 @@ function upbarHtml(scope){
   const next=list[0];
   const j=jobById(next.app.jobId);
   const when=next.iv.date+" "+next.iv.time;
+  const d0=new Date(); d0.setHours(0,0,0,0);
+  const gap=Math.round((new Date(next.iv.date+"T00:00:00")-d0)/86400000);
+  const tag=gap===0?'<span class="badge bad">今天</span>':gap===1?'<span class="badge warn">明天</span>':'';
   if(scope==="hr"){
-    return '<div class="upbar"><b>未来 7 天 '+list.length+' 场面试</b><span>最近：'+esc(when)+' · '+esc(next.app.candidate.name)+'（'+esc(j?j.u+" · "+j.r:"")+'）</span></div>';
+    return '<div class="upbar"><b>未来 7 天 '+list.length+' 场面试</b>'+tag+'<span>最近：'+esc(when)+' · '+esc(next.app.candidate.name)+'（'+esc(j?j.u+" · "+j.r:"")+'）</span></div>';
   }
-  return '<div class="upbar"><b>你最近一场面试</b><span>'+esc(when)+' · '+esc(j?j.u+" · "+j.r:"")+' · '+esc(next.iv.mode)+(next.iv.place?' · '+esc(next.iv.place):'')+'</span></div>';
+  return '<div class="upbar"><b>你最近一场面试</b>'+tag+'<span>'+esc(when)+' · '+esc(j?j.u+" · "+j.r:"")+' · '+esc(next.iv.mode)+(next.iv.place?' · '+esc(next.iv.place):'')+'</span></div>';
 }
 function timelineHtml(a){
   return '<div class="tl">'+a.events.map(e=>
@@ -2610,6 +3467,7 @@ function timelineHtml(a){
 applyTheme();
 syncPostedJobs();
 renderApp();
+initLive();
 })();
 </script>
 </body>

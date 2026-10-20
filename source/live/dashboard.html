@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>实时数据大屏 · 星他 STARTA</title>
+<link rel="stylesheet" href="/live/live.css">
+<style>
+  :root{
+    --bg:#0e0f11; --bg2:#15171a; --line:rgba(255,255,255,.1); --line2:rgba(255,255,255,.18);
+    --txt:#f3f1ec; --dim:#9b9a96; --dim2:#6b6a67; --orange:#e4572e; --green:#3ecf8e;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(1200px 500px at 10% -10%,rgba(228,87,46,.10),transparent 60%),radial-gradient(900px 400px at 90% 0%,rgba(62,207,142,.05),transparent 55%);}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1240px;margin:0 auto;padding:26px 28px 60px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:34px;height:34px;border-radius:6px;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:12px}
+  .brand h1{margin:0;font-size:15px;letter-spacing:.02em;font-weight:600}
+  .brand p{margin:2px 0 0;font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;color:var(--dim2);text-transform:uppercase}
+  .top .right{display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:var(--dim)}
+  .top .right a{font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:5px 9px;border:1px solid var(--line2);border-radius:999px;color:var(--dim)}
+  .top .right a:hover{color:var(--txt);border-color:var(--orange)}
+  .live-pill{--mono:var(--mono);font-size:10.5px;color:var(--dim)}
+
+  .lead{margin:26px 0 8px;color:var(--dim);font-size:12.5px;line-height:1.7;max-width:70ch}
+  .lead b{color:var(--txt);font-weight:500}
+  .hero{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:20px 0 24px;background:var(--bg2)}
+  .cell{padding:18px 16px 16px;border-right:1px solid var(--line);min-width:0}
+  .cell:last-child{border-right:0}
+  .cell .k{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--dim2);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell .v{font-family:var(--sans);font-size:clamp(22px,2.4vw,30px);font-weight:600;letter-spacing:-.02em;margin-top:8px;line-height:1;font-variant-numeric:tabular-nums}
+  .cell .v small{font-size:11px;color:var(--dim);font-weight:400;margin-left:4px;letter-spacing:0}
+  .cell .s{font-family:var(--mono);font-size:9.5px;color:var(--dim2);margin-top:8px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell.is-hot .v{color:var(--orange)}
+
+  .cols{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}
+  section.card{border:1px solid var(--line);border-radius:10px;background:var(--bg2);overflow:hidden}
+  section.card > h2{margin:0;padding:13px 16px;font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--dim);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;text-transform:uppercase}
+  section.card > h2 .n{font-family:var(--mono);font-size:9.5px;color:var(--dim2);letter-spacing:.06em;font-weight:400}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:9px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--dim2);font-weight:500;text-transform:uppercase}
+  td{color:var(--dim)}
+  td.b{color:var(--txt);font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:0}
+  .fresh{display:inline-flex;align-items:center;gap:5px}
+  .fresh i{width:5px;height:5px;border-radius:50%;background:var(--green)}
+  .fresh.stale i{background:#e0a800}
+  #events{padding:4px 0;max-height:420px;overflow:auto}
+  .ev{display:grid;grid-template-columns:64px 1fr auto;gap:10px;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.05);font-size:11.5px;align-items:baseline}
+  .ev:last-child{border-bottom:0}
+  .ev time{font-family:var(--mono);font-size:9.5px;color:var(--dim2)}
+  .ev .name{color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ev .name b{color:var(--orange);font-weight:600;font-family:var(--mono);font-size:10px;letter-spacing:.05em;margin-right:6px}
+  .ev .who{font-family:var(--mono);font-size:9px;color:var(--dim2);letter-spacing:.05em}
+  .ev.replay .name{opacity:.62}
+  .empty{padding:26px 16px;color:var(--dim2);font-size:12px;text-align:center}
+  #health{padding:8px 16px 12px}
+  .chk{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:11.5px;color:var(--dim);border-bottom:1px dashed rgba(255,255,255,.06)}
+  .chk:last-child{border-bottom:0}
+  .chk i{width:13px;height:13px;border-radius:50%;flex:0 0 auto;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-style:normal;color:#0b0c0e;font-weight:700}
+  .chk.ok i{background:var(--green)}
+  .chk.bad i{background:var(--orange)}
+  .chk .det{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--dim2);text-align:right;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  footer{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--dim2)}
+  footer code{color:var(--dim);letter-spacing:0}
+  @media(max-width:1000px){.hero{grid-template-columns:repeat(3,1fr)}.cols{grid-template-columns:1fr}.cell:nth-child(3n){border-right:0}.cell:nth-child(-n+3){border-bottom:1px solid var(--line)}}
+  @media(max-width:620px){.hero{grid-template-columns:repeat(2,1fr)}.cell:nth-child(2n){border-right:0}.cell:nth-child(3n){border-right:1px solid var(--line)}.wrap{padding:18px 16px 40px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">ST</div>
+      <div>
+        <h1>实时数据大屏</h1>
+        <p>STARTA · LIVE OPS · v1.0</p>
+      </div>
+    </div>
+    <div class="right">
+      <span id="livePill" class="live-pill"></span>
+      <a href="/app/">工作台</a>
+      <a href="/">报告首页</a>
+      <a href="/live/health">体检 JSON</a>
+    </div>
+  </header>
+
+  <p class="lead">
+    这块屏上<strong>没有一个数字是编的</strong>：岗位行数来自 <code>data/岗位表_统一字段.csv</code> 的真解析，
+    在线页签来自 SSE 真连接，运行时长来自服务进程的真 <code>Date.now()</code>。
+    关掉这个页面，数字会掉；改一个 CSV 字节，行数和时间会跟着动。做不到实时，就直说——没有假的“模拟增长”。
+  </p>
+
+  <div class="hero">
+    <div class="cell"><div class="k">岗位行 / POSITIONS</div><div class="v"><span id="mPos">0</span><small>行</small></div><div class="s" id="mPosSrc">读 CSV 中…</div></div>
+    <div class="cell"><div class="k">覆盖单位 / EMPLOYERS</div><div class="v"><span id="mEmp">0</span><small>家</small></div><div class="s" id="mEmpSrc">第三列去重</div></div>
+    <div class="cell"><div class="k">拟招人数 / HIRES</div><div class="v"><span id="mHire">0</span><small>人</small></div><div class="s" id="mHireSrc">人数列求和</div></div>
+    <div class="cell"><div class="k">采集提交 / SUBMITS</div><div class="v"><span id="mSub">0</span><small>次</small></div><div class="s" id="mSubSrc">会话台账求和</div></div>
+    <div class="cell is-hot"><div class="k">在线页签 / ONLINE</div><div class="v"><span id="mClients">0</span><small>个</small></div><div class="s" id="mClientsSrc">SSE 长连接</div></div>
+    <div class="cell"><div class="k">心跳 / UPTIME</div><div class="v"><span id="mUp">--:--:--</span></div><div class="s" id="mBeat">— 次心跳</div></div>
+  </div>
+
+  <div class="cols">
+    <section class="card">
+      <h2>真实数据文件 <span class="n">fs.watch · 变了才推</span></h2>
+      <table>
+        <thead><tr><th>文件</th><th>行数</th><th>大小</th><th>写入时间</th><th>新鲜度</th></tr></thead>
+        <tbody id="fileRows"><tr><td colspan="5" class="empty">等第一次扫描…</td></tr></tbody>
+      </table>
+      <h2 style="border-top:1px solid var(--line)">事件流 <span class="n" id="evCount">0 条</span></h2>
+      <div id="events"><div class="empty">还没有事件。POST /live/event 发一条，这里会立刻出现。</div></div>
+    </section>
+
+    <section class="card">
+      <h2>服务自检 <span class="n" id="chkTime">—</span></h2>
+      <div id="health"><div class="empty">正在体检…</div></div>
+      <h2 style="border-top:1px solid var(--line)">接口</h2>
+      <table>
+        <tbody>
+          <tr><td class="b">GET /live/stream</td><td>SSE 流，4 秒心跳</td></tr>
+          <tr><td class="b">POST /live/event</td><td>推一条真实事件</td></tr>
+          <tr><td class="b">GET /live/state</td><td>当前状态 JSON</td></tr>
+          <tr><td class="b">GET /live/health</td><td>数据/服务体检</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <footer>
+    <span>星他 STARTA · 实时数据服务 <code>127.0.0.1:8790</code> · 零依赖 Node</span>
+    <span id="footState">静态快照：页面数字来自真实数据文件，不模拟增长</span>
+  </footer>
+</div>
+<script src="/live/live.js"></script>
+<script src="/live/dashboard.js"></script>
+</body>
+</html>

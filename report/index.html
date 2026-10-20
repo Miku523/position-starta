@@ -3,10 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>岗位要求的地层 · 招聘门槛采样报告</title>
+<title>岗位要求的地层 · 2026-10-20 招聘门槛采样报告</title>
 <meta name="description" content="19 个地址、29 次提交、9,200 个岗位：看招聘门槛是怎么一层层沉下去、又在哪里断掉。">
+<link rel="canonical" href="https://mikuascendlog.com/position-starta/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="SKILL STARTA SURVEY">
+<meta property="og:locale" content="zh_CN">
 <meta property="og:title" content="岗位要求的地层 · SKILL STARTA">
 <meta property="og:description" content="19 个地址 · 9,200 个岗位 · 一次可回放的云浏览器采样">
+<meta property="og:url" content="https://mikuascendlog.com/position-starta/">
+<meta property="og:image" content="https://mikuascendlog.com/position-starta/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="学历门槛地层剖面：本科层占 72.6%，其下断层至 19.1%">
+<meta property="article:published_time" content="2026-10-20">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="岗位要求的地层 · SKILL STARTA">
+<meta name="twitter:description" content="19 个地址 · 9,200 个岗位 · 一次可回放的云浏览器采样">
+<meta name="twitter:image" content="https://mikuascendlog.com/position-starta/assets/og.jpg">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230A0B0C'/%3E%3Crect x='7' y='9' width='18' height='3' fill='%23E4572E'/%3E%3Crect x='7' y='15' width='12' height='3' fill='%23F4EFE4'/%3E%3Crect x='7' y='21' width='7' height='3' fill='%236E8BFF'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -89,11 +103,6 @@ h1 em{font-style:normal;color:var(--orange)}
 .hero-metrics div:last-child{border-right:0}
 .hero-metrics b{display:block;font-family:var(--serif);font-size:clamp(30px,3.6vw,44px);font-weight:600;letter-spacing:-.01em;white-space:nowrap}
 .hero-metrics b i{font-style:normal;color:var(--orange)}
-.hero-metrics b .ar{font-family:var(--sans);font-size:.44em;color:var(--dim2);margin:0 .22em;vertical-align:.22em;letter-spacing:0}
-.hero-metrics .t3 b{display:flex;align-items:baseline;gap:0;font-size:clamp(24px,2.9vw,34px)}
-.hero-metrics .t3 b span{display:inline;font-size:inherit;letter-spacing:inherit;color:inherit;
-  margin:0;white-space:nowrap;font-family:inherit}
-.hero-metrics .t3 b span.ar{font-family:var(--sans);font-size:.44em;color:var(--dim2);margin:0 .2em}
 .hero-metrics > div > span{display:block;margin-top:6px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim2)}
 
 /* 浏览器窗口示意（截图占位） */
@@ -140,6 +149,14 @@ h1 em{font-style:normal;color:var(--orange)}
 .metric .v small{font-size:13px;font-family:var(--sans);font-weight:400;color:var(--dim);margin-left:5px;letter-spacing:0}
 .metric .u{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--dim2);margin-top:10px}
 .metric.is-active{box-shadow:var(--shadow-click);border-color:var(--orange)}
+/* 结论卡里指向证据的箭头：C-0x 是结论，E-0x / A-0x 是证据，两套编号不混用 */
+.metric .u .ref{color:var(--orange);font-family:var(--mono);letter-spacing:.1em;margin-left:6px;white-space:nowrap}
+
+/* 口径前置：最重要的局限不能只藏在附录折叠里 */
+.caveat{margin-top:16px;border-left:2px solid var(--orange);padding:13px 16px;background:rgba(228,87,46,.05);
+  font-size:12.5px;line-height:1.9;color:#54585F;max-width:80ch}
+.caveat b{color:var(--ink)}
+.light .caveat{color:#54585F}
 
 /* Evidence 证据卡 */
 .evidence{cursor:pointer;position:relative;padding:0;overflow:hidden}
@@ -191,6 +208,40 @@ h1 em{font-style:normal;color:var(--orange)}
   transform:scaleX(0);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
 .srow.hot .bar i{background:var(--orange)}
 .srow .ct{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--dim2);text-align:right}
+.starta.sub{margin-top:0}
+
+/* ---------- 地层剖面（04 节主图 FIG.01） ---------- */
+.core-block{display:grid;grid-template-columns:minmax(190px,240px) 1fr;gap:40px;align-items:start;margin-top:38px}
+.core-col{display:flex;flex-direction:column;gap:9px}
+.core-cap{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--dim2);text-align:center}
+/* 钻探动画用父级遮罩 + inner 位移，不用 clip-path：
+   clip-path 会把 IntersectionObserver 的相交矩形也算成裁剪盒（全裁=0×0），柱子永远进不了视口也就不触发。 */
+.core-mask{position:relative;overflow:hidden;height:clamp(420px,44vw,520px)}
+.core{position:absolute;inset:0;display:flex;flex-direction:column;
+  border:1px solid var(--ink);overflow:hidden;
+  transform:translateY(-101%);transition:transform 1.15s cubic-bezier(.3,.8,.3,1)}
+.core.grown{transform:translateY(0)}
+.layer{display:flex;flex-direction:column;justify-content:center;gap:3px;padding:0 14px;overflow:hidden}
+.layer b{font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:.02em}
+.layer span{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;opacity:.85}
+.l1{background:#F2C9B4;color:#241A14}
+.l2{background:var(--orange);color:#0A0B0C}
+.l3{background:#B23A17;color:var(--paper)}
+.l4{background:#6B2109;color:var(--paper)}
+.l4 b{font-size:12px}
+.fault{position:absolute;left:0;right:0;bottom:19.1%;border-top:1px dashed rgba(244,239,228,.92)}
+/* 右栏顶对齐到柱身（让过「地表」小标），并留一点呼吸 */
+.core-side{display:flex;flex-direction:column;gap:14px;padding-top:clamp(8px,3vw,34px)}
+.fault-note{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--orange)}
+.fault-note i{display:inline-block;width:26px;border-top:1px dashed var(--orange);vertical-align:middle;margin-right:9px}
+.core-note{margin:0;font-size:12.5px;line-height:1.95;color:#54585F;max-width:62ch}
+.core-note b{color:var(--ink)}
+.lg{list-style:none;display:flex;flex-wrap:wrap;gap:8px 20px;margin:4px 0 0;padding:0;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:#3F434A}
+.lg li{display:flex;align-items:center;gap:7px}
+.lg i{width:10px;height:10px;flex:0 0 10px;border:1px solid rgba(10,11,12,.25)}
+.figcap{display:flex;justify-content:space-between;gap:14px;font-family:var(--mono);
+  font-size:9px;letter-spacing:.14em;color:var(--dim2);margin-top:10px}
 
 /* 失败框（虚线只在这里用） */
 .fail{border:1px dashed rgba(228,87,46,.5);padding:20px 22px;position:relative;background:rgba(228,87,46,.03)}
@@ -205,14 +256,17 @@ th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--lineL2);ve
 th{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--dim2);text-transform:uppercase;font-weight:400}
 td.mono{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:#3F434A}
 
-/* 连线图 */
-.graph{border:1px solid var(--lineD);background:rgba(255,255,255,.008);padding:8px;margin-top:26px}
-.graph svg{display:block;width:100%;height:auto}
+/* 连线图
+   SVG 是等比缩放：viewBox 980 宽被压进 336px（390 视口）时，9px 的字只剩 3.1px，完全不可读。
+   所以给 svg 一个 min-width 让窄屏改为横向滚动，同时把字号整体调大一号。 */
+.graph{border:1px solid var(--lineD);background:rgba(255,255,255,.008);padding:8px;margin-top:26px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch}
+.graph svg{display:block;width:100%;min-width:860px;height:auto}
 .gnode{cursor:pointer}
 .gnode rect{fill:#0F1215;stroke:rgba(255,255,255,.16);stroke-width:1;transition:stroke .18s,fill .18s}
 .gnode:hover rect{stroke:var(--blue)}
-.gnode text{font-family:var(--mono);font-size:9px;fill:#B9BEC6;letter-spacing:.06em}
-.gnode text.big{font-size:11.5px;fill:#F4EFE4;letter-spacing:.02em}
+.gnode text{font-family:var(--mono);font-size:10.5px;fill:#B9BEC6;letter-spacing:.06em}
+.gnode text.big{font-size:13px;fill:#F4EFE4;letter-spacing:.02em}
 .gnode .port{fill:var(--ink);stroke:var(--blue);stroke-width:1.2}
 .svg-dim .gnode:not(.hot) rect{opacity:.35}
 .svg-dim .gsrc{opacity:.28}
@@ -221,6 +275,9 @@ td.mono{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:#3F4
 @keyframes dash{to{stroke-dashoffset:-16}}
 .graph .cap{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;
   letter-spacing:.16em;color:var(--dim2);padding:8px 6px 2px}
+.graph .cap .swipe{display:none;font-style:normal;opacity:.75}
+/* 容器窄到装不下 svg 的 min-width 时才提示可横向滑动 */
+@media (max-width:1120px){ .graph .cap .swipe{display:inline} }
 
 /* 行动 / 配方块 */
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px}
@@ -251,8 +308,10 @@ details.acc .body{padding:0 0 22px;font-size:12.5px;line-height:2;color:#BCC2CA;
 details.acc .body table{font-size:12px}
 details.acc .body th,details.acc .body td{border-color:var(--lineD2);color:#D2D7DD}
 details.acc .body th{color:#9FA6AE}
-/* 表格横向滚动容器（窄屏） */
-.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* 表格横向滚动容器（窄屏）
+   min-width:0 必需：作为 grid/flex 子项时，默认 min-width:auto 会被表内 min-width:520px 顶开，
+   结果是整页横向溢出而不是容器内滚动。 */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%}
 
 /* ---------- 目录 ---------- */
 .toc{position:fixed;left:max(20px,calc(50vw - 590px - 210px));top:50%;transform:translateY(-50%);
@@ -322,12 +381,16 @@ details.acc .body th{color:#9FA6AE}
   .hero .wrap{grid-template-columns:1fr;gap:34px}
   .g3,.g4{grid-template-columns:repeat(2,1fr)}
   .pair{grid-template-columns:1fr}
+  .core-block{grid-template-columns:1fr;gap:26px}
+  .core-mask{height:clamp(360px,58vw,460px)}
+  .core-side{padding-top:0}
+  .figcap{flex-direction:column;gap:3px}
   .bar .r .keep{display:none}
   .bar>div:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58%}
   .sect-pad{padding:64px 0 70px}
 }
 @media (max-width:620px){
-  .wrap{padding:0 18px}
+  .wrap{padding:0 18px;max-width:100%}
   .g2,.g3,.g4{grid-template-columns:1fr}
   .hero-metrics{grid-template-columns:1fr 1fr}
   .hero-metrics div{border-right:0;padding-bottom:14px}
@@ -357,6 +420,12 @@ details.acc .body th{color:#9FA6AE}
   section{page-break-inside:avoid;break-inside:avoid}
   .sect-pad{padding:28px 0}
   .card,.evidence,.flip,.graph,.fail{break-inside:avoid;box-shadow:none!important;border-color:#ccc!important}
+  /* 打印时 .core-mask 必须保留确定高度：.layer 靠 flex:8/72.6/14.6/4.5 + flex-basis:0 分配父级高度，
+     父高一旦是 auto，层高会全部塌成 0（实测整根柱子只剩 2px 边框，主图等于没印出来）。
+     .core 保持 absolute + inset:0 由 mask 撑高即可，不要再改 position。 */
+  .core-mask{height:460px!important}
+  .core{transform:none!important}
+  .core-block,.core-side{break-inside:avoid}
   .gnode rect{fill:#fff;stroke:#bbb}
   .gnode text.big{fill:#111} .gnode text{fill:#444}
   .edge{stroke:#bbb}
@@ -366,11 +435,168 @@ details.acc .body th{color:#9FA6AE}
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}
   .srow .bar i{transform:scaleX(1)!important}
+  /* 这里不要再写 .core-mask 的高度：带 !important 会盖掉 620px 断点里的窄屏高度（58vw）。 */
+  .core{transform:none!important}
 }
 /* 键盘焦点 */
 a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.flip:focus-visible{
   outline:2px solid var(--orange);outline-offset:3px}
 </style>
+<noscript><style>.core-mask{height:auto!important;overflow:visible!important}.core{position:static!important;transform:none!important}</style></noscript>
+<!-- LIVE_CSS_START -->
+<style>
+/* =====================================================================
+   星他 STARTA · 实时数据层 样式 Live v1.0
+   ---------------------------------------------------------------------
+   不绑定配色：一切颜色继承 currentColor，只在“状态点/增量标签”上用固定
+   语义色。这样同一套组件能同时活在工作台的浅色纸面、双端的米白、报告
+   的深色版面上，不需要各自覆写。
+   ===================================================================== */
+
+/* ---------- 状态胶囊 ---------- */
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .08em;
+  color: inherit;
+  opacity: .92;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+.live-pill:hover { opacity: 1; }
+
+.live-pill .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #9ca3af;
+  transition: background .3s ease;
+}
+
+.live-pill .live-state { font-weight: 700; letter-spacing: .1em; }
+.live-pill .live-sep { opacity: .4; margin: 0 -1px; }
+.live-pill .live-clock { font-variant-numeric: tabular-nums; opacity: .85; }
+.live-pill .live-meta { opacity: .62; }
+
+/* 各状态：点色 + 呼吸动画（只对真连接呼吸） */
+.live-pill.is-live .live-dot { background: #12a150; }
+.live-pill.is-live .live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid rgba(18, 161, 80, .55);
+  animation: livePing 1.8s cubic-bezier(.2, .6, .35, 1) infinite;
+}
+.live-pill .live-dot { position: relative; }
+.live-pill.is-connecting .live-dot,
+.live-pill.is-reconnecting .live-dot { background: #e08a00; animation: liveBlink 1s steps(2, start) infinite; }
+.live-pill.is-sync .live-dot { background: #0e8fa3; }
+.live-pill.is-snapshot .live-dot { background: #9ca3af; }
+.live-pill.is-reconnecting .live-state { opacity: .75; }
+
+@keyframes livePing {
+  0% { transform: scale(.7); opacity: .9; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes liveBlink { to { opacity: .3; } }
+
+/* 若宿主支持 color-mix，再补一层极淡的底，不破坏任何主题 */
+@supports (color: color-mix(in srgb, currentColor 10%, transparent)) {
+  .live-pill { padding: 3px 7px 3px 6px; border-radius: 999px; }
+  .live-pill:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+  .live-pill.is-live { background: color-mix(in srgb, #12a150 9%, transparent); }
+}
+
+/* ---------- 数字 ---------- */
+.live-num { font-variant-numeric: tabular-nums; }
+.live-bump { animation: liveBump .5s cubic-bezier(.2, .7, .3, 1); }
+@keyframes liveBump {
+  0% { opacity: .35; filter: blur(.3px); }
+  100% { opacity: 1; filter: none; }
+}
+
+/* 真实 +N / -N 增量标签（由 Live.delta 生成） */
+.live-delta {
+  position: absolute;
+  top: -13px;
+  right: 0;
+  z-index: 5;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: .04em;
+  color: #fff;
+  pointer-events: none;
+  animation: liveDelta 1.6s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+.live-delta.up { background: #12a150; }
+.live-delta.down { background: #c2410c; }
+@keyframes liveDelta {
+  0% { opacity: 0; transform: translateY(4px) scale(.9); }
+  18% { opacity: 1; transform: translateY(0) scale(1); }
+  72% { opacity: 1; transform: translateY(-1px); }
+  100% { opacity: 0; transform: translateY(-7px); }
+}
+
+/* ---------- 倒计时 / 相对时间 ---------- */
+.live-cd, .live-ago { font-variant-numeric: tabular-nums; }
+.live-cd.is-hot { font-weight: 700; }
+.live-cd.is-over, .live-ago.is-over { opacity: .55; }
+
+/* 给报告深色版面用的一点统一微调（仍不写颜色，只写字距） */
+.live-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.live-strip .live-ago { font-family: var(--mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .06em; opacity: .7; }
+
+/* 尊重系统的“减少动态效果” */
+@media (prefers-reduced-motion: reduce) {
+  .live-pill .live-dot::after { animation: none; opacity: 0; }
+  .live-bump { animation: none; }
+  .live-delta { display: none; }
+  .live-pill .live-dot { animation: none !important; }
+}
+
+/* ---------- 紧凑变体：状态栏 / 报告页眉 ---------- */
+.live-pill--sm { font-size: 9.5px; letter-spacing: .06em; gap: 5px; }
+.live-pill--sm .live-dot { width: 5px; height: 5px; }
+.live-asof {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  opacity: .58;
+}
+.live-pill.live-flash,
+.live-pill.live-flash-warn { animation: liveFlash .9s ease; }
+@keyframes liveFlash {
+  0% { opacity: .35; }
+  40% { opacity: 1; }
+  70% { opacity: .55; }
+  100% { opacity: .92; }
+}
+/* 数字滚动时轻微提亮，让“变化”被看见但不抢注意力 */
+.live-num.live-bump, .live-cd.live-bump { will-change: contents; }
+
+/* 报告页眉：窄屏时统计口径让位给标题与实时状态（pill / 数据截至 / 倒计时仍在） */
+@media (max-width:1280px){.bar .r .stat-k{display:none}}
+</style>
+<!-- LIVE_CSS_END -->
 </head>
 <body>
 <div class="progress" id="prog"></div>
@@ -378,11 +604,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
 <header class="bar">
   <div title="岗位要求的地层 / SKILL STARTA SURVEY"><b>岗位要求的地层</b> &nbsp;/&nbsp; SKILL STARTA SURVEY</div>
   <div class="r">
-    <span class="keep">19 SITES · 29 SUBMITS</span>
-    <span class="keep">9,200 POSITIONS</span>
+    <span id="livePill" class="live-pill live-pill--sm" role="status" aria-live="polite"></span>
+    <span class="keep" id="liveAsOf" title="最近一次数据文件写入时间"></span>
+    <span class="keep stat-k">19 SITES · 29 SUBMITS</span>
+    <span class="keep stat-k">9,200 POSITIONS</span>
     <span class="keep">2026-10-20</span>
-    <a class="lang" href="https://mikuascendlog.com/position-starta/app/" target="_blank" rel="noopener">招聘工作台 ↗</a>
-    <a class="lang" href="#s06">数据下载</a>
+    <span class="keep">报名截止 <span id="liveCd" class="live-cd"></span></span>
   </div>
 </header>
 
@@ -396,9 +623,9 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
       <h1>岗位要求的<br><em>地层</em></h1>
       <p>19 个地址、29 次提交抓回来，其中一份省级公告拖出 5 张岗位表——9,200 个岗位（两份公告）沿垂直方向切开，看门槛是怎么一层层沉下去、又在哪里断掉。每一行都带编号：这份表不是总结，是<u>现场记录</u>。</p>
       <div class="hero-metrics">
-        <div><b>19</b><span>个地址 / SITES</span></div>
-        <div><b>9,200</b><span>个岗位 / STARTA</span></div>
-        <div class="t3"><b><span>223<i>s</i></span></b><span>云端总用时 / TIME</span></div>
+        <div><b data-live-num="19" data-live-from="0">19</b><span>个地址 / SITES</span></div>
+        <div><b data-live-num="9200" data-live-from="0">9,200</b><span>个岗位 / STARTA</span></div>
+        <div><b data-live-num="2" data-live-from="0">2</b><span>份来源公告 / SOURCES</span></div>
       </div>
     </div>
     <div>
@@ -407,7 +634,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
         <div class="body" style="padding:0;display:block">
           <img src="assets/hero-real.jpg" alt="2026年大兴安岭林业集团公司公开招聘工勤岗位工作人员公告" width="1200" height="935" decoding="async" fetchpriority="high" style="display:block;width:100%;height:auto">
         </div>
-        <div class="cap">FIG.00 — 采集现场 / session_d790ab9f-2133-4d7e-b5b1-93389072fd17 / 2026-10-20 02:31 / 云端整页截图，未裁改</div>
+        <div class="cap">FIG.00 — 采集现场 / session_d790ab9f… / 2026-10-20 02:31 / 云端整页截图，未裁改（同一 URL 在 05 节 E-01 是另一次会话 0b1a3337…，同一页面先后采过两次）</div>
       </div>
     </div>
   </div>
@@ -420,18 +647,20 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
   <div class="wrap sect-pad">
     <div class="eyebrow">02 — Verdict</div>
     <h2 class="sec">四条结论，每条后面都有证据编号</h2>
-    <p class="lede">如果只看一屏，看这四条。括号里是它可以被追溯到的那条记录，翻到对应小节能看到截图、URL 和会话 ID。</p>
+    <p class="lede">如果只看一屏，看这四条。每张卡左上角的 <b style="color:var(--ink);font-weight:600">C-0x</b> 是结论编号，卡内箭头指向的 <b style="color:var(--ink);font-weight:600">E-0x / A-0x</b> 是它可以被追溯到的那条记录——翻到对应小节能看到截图、URL 和会话 ID。</p>
 
     <div class="grid g4" style="margin-top:34px">
-      <div class="card metric"><div class="no">E-01</div><div class="v">本科<small>最高频学历</small></div><div class="u">6,681 / 9,200 个岗位卡本科及以上</div></div>
-      <div class="card metric"><div class="no">E-02</div><div class="v">湛江<small>岗位最密</small></div><div class="u">1,320 个岗位，占 14.3%——不是广州</div></div>
-      <div class="card metric"><div class="no">E-03</div><div class="v">15.5%<small>只招应届</small></div><div class="u">1,426 个岗位卡应届，其余 84.5% 不限</div></div>
-      <div class="card metric"><div class="no">E-04</div><div class="v">31%<small>提交失败率</small></div><div class="u">29 次提交里 9 次失败——<b style="color:var(--paper2);font-weight:500">9 次全部来自 hrss.gd.gov.cn 一台服务器</b>，其中 8 次是导航超时。不是采集器的问题，是那台服务器不稳定（详见 A-02）</div></div>
+      <div class="card metric"><div class="no">C-01</div><div class="v">本科<small>最高频学历</small></div><div class="u">6,681 / 9,200 个岗位最低门槛为本科<span class="ref">→ E-03</span></div></div>
+      <div class="card metric"><div class="no">C-02</div><div class="v">湛江<small>岗位最密</small></div><div class="u">1,320 个岗位，占 14.3%——不是广州<span class="ref">→ E-03</span></div></div>
+      <div class="card metric"><div class="no">C-03</div><div class="v">15.5%<small>只招应届</small></div><div class="u">1,426 个岗位卡应届，其余 84.5% 不限<span class="ref">→ E-03</span></div></div>
+      <div class="card metric"><div class="no">C-04</div><div class="v">31%<small>提交失败率</small></div><div class="u">29 次提交里 9 次失败——<b style="color:var(--paper2);font-weight:500">9 次全部来自 hrss.gd.gov.cn 一台服务器</b>，其中 8 次是导航超时。不是采集器的问题，是那台服务器不稳定<span class="ref">→ A-02</span></div></div>
     </div>
 
+    <div class="caveat"><b>读这四条之前，先看口径</b>：9,200 个岗位里 <b>9,169 条来自同一份省级岗位表</b>的 5 张 sheet，另 31 条来自国家林草局的一份 PDF。它不是全省全行业，更不是全市场；且只是 2026-10-20 一次快照，不能当趋势读。完整的方法局限见 <span style="font-family:var(--mono)">A-03</span>。</div>
+
     <div class="grid g2" style="margin-top:14px">
-      <div class="card"><h3>门槛不写在“技能”里</h3><p>学历是硬筛，专业是软筛。9,200 个岗位里 72.6% 卡本科、14.6% 卡硕士、4.5% 卡博士；而「专业不限」一个都没有——每个岗位都写了专业。<b>顺序本身就是权重</b>。（E-01 / E-02）</p></div>
-      <div class="card"><h3>真正的稀缺在交叉处</h3><p>专业榜前四名里两个是教师方向：「学科教学硕士」1,414 +「课程与教学论」919，合计 2,333 个岗位（25.4%）；紧随其后的是临床医学 808、会计学 771。地区榜第一是湛江，不是广州。<b>读专业榜，读到的是产业结构，不是偏好。</b>（E-01 / E-02）</p></div>
+      <div class="card"><h3>门槛不写在“技能”里</h3><p>学历是硬筛，专业是软筛。9,200 个岗位里 72.6% 卡本科、14.6% 卡硕士及以上、4.5% 卡博士；广东那 9,169 行<b>每一行都填了专业</b>，一个「专业不限」都没有。只有林草局那 31 行没有专业字段——那份 PDF 只给了岗位名・单位・学历・人数，<b>那是没采集到，不是不设限</b>，两件事不能混着说。<b>顺序本身就是权重</b>。（C-01 / C-02 → E-03）</p></div>
+      <div class="card"><h3>真正的稀缺在交叉处</h3><p>专业榜前四名里两个是教师方向：「学科教学硕士」1,414 +「课程与教学论」919，合计 2,333 个岗位（25.4%）；紧随其后的是临床医学 808、会计学 771。地区榜第一是湛江，不是广州。<b>读专业榜，读到的是产业结构，不是偏好。</b>（C-02 → E-03）</p></div>
     </div>
   </div>
 </section>
@@ -461,7 +690,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
       <ul>
         <li><b>hrss.gd.gov.cn 的招聘列表页</b>：navigation timeout，连试 4 次都没开。</li>
         <li><b>同一份公告（post_4848983）</b>：提交 6 次，成功 2 次、失败 4 次——一次是建会话时 HTTP error，三次是导航超时。</li>
-        <li><b>hrss.gd.gov.cn 的另外两个详情页</b>：同样超时；浙江那页能开但抓不到岗位。</li>
+        <li><b>hrss.gd.gov.cn 的另外一个详情页</b>：同样超时；浙江那页能开但抓不到岗位。</li>
       </ul>
       <p style="margin:10px 0 0">所以真实账目是：<b>19 个唯一地址，29 次提交尝试，20 次成功</b>。同一页反复失败不是重试没用，是那台服务器对学生时段以外的访问不稳定——这件事只能写出来，不能藏。</p>
     </div>
@@ -488,9 +717,40 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
   <div class="wrap sect-pad" style="padding-top:0">
     <div class="eyebrow">04 — Profile</div>
     <h2 class="sec">剖面：门槛是怎么沉下去的</h2>
-    <p class="lede">同一份数据，画成折线是趋势，画成柱是排序，画成环是占比——选错图，结论就会被读错。所以先交代每种图该用在哪、这次用了没用，再给图。</p>
+    <p class="lede">同一份数据，画成折线是趋势，画成柱是排序，画成环是占比，画成地层是次序——选错图，结论就会被读错。所以先交代每种图该用在哪、这次用了没用，再给图。</p>
 
-    <div class="starta" id="starta">
+    <div class="core-block">
+      <div class="core-col">
+        <div class="core-cap">地表 · 门槛最低</div>
+        <div class="core-mask">
+          <div class="core" id="core" role="img" aria-label="学历门槛地层剖面：自上而下为大专 8.0%（733 岗）、本科 72.6%（6,681 岗）、硕士及以上 14.6%（1,343 岗）、博士 4.5%（413 岗），层厚等于岗位占比，越往下门槛越高；本科层下沿为断层，以下合计仅 19.1%">
+            <div class="layer l1" style="flex:8 1 0"><b>大专</b></div>
+            <div class="layer l2" style="flex:72.6 1 0"><b>本科</b><span>72.6%</span></div>
+            <div class="layer l3" style="flex:14.6 1 0"><b>硕士及以上</b><span>14.6%</span></div>
+            <div class="layer l4" style="flex:4.5 1 0"><b>博士</b></div>
+            <div class="fault"></div>
+          </div>
+        </div>
+        <div class="core-cap">深处 · 门槛最高</div>
+      </div>
+      <div class="core-side">
+        <div class="fault-note"><i></i>断层 · 越过本科往下骤降到 19.1%</div>
+        <p class="core-note">层厚 = 岗位占比，越往下门槛越高。本科一层吃掉 72.6%，是整根柱子的主体；它的下沿就是<b>断层</b>——硕士及以上 14.6% 加博士 4.5%，只剩 19.1%。四层合计 9,170 岗（99.7%），余下 30 个不在这四档里：<b>28 个是「高中及以上学历」</b>（全部来自林草局那份工勤岗 PDF），2 个学历字段为空——它们没有被并入任何一层，也没有被丢掉。</p>
+        <ul class="lg">
+          <li><i style="background:#F2C9B4"></i>大专 · 733 岗 · 8.0%</li>
+          <li><i style="background:#E4572E"></i>本科 · 6,681 岗 · 72.6%</li>
+          <li><i style="background:#B23A17"></i>硕士及以上 · 1,343 岗 · 14.6%</li>
+          <li><i style="background:#6B2109"></i>博士 · 413 岗 · 4.5%</li>
+          <li><i style="background:#8A9098"></i>未入层 · 30 岗 · 0.3%（高中 28 ＋ 空 2）</li>
+        </ul>
+      </div>
+    </div>
+    <div class="figcap"><span>DEPTH · 层厚 = 岗位占比</span><span>FIG.01 — EDUCATION STARTA · N=9200</span></div>
+    <p class="cap" style="border:0;padding:10px 0 0;max-width:74ch"><b>「研究生」为什么不是单独一层</b>：原始学历列里没有「研究生」这个取值——它实际写作「硕士研究生以上」896 与「硕士研究生」447，归一器把两者并成<b>「硕士及以上」1,343</b>；「博士研究生」413 单成一档。同理「本科以上」5,427 ＋「本科」1,254 并为「本科」，「大专以上」719 ＋「大专」11 ＋「大专及以上学历」3 并为「大专」。凡是带「以上」的都表示<b>最低门槛</b>，不是只招该学历——这也是第三层叫「硕士及以上」而不是「硕士」的原因。</p>
+
+    <p class="lede" style="margin-top:46px;max-width:70ch">同一个 N=9,200 的专业频次放在这里做对照：地层看的是门槛的次序，这张看的是专业的热度，两者不是一回事，别互相代入。</p>
+
+    <div class="starta sub" id="majors">
       <div class="srow"><div class="nm">学科教学硕士</div><div class="bar"><i style="--w:1.00"></i></div><div class="ct">1,414 岗</div></div>
       <div class="srow hot"><div class="nm">课程与教学论</div><div class="bar"><i style="--w:0.65"></i></div><div class="ct">919 岗</div></div>
       <div class="srow"><div class="nm">临床医学</div><div class="bar"><i style="--w:0.57"></i></div><div class="ct">808 岗</div></div>
@@ -498,21 +758,22 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
       <div class="srow"><div class="nm">计算机科学与技术</div><div class="bar"><i style="--w:0.44"></i></div><div class="ct">625 岗</div></div>
       <div class="srow"><div class="nm">汉语言文学</div><div class="bar"><i style="--w:0.42"></i></div><div class="ct">590 岗</div></div>
       <div class="srow"><div class="nm">法学</div><div class="bar"><i style="--w:0.39"></i></div><div class="ct">548 岗</div></div>
+      <div class="srow"><div class="nm">财务管理</div><div class="bar"><i style="--w:0.38"></i></div><div class="ct">540 岗</div></div>
     </div>
-    <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--dim2);margin-top:10px">
-      <span>DEPTH · 要求该专业的岗位数</span><span>FIG.01 — MAJOR FREQUENCY · N=9200</span>
-    </div>
+    <div class="figcap"><span>要求该专业的岗位数（条形长度为相对最高项 1,414 的比例）</span><span>FIG.01b — MAJOR FREQUENCY · N=9200</span></div>
+    <p class="cap" style="border:0;padding:10px 0 0;max-width:74ch">口径：每个岗位对每个专业只记 1 票（旧脚本按单元格出现次数记，同一岗位在大专／本科／研究生三列都写「会计学」会算 3 票）。会计学因此从 1,241 降到 771，靠前的排序也跟着变——<b>数字变化主要来自这条口径修正，不是那 31 行的加入</b>。图上 8 行与 06 节下载的 CSV 8 行一致。</p>
 
-    <h3 style="font-family:var(--serif);font-size:22px;margin:52px 0 0;font-weight:600">六种图，这次用了三种</h3>
-    <p class="cap" style="border:0;padding:8px 0 0;max-width:70ch">下面六张卡翻面是「这张图该怎么用、这次用在哪」。折线、环、散点这次<b>没有画</b>——不是忘了，是这次的数据撑不起它们的口径，背面上写了原因。</p>
+    <div class="eyebrow" style="margin-top:56px">附记 — 选图方法论</div>
+    <h3 style="font-family:var(--serif);font-size:22px;margin:8px 0 0;font-weight:600">六种图，这次用了四种</h3>
+    <p class="cap" style="border:0;padding:8px 0 0;max-width:70ch">这一段不属于「剖面」本身，是画图前的方法交代，放在 04 节末尾作附记。下面六张卡翻面是「这张图该怎么用、这次用在哪」。折线与散点这次<b>没有画</b>——不是忘了，是这次的数据撑不起它们的口径；占比那一格换成了地层剖面而不是环，背面上都写了原因。</p>
     <p class="lede" style="margin-top:10px">点一下卡片翻面，背面写的是“为什么这张图只能这么用”。</p>
     <div class="grid g3" style="margin-top:22px">
       <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>趋势 → 折线</b><span>同一省按发布日排周，看招聘季是涨是退。</span></div><div class="b"><i>NOT USED · 没有时间轴</i><p>折线要时间连续、间隔相等，缺一周就得断笔。本次只有 2026-10-20 一个快照，画折线等于凭空造趋势，所以不画。</p></div></div></div>
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>对比 → 柱形</b><span>岗位数按考区排序，一眼看出湛江占 14.3%。</span></div><div class="b"><i>USED · FIG.01 / 04</i><p>类别之间没有顺序关系时用柱；若强行排序成折线，会伪造出“趋势”。上面专业榜这张就是柱形（横排）。</p></div></div></div>
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>占比 → 环</b><span>学历构成：本科 72.6 ／ 硕士 14.6 ／ 大专 8.0 ／ 博士 4.5。</span></div><div class="b"><i>NOT USED · 已用文字给过</i><p>环只用于“部分相加等于整体”。这组学历占比已经写在 02 节与 E-01 卡里，再画一个环只是重复同一组数，不新增信息。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>对比 → 柱形</b><span>岗位数按专业排序，一眼看出学科教学硕士 1,414 岗、占 15.4%。</span></div><div class="b"><i>USED · FIG.01b / 04</i><p>类别之间没有顺序关系时用柱；若强行排序成折线，会伪造出“趋势”。上面专业榜那张就是柱形（横排）。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>占比 → 地层剖面</b><span>学历构成：本科 72.6 ／ 硕士及以上 14.6 ／ 大专 8.0 ／ 博士 4.5。</span></div><div class="b"><i>USED · FIG.01 / 04</i><p>四层相加等于整体，且层与层有序——门槛由低到高。环只能给比例，给不了“深度”；改成垂直堆叠后，厚度同时表示占比与顺序，断层的高度也一并画了出来。这次要的正是后两件事，所以没用环。</p></div></div></div>
       <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>分布 → 散点</b><span>单位 × 岗位数：谁只招 1 个岗，谁招了 37 个。</span></div><div class="b"><i>NOT USED · 缺逐单位明细</i><p>散点要的是离群点，得有每个单位的岗位数。本次只输出了单位总数 4,519，没有逐单位分布，硬画就是拿总数冒充分布。</p></div></div></div>
       <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>明细 → 表格</b><span>9,200 条岗位明细，逐条能追回附件原件。</span></div><div class="b"><i>USED · 03 / 07</i><p>表格不是退化形式。要让人能核对，就必须给行，不能给摘要。03 节归一表、07 节会话台账都是它。</p></div></div></div>
-      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>指标 → 卡片</b><span>9,200 岗位、4,519 家单位、失败率 31%。</span></div><div class="b"><i>USED · 01 / 03</i><p>一张卡只放一个数。放两个数，读者就只记住一个。首屏三个大数字与 03 节的账目卡都是它。</p></div></div></div>
+      <div class="flip" tabindex="0"><div class="inner"><div class="f"><b>指标 → 卡片</b><span>9,200 岗位、4,519 家单位、11,208 个聘用名额、失败率 31%。</span></div><div class="b"><i>USED · 01 / 03</i><p>一张卡只放一个数。放两个数，读者就只记住一个。首屏三个大数字与 03 节的账目卡都是它。</p></div></div></div>
     </div>
   </div>
 </section>
@@ -547,13 +808,14 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
       <div class="mono" style="font-size:10px;letter-spacing:.14em;color:var(--orange);flex:0 0 44px">E-04</div>
       <div style="flex:1">
         <b style="font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink)">跨源归一：两份公告、6 张表、9,200 行</b>
-        <div class="cap" style="border:0;padding:8px 0 0;color:var(--dim2)">广东省人社厅（xlsx × 1，5 个 sheet，9,169 行）与国家林草局（pdf × 1，31 行）在同一批次里被映射到 11 个统一字段。两个会话都留了档：<span class="mono">session_5eac7377</span> / <span class="mono">session_b881d097</span>。</div>
+        <div class="cap" style="border:0;padding:8px 0 0;color:var(--dim2)">广东省人社厅（xlsx × 1，5 个 sheet，9,169 行）与国家林草局（pdf × 1，31 行）在同一批次里被映射到 11 个统一字段。两个会话都留了档：<span class="mono">session_5eac7377</span> / <span class="mono">session_b881d097</span>。<br><span style="color:var(--dim)">这一条没有自己的截图：它是上面三张卡汇合后的结果，样子要看 03 节的归一对照表——所以它是横条而不是卡片。</span></div>
       </div>
       <a href="#s03" class="mono" style="flex:0 0 auto;font-size:10.5px;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(110,139,255,.4);padding-bottom:2px">回到 03 看对照表 ↗</a>
     </div>
 
     <div class="graph">
-      <div class="cap"><span>FIG.02 — 采集链路 / 主块 → 三支路 → 汇回</span><span>NODE MAP</span></div>      <svg viewBox="0 0 980 300" id="graph" role="img" aria-label="采集链路图：一个会话分三条支路汇回岗位表">
+      <div class="cap"><span>FIG.02 — 采集链路 / 主块 → 三支路 → 汇回 · 广东 xlsx 9,169 ＋ 林草局 PDF 31 ＝ N 9,200</span><span>NODE MAP<i class="swipe"> · 可横向滑动</i></span></div>
+      <svg viewBox="0 0 980 300" id="graph" role="img" aria-label="采集链路图：一个会话分三条支路汇回岗位表">
         <defs>
           <marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
             <path d="M0,0 L6,3 L0,6 z" fill="rgba(110,139,255,.55)"/>
@@ -597,15 +859,16 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
         <g class="gnode" data-n="R">
           <rect x="636" y="122" width="128" height="48"/>
           <text class="big" x="650" y="143">岗位表 9,169 条</text>
-          <text x="650" y="159">去重后 9,169</text>
+          <text x="650" y="159">广东源 · 去重后</text>
           <circle class="port" cx="636" cy="146" r="4"/>
           <circle class="port" cx="764" cy="146" r="4"/>
         </g>
         <g class="gnode" data-n="S">
-          <rect x="822" y="112" width="120" height="68"/>
-          <text class="big" x="836" y="136">门槛剖面</text>
-          <text x="836" y="152">学历·地区·专业</text>
-          <text x="836" y="166">N = 9,169</text>
+          <rect x="822" y="106" width="120" height="80"/>
+          <text class="big" x="836" y="130">门槛剖面</text>
+          <text x="836" y="148">学历·地区·专业</text>
+          <text x="836" y="164">9,169 + 31</text>
+          <text class="big" x="836" y="180">N = 9,200</text>
           <circle class="port" cx="822" cy="146" r="4"/>
         </g>
       </svg>
@@ -630,7 +893,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,.card:focus-visible,.
       <div class="box now"><div class="h">数据 · 实际是这样</div><ul>
         <li>广州只有 546 个岗位（5.9%），<b>湛江 1,320（14.3%）、梅州 1,059（11.5%）</b>——重心在粤东西北</li>
         <li>不是「行政一条街」：<b>学科教学硕士（1,414）＋课程与教学论（919）＝25.4%</b> 是教师岗，但紧跟着的就是临床医学（808）与会计学（771）</li>
-        <li><b>72.6% 就卡在本科</b>，本科不是过线而是主力；硕士 14.6%、博士 4.5%</li>
+        <li><b>72.6% 就卡在本科</b>，本科不是过线而是主力；硕士及以上 14.6%、博士 4.5%</li>
       </ul></div>
     </div>
 
@@ -648,11 +911,10 @@ close     每个 session 结束即 close，防遗漏计费</div>
     <div class="dl">
       <button class="btn" id="csv">下载专业榜 CSV · 8 行</button>
       <button class="btn ghost" id="json">下载 JSON · 含证据字段</button>
-      <a class="btn ghost" href="https://browser.lexmount.cn/zh/docs" target="_blank" rel="noopener">看这套流程怎么跑 ↗</a>
-      <a class="btn ghost" href="https://mikuascendlog.com/position-starta/app/" target="_blank" rel="noopener">打开招聘工作台 demo ↗</a>
     </div>
     <p style="font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--dim2);margin-top:14px">
       表来自 2026-10-20 凌晨的 29 次真实提交；失败与重试记录见 03 与 07。</p>
+    <p class="cap" style="border:0;padding:14px 0 0;max-width:64ch">这一页只给数据，不给入口——这里没有产品链接，也没有转化按钮。想接着用这批数据做点什么，在页脚。</p>
   </div>
 </section>
 
@@ -665,18 +927,21 @@ close     每个 session 结束即 close，防遗漏计费</div>
     <p class="lede">这一节是给愿意核对的人准备的。数字不好看的部分，也一起放着了。</p>
 
     <div style="margin-top:26px">
-      <details class="acc"><summary><span>会话台账 · 20 个 Session / 10 个批次</span><span class="n">A-01 <span class="ico">+</span></span></summary>
-        <div class="body"><table><thead><tr><th>批次</th><th>地址</th><th>成功</th><th>失败</th><th>用时</th></tr></thead><tbody>
+      <details class="acc"><summary><span>会话台账 · 20 个 Session / 29 次提交 / 19 个唯一地址</span><span class="n">A-01 <span class="ico">+</span></span></summary>
+        <div class="body"><table><thead><tr><th>阶段</th><th>提交</th><th>成功</th><th>失败</th><th>用时</th></tr></thead><tbody>
           <tr><td>首轮横向</td><td class="mono">13</td><td class="mono">11</td><td class="mono">2</td><td class="mono">164s</td></tr>
           <tr><td>招聘源</td><td class="mono">8</td><td class="mono">6</td><td class="mono">2</td><td class="mono">48s</td></tr>
-          <tr><td>广东岗位表重试</td><td class="mono">1（同一 URL ×5）</td><td class="mono">1</td><td class="mono">4</td><td class="mono">5.4s</td></tr>
-          <tr><td>合计</td><td class="mono">29 次提交</td><td class="mono">20</td><td class="mono">9</td><td class="mono">223s</td></tr>
+          <tr><td>广东岗位表重试（同一 URL）</td><td class="mono">6</td><td class="mono">2</td><td class="mono">4</td><td class="mono">5.4s</td></tr>
+          <tr><td><b>分项合计</b></td><td class="mono"><b>27</b></td><td class="mono"><b>19</b></td><td class="mono"><b>8</b></td><td class="mono"><b>217.4s</b></td></tr>
         </tbody></table>
-        <p class="mono" style="font-size:9.5px;letter-spacing:.1em;color:var(--dim2);margin:10px 0 0">用时只统计成功打开的页面；超时的那几次没有计入。</p>
+        <p class="mono" style="font-size:10px;letter-spacing:.06em;color:var(--dim2);margin:12px 0 0;line-height:1.95">上表按阶段归集，每行「提交 = 成功 + 失败」，合计 27 次由分项相加得出。<br>
+        首屏与正文引用的 <b style="color:#D2D7DD">29 次提交 / 20 成功 / 9 失败</b> 是全文口径，比上表多 2 次不属任一批次的单点尝试：<b style="color:#D2D7DD">浙江人社列表页 1 次</b>（能打开但没有岗位，记成功）与 <b style="color:#D2D7DD">hrss.gd.gov.cn 另一个详情页 1 次</b>（超时，记失败）。<br>
+        这 2 次单独列出、<b style="color:#D2D7DD">不做平滑</b>——合计对不上总数时，正确做法是把差额写出来，而不是把分项改圆。失败构成见 A-02：8 次 navigation timeout（列表页 4 ＋ 同一公告 3 ＋ 另一详情页 1）＋ 1 次 HTTP error，合计 9。<br>
+        用时为各阶段实跑耗时之和；超时的那几次没有计入。</p>
         </div>
       </details>
       <details class="acc"><summary><span>失败清单 · 9 次，全在同一个站</span><span class="n">A-02 <span class="ico">+</span></span></summary>
-        <div class="body">9 次失败里 8 次是 navigation timeout、1 次是 HTTP error，全部来自 <span class="mono">hrss.gd.gov.cn</span>。同一个 URL（post_4848983）连续失败 4 次、第 5 次成功——所以那 9,200 行不是一次跑出来的，是重试出来的。</div>
+        <div class="body">9 次失败里 8 次是 navigation timeout、1 次是 HTTP error，全部来自 <span class="mono">hrss.gd.gov.cn</span>。timeout 的构成：招聘列表页 4 次、同一份公告（post_4848983）3 次、另一个详情页 1 次；那 1 次 HTTP error 发生在建会话时。同一个 URL（post_4848983）共提交 <b>6 次——失败 4 次、成功 2 次</b>，第一次成功出现在第 5 次尝试——所以那 9,200 行不是一次跑出来的，是重试出来的。</div>
       </details>
       <details class="acc"><summary><span>方法局限 · 这份报告不能证明什么</span><span class="n">A-03 <span class="ico">+</span></span></summary>
         <div class="body">9,200 个岗位里 9,169 条来自<b>同一份省级岗位表</b>的 5 张 sheet，另 31 条来自国家林草局的一份 PDF，不是全省全行业，更不是全市场；专业写法不统一（“学科教学硕士（专业硕士）”与简称混用），做合并时会有误判；只覆盖 2026-10-20 一次快照，不能当趋势看；xlsx 靠文本解析列，版式一换就可能错列——这次就踩过空单元格导致整体左移。<b>另外，专业榜的计数口径这次改过</b>：旧脚本按「单元格出现次数」记，一个岗位在大专／本科／研究生三列里都写了「会计学」就算 3 票；现在改成「每个岗位对每个专业只记 1 票」。会计学因此从 1,241 降到 771，靠前的排序也跟着变——数字变化主要来自这条口径修正，不是那 31 行的加入。</div>
@@ -691,7 +956,7 @@ close     每个 session 结束即 close，防遗漏计费</div>
           批次会落到 <span class="mono">runs/batch-*.json</span>，然后跑
           <span class="mono">python canon_stat.py runs/batch-1792437271749.json</span>，输出学历构成、专业频次、地区分布、单位数、聘用人数合计。<br>
           <b>4 · 看报告</b><br>
-          <span class="mono">/</span> 是报告单文件版（本地双击 <span class="mono">index.html</span> 也能开），<span class="mono">/report/</span> 是多文件版；要截图或打印就 <span class="mono">python -m http.server 8899</span> 起个本地服务再访问。<br>
+          线上 <span class="mono">/</span> 是<b>多文件版</b>：图按需加载，首屏 HTML 约 65 KB；<span class="mono">/report/</span> 放的是<b>单文件版</b>（约 1.5 MB，图已内嵌，可下载后双击打开，适合离线看与打印）。要截图或打印就下单文件版，或用 <span class="mono">python -m http.server 8899</span> 起本地服务访问多文件版。<br>
           <b>环境依赖</b>：Node 22+；<span class="mono">.doc</span> 转 <span class="mono">.docx</span> 需要 LibreOffice；PDF 用 <span class="mono">bin/pdftotext/pdftotext.exe</span>、云浏览器 CLI 放 <span class="mono">bin/browser-cli.exe</span>（两个二进制不在仓库里，需自备）；xlsx 只用 tar 解包 + XML 解析，不依赖 Office。
         </div>
       </details>
@@ -729,6 +994,582 @@ close     每个 session 结束即 close，防遗漏计费</div>
 
 <div class="hint" id="hint">滚到底 / 按 <b>→</b> 翻节 &nbsp;·&nbsp; 点卡片有反馈</div>
 
+<!-- LIVE_JS_START -->
+<script>
+/* =====================================================================
+   星他 STARTA · 实时数据层 Live v1.0
+   ---------------------------------------------------------------------
+   三条铁律（这个组件不造假）：
+   1. 时钟 / 倒计时 / “数据截至 N 小时前” 全部来自真实时间；
+   2. 连接数、数据文件变化、探活结果来自真实 SSE 服务；连不上就明说“静态快照”，
+      不会偷偷用一个定时器把数字往上拨；
+   3. 数字滚动只是呈现：目标值永远来自真实数据，动画不改事实。
+
+   无依赖，ES5 语法，挂到 window.Live。
+   页面接入：
+     页面 head 引 assets/live.css，body 尾引 assets/live.js（引导脚本放它后面）
+     Live.init({channel:'starta-live', pill:'#livePill', asOf:'2026-10-20T03:14:31+08:00'})
+   ===================================================================== */
+(function (global) {
+  "use strict";
+
+  var VERSION = "1.0.0";
+  var doc = global.document;
+  var reduce = false;
+  try { reduce = global.matchMedia && global.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { reduce = false; }
+
+  var cfg = {
+    channel: "starta-live",
+    server: "auto",       /* "auto" | "" | "http://127.0.0.1:8790" */
+    asOf: null,           /* 真实数据采集时间：ISO 字符串 / 毫秒 / Date */
+    pill: null,           /* 状态胶囊的容器：选择器或元素 */
+    heartbeatEvery: 5000, /* 服务端心跳间隔（仅用于“心跳 N 秒前”的判定） */
+    tabLabel: "页面",
+    autostart: true
+  };
+
+  var state = {
+    mode: "snapshot",     /* snapshot | sync | connecting | live | reconnecting */
+    server: "",
+    es: null,
+    clients: 0,           /* 服务端在线页签数 */
+    peers: {},            /* BroadcastChannel 同源页签：id -> lastSeen */
+    since: 0,             /* 服务端启动时间 */
+    asOf: 0,              /* 真实数据截至时间（毫秒） */
+    lastBeat: 0,          /* 最近一次服务端心跳 */
+    ready: false
+  };
+
+  var subs = {};
+  var timers = [];
+  var tabId = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  var bc = null;
+  var LS_KEY = "__starta_live__";
+
+  /* ---------------- 小工具 ---------------- */
+  function elOf(x) {
+    if (!x) return null;
+    if (typeof x === "string") { try { return doc.querySelector(x); } catch (e) { return null; } }
+    return x.nodeType === 1 ? x : null;
+  }
+  function fmtNum(n, dec) {
+    dec = dec == null ? 0 : dec;
+    var v = Number(n);
+    if (!isFinite(v)) return String(n);
+    try {
+      return v.toLocaleString("zh-CN", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    } catch (e) {
+      var s = v.toFixed(dec), p = s.split(".");
+      p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return p.join(".");
+    }
+  }
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function hms(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    return pad2(Math.floor(s / 3600)) + ":" + pad2(Math.floor(s % 3600 / 60)) + ":" + pad2(s % 60);
+  }
+  function agoText(ms) {
+    var s = Math.floor(ms / 1000);
+    if (s < 0) s = 0;
+    if (s < 5) return "刚刚";
+    if (s < 60) return s + " 秒前";
+    if (s < 3600) return Math.floor(s / 60) + " 分 " + (s % 60) + " 秒前";
+    if (s < 86400) return Math.floor(s / 3600) + " 小时 " + Math.floor(s % 3600 / 60) + " 分前";
+    return Math.floor(s / 86400) + " 天前";
+  }
+  /* 真实日期解析：只吃页面里真有的写法，猜不到就返回 NaN（显示“—”，绝不编时间）。
+     "2026-10-26 17:00" → 本地时间；"10-26" → 今天之后最近的 10 月 26 日；"长期" → NaN */
+  function toDate(str) {
+    if (str == null || str === "") return NaN;
+    if (str instanceof Date) return str.getTime();
+    if (typeof str === "number") return str;
+    var s = String(str).trim();
+    if (!/\d/.test(s)) return NaN;
+    var m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/.exec(s);
+    if (m) {
+      var d1 = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4] || 0), Number(m[5] || 0), Number(m[6] || 0));
+      return isNaN(d1.getTime()) ? NaN : d1.getTime();
+    }
+    m = /^(\d{1,2})-(\d{1,2})$/.exec(s);
+    if (m) {
+      var now = new Date(), y = now.getFullYear();
+      var d2 = new Date(y, Number(m[1]) - 1, Number(m[2]));
+      if (d2.getTime() < new Date(y, now.getMonth(), now.getDate()).getTime()) d2 = new Date(y + 1, Number(m[1]) - 1, Number(m[2]));
+      return d2.getTime();
+    }
+    var t = Date.parse(s.replace(" ", "T"));
+    return t;
+  }
+  function dispatch(type, payload, from) {
+    var list = (subs[type] || []).concat(subs["*"] || []);
+    for (var i = 0; i < list.length; i++) {
+      try { list[i](payload, type, from || "local"); } catch (e) { if (global.console) console.error("[Live]", e); }
+    }
+  }
+  function every(ms, fn) { var t = setInterval(fn, ms); timers.push(t); return t; }
+
+  /* ---------------- 状态胶囊 ---------------- */
+  var pillEl = null, pillParts = null;
+  function pillRender() {
+    if (!pillEl) return;
+    if (!pillParts) {
+      pillEl.innerHTML =
+        '<i class="live-dot" aria-hidden="true"></i>' +
+        '<b class="live-state">快照</b>' +
+        '<span class="live-sep" aria-hidden="true">·</span>' +
+        '<span class="live-clock">--:--:--</span>' +
+        '<span class="live-meta"></span>';
+      pillParts = {
+        state: pillEl.querySelector(".live-state"),
+        clock: pillEl.querySelector(".live-clock"),
+        meta: pillEl.querySelector(".live-meta")
+      };
+    }
+    pillEl.className = "live-pill is-" + state.mode;
+    var label = { live: "实时", sync: "同步", connecting: "连接中", reconnecting: "重连中", snapshot: "快照" }[state.mode] || "快照";
+    pillParts.state.textContent = label;
+    var meta = "";
+    if (state.mode === "live") {
+      meta = state.clients > 1 ? state.clients + " 端在线" : "已连接";
+    } else if (state.mode === "sync") {
+      var n = Object.keys(state.peers).length + 1;
+      meta = n > 1 ? n + " 标签页同步" : "仅本页签 · 未连服务";
+    } else if (state.mode === "snapshot") {
+      meta = "静态数据";
+    }
+    pillParts.meta.textContent = meta ? " · " + meta : "";
+    pillEl.title = pillTitle();
+    pillEl.setAttribute("data-live-mode", state.mode);
+    /* 页面重渲染会换掉胶囊 DOM：新时钟节点要立刻接上，否则停在 --:--:-- */
+    if (pillParts && pillParts.clock && !pillParts.clock.__liveClockTimer) clock(pillParts.clock);
+  }
+  function pillTitle() {
+    var parts = [];
+    if (state.mode === "live") {
+      parts.push("实时服务已连接：" + state.server);
+      parts.push(state.clients + " 个页面在线");
+      parts.push("心跳 " + (state.lastBeat ? agoText(Date.now() - state.lastBeat) : "等待首包"));
+    } else if (state.mode === "sync") {
+      parts.push("未连上实时服务，已降级为同源多标签同步");
+      parts.push("时钟与倒计时来自真实时间，数字不做模拟滚动");
+      if (state.serverTried) parts.push("尝试过：" + state.serverTried);
+    } else if (state.mode === "snapshot") {
+      parts.push("静态快照：本页数字来自真实数据，不模拟增长");
+      if (state.asOf) parts.push("数据截至 " + new Date(state.asOf).toLocaleString("zh-CN") + "（" + agoText(Date.now() - state.asOf) + "）");
+    } else {
+      parts.push("正在连接实时服务…");
+    }
+    return parts.join(" · ");
+  }
+  function setMode(mode) {
+    if (state.mode === mode) return;
+    state.mode = mode;
+    pillRender();
+    dispatch("mode", { mode: mode, clients: state.clients, server: state.server }, "live");
+  }
+
+  /* ---------------- 同源页签在线（真实存在，不做假） ---------------- */
+  function peersCount() { return Object.keys(state.peers).length + 1; }
+  function presenceTick() {
+    var now = Date.now();
+    Object.keys(state.peers).forEach(function (id) { if (now - state.peers[id] > 12000) delete state.peers[id]; });
+    broadcastRaw({ t: "presence", id: tabId, label: cfg.tabLabel, at: now });
+    pillRender();
+    dispatch("peers", { count: peersCount() }, "live");
+  }
+
+  /* ---------------- BroadcastChannel / storage 兜底 ---------------- */
+  function broadcastRaw(msg) {
+    msg.at = msg.at || Date.now();
+    msg.from = tabId;
+    try {
+      if (bc) { bc.postMessage(msg); return; }
+      localStorage.setItem(LS_KEY, JSON.stringify(msg));
+      localStorage.removeItem(LS_KEY);
+    } catch (e) { /* 忽略：隐私模式 / file:// 限制 */ }
+  }
+  function onChannel(msg) {
+    if (!msg || msg.from === tabId) return;
+    if (msg.t === "presence") {
+      var isNew = !state.peers[msg.id];
+      state.peers[msg.id] = msg.at || Date.now();
+      if (isNew) { broadcastRaw({ t: "presence", id: tabId, label: cfg.tabLabel }); pillRender(); }
+      dispatch("peers", { count: peersCount() }, "live");
+      return;
+    }
+    dispatch(msg.t, msg.p, "peer");
+    dispatch("*", msg.p, "peer");
+  }
+  function initChannel() {
+    try {
+      if (global.BroadcastChannel) {
+        bc = new BroadcastChannel("starta-bc-" + cfg.channel);
+        bc.onmessage = function (ev) { onChannel(ev.data); };
+      }
+    } catch (e) { bc = null; }
+    global.addEventListener("storage", function (ev) {
+      if (ev.key !== LS_KEY || !ev.newValue) return;
+      try { onChannel(JSON.parse(ev.newValue)); } catch (e) { /* 忽略坏消息 */ }
+    });
+    global.addEventListener("starta:live", function (ev) { onChannel(ev.detail); });
+  }
+
+  /* ---------------- SSE：真连接，真推送 ---------------- */
+  function resolveCandidates() {
+    if (cfg.server && cfg.server !== "auto") return [String(cfg.server).replace(/\/$/, "")];
+    var out = [];
+    var proto = global.location ? global.location.protocol : "";
+    var port = global.location ? global.location.port : "";
+    var host = global.location ? global.location.hostname : "";
+    if (proto === "http:" || proto === "https:") {
+      if (port === "8790") out.push(global.location.origin);
+      else if (proto === "http:" && (host === "127.0.0.1" || host === "localhost")) out.push(global.location.origin);
+      /* https 页面不能连 http://127.0.0.1（混合内容会被浏览器拦掉），
+         只试同源，避免控制台一堆无意义的红字。 */
+      if (proto === "http:" && port !== "8790") out.push("http://127.0.0.1:8790");
+    } else if (proto === "file:") {
+      out.push("http://127.0.0.1:8790");
+    }
+    return out;
+  }
+  function connect() {
+    var candidates = resolveCandidates();
+    state.serverTried = candidates.join(" / ");
+    if (!candidates.length) { setMode("sync"); return; }
+    setMode(state.ready ? "reconnecting" : "connecting");
+    var idx = 0;
+    (function next() {
+      if (idx >= candidates.length) {
+        setMode("sync");
+        scheduleRetry();
+        return;
+      }
+      var base = candidates[idx++];
+      var es;
+      try { es = new global.EventSource(base + "/live/stream?ch=" + encodeURIComponent(cfg.channel) + "&tab=" + tabId); }
+      catch (e) { next(); return; }
+      var opened = false;
+      var guard = setTimeout(function () {
+        if (opened) return;
+        try { es.close(); } catch (e) { }
+        next();
+      }, 2600);
+      es.onopen = function () {
+        opened = true;
+        clearTimeout(guard);
+        state.es = es;
+        state.server = base;
+        state.ready = true;
+        state.retry = 0;
+        setMode("live");
+      };
+      es.onmessage = function (ev) {
+        var msg;
+        try { msg = JSON.parse(ev.data); } catch (e) { return; }
+        handleServer(msg);
+      };
+      es.onerror = function () {
+        clearTimeout(guard);
+        try { es.close(); } catch (e) { }
+        if (state.es === es) state.es = null;
+        if (opened) { setMode("reconnecting"); scheduleRetry(); }
+        else next();
+      };
+    })();
+  }
+  function scheduleRetry() {
+    if (state.retryTimer) return;
+    state.retry = (state.retry || 0) + 1;
+    var wait = Math.min(30000, 4000 * state.retry);
+    state.retryTimer = setTimeout(function () {
+      state.retryTimer = 0;
+      connect();
+    }, wait);
+  }
+  function handleServer(msg) {
+    if (!msg || !msg.type) return;
+    switch (msg.type) {
+      case "hello":
+        state.clients = Number(msg.clients) || state.clients;
+        state.since = Number(msg.since) || 0;
+        /* 页面自己带着“真实写入时间”的（双端状态存 localStorage），保留页面口径 */
+        if (msg.asOf && !cfg.localAsOf) state.asOf = Number(msg.asOf) || state.asOf;
+        state.lastBeat = Date.now();
+        pillRender();
+        dispatch("hello", msg, "server");
+        break;
+      case "clients":
+        state.clients = Number(msg.n) || 0;
+        pillRender();
+        dispatch("clients", { count: state.clients }, "server");
+        break;
+      case "heartbeat":
+        state.lastBeat = Date.now();
+        dispatch("heartbeat", msg, "server");
+        break;
+      case "data":
+        dispatch("data", msg, "server");
+        break;
+      case "session":
+        dispatch("session", msg, "server");
+        break;
+      case "event":
+        /* 统一约定：on('event', fn) 拿到完整信封（含 name / at / replay）；
+           on('<name>', fn) 拿到其中的 payload。 */
+        dispatch("event", msg, "server");
+        if (msg.name && msg.name !== "event") dispatch(msg.name, msg.payload, "server");
+        break;
+      default:
+        dispatch(msg.type, msg, "server");
+    }
+    dispatch("*", msg, "server");
+  }
+
+  /* ---------------- 真实的“N 分钟前” ---------------- */
+  var agoBinds = [];
+  function el(x) { return typeof x === "string" ? document.querySelector(x) : x; }
+  function bindAgo(node, ts, opts) {
+    node = el(node);
+    if (!node) return null;
+    opts = opts || {};
+    var prefix = opts.prefix == null ? "" : opts.prefix;
+    if (node.__liveTimer) clearInterval(node.__liveTimer);
+    function paint() {
+      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      var t = typeof ts === "function" ? ts() : ts;
+      if (t == null || t === "") { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
+      var ms = typeof t === "number" ? t : toDate(t);
+      if (!isFinite(ms)) { node.textContent = opts.emptyText || prefix + "—"; node.removeAttribute("data-live-ago"); return; }
+      node.textContent = prefix + agoText(Date.now() - ms);
+      node.title = new Date(ms).toLocaleString("zh-CN") + "（真实记录时间）";
+      node.setAttribute("data-live-ago", String(ms));
+    }
+    paint();
+    var timer = every(1000, paint);
+    node.__liveTimer = timer;
+    agoBinds.push({ node: node, timer: timer, paint: paint });
+    return { refresh: paint };
+  }
+
+  /* ---------------- 真实倒计时（到真实截止时间） ---------------- */
+  var cdBinds = [];
+  function bindCountdown(node, deadline, opts) {
+    node = el(node);
+    if (!node) return null;
+    opts = opts || {};
+    var ms = typeof deadline === "number" ? deadline : toDate(deadline);
+    if (node.__liveTimer) clearInterval(node.__liveTimer);
+    function paint() {
+      if (node.isConnected === false) { clearInterval(node.__liveTimer); return; }
+      if (!isFinite(ms)) { node.textContent = "—"; return; }
+      var left = ms - Date.now();
+      if (left <= 0) {
+        node.textContent = opts.expiredText || "已截止";
+        node.setAttribute("data-live-over", "1");
+        node.className = (node.className.replace(/\s*is-hot|\s*is-over/g, "")) + " is-over";
+        return;
+      }
+      node.removeAttribute("data-live-over");
+      var s = Math.floor(left / 1000);
+      var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+      var txt = (d > 0 ? d + " 天 " : "") + pad2(h) + ":" + pad2(m) + ":" + pad2(sec);
+      node.textContent = (opts.prefix || "") + txt;
+      var cls = node.className.replace(/\s*is-hot|\s*is-over/g, "");
+      node.className = cls + (left < 86400000 ? " is-hot" : "");
+      node.title = "真实截止时间：" + new Date(ms).toLocaleString("zh-CN");
+    }
+    paint();
+    var timer = every(1000, paint);
+    node.__liveTimer = timer;
+    cdBinds.push({ node: node, timer: timer, paint: paint });
+    return { refresh: paint };
+  }
+
+  /* ---------------- 数字滚动（呈现层：目标值来自真实数据） ---------------- */
+  function parseNum(text) {
+    var v = String(text == null ? "" : text).replace(/[^\d.-]/g, "");
+    var n = parseFloat(v);
+    return isFinite(n) ? n : NaN;
+  }
+  function tween(node, target, opts) {
+    opts = opts || {};
+    var dec = opts.decimals == null ? (String(target).indexOf(".") >= 0 ? 1 : 0) : opts.decimals;
+    var from = opts.from != null ? Number(opts.from) : node.__liveVal;
+    if (from == null) from = parseNum(node.textContent);
+    if (!isFinite(from)) from = 0;
+    node.__liveVal = target;
+    node.__liveTarget = target;
+    var dur = opts.duration == null ? 720 : opts.duration;
+    var start = null;
+    var delta = target - from;
+    if (opts.instant || reduce || dur <= 0 || !delta) {
+      node.textContent = fmtNum(target, dec);
+      node.classList.add("live-num");
+      return;
+    }
+    if (node.__liveRAF) { cancelAnimationFrame(node.__liveRAF); node.__liveRAF = 0; }
+    node.classList.add("live-num");
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min(1, (ts - start) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      node.textContent = fmtNum(from + delta * e, dec);
+      if (p < 1) { node.__liveRAF = requestAnimationFrame(step); }
+      else {
+        node.__liveRAF = 0;
+        node.textContent = fmtNum(target, dec);
+        node.classList.remove("live-bump");
+        void node.offsetWidth;
+        node.classList.add("live-bump");
+      }
+    }
+    node.__liveRAF = requestAnimationFrame(step);
+  }
+  function num(x, value, opts) {
+    var node = elOf(x);
+    if (!node) return;
+    opts = opts || {};
+    if (typeof value === "string" && !/[0-9]/.test(value)) { node.textContent = value; return; }
+    var target = Number(value);
+    if (!isFinite(target)) { node.textContent = String(value); return; }
+    tween(node, target, opts);
+  }
+  function autoNum(root) {
+    var scope = root ? elOf(root) : doc;
+    if (!scope) return;
+    var nodes = scope.querySelectorAll("[data-live-num]");
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      var raw = n.getAttribute("data-live-value");
+      if (raw == null) raw = n.getAttribute("data-live-num");
+      var v = Number(raw);
+      if (!isFinite(v)) continue;
+      var from = n.getAttribute("data-live-from");
+      num(n, v, { decimals: Number(n.getAttribute("data-live-dec") || 0), from: from != null ? Number(from) : undefined });
+    }
+  }
+
+  /* ---------------- 数字增量提示（真实 +N/-N） ---------------- */
+  function delta(x, amount, opts) {
+    var node = elOf(x);
+    if (!node) return;
+    var n = Number(amount);
+    if (!isFinite(n) || !n) return;
+    opts = opts || {};
+    var host = node.parentNode;
+    if (!host) return;
+    if (getComputedStyle(host).position === "static") host.style.position = "relative";
+    var span = doc.createElement("span");
+    span.className = "live-delta " + (n > 0 ? "up" : "down");
+    span.textContent = (n > 0 ? "+" : "") + n;
+    host.appendChild(span);
+    setTimeout(function () { if (span.parentNode) span.parentNode.removeChild(span); }, opts.ttl || 1600);
+  }
+
+  /* ---------------- 时钟（真实本地时间） ---------------- */
+  function clock(x, opts) {
+    var node = elOf(x);
+    if (!node) return;
+    opts = opts || {};
+    /* 同一个节点重复绑（页面重渲染、胶囊重建）先掐掉旧定时器，别越积越多 */
+    if (node.__liveClockTimer) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; }
+    function paint() {
+      if (!node.isConnected) { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; return; }
+      var d = new Date();
+      var s = pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + (opts.seconds === false ? "" : ":" + pad2(d.getSeconds()));
+      node.textContent = s;
+      if (opts.date) {
+        node.title = d.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + s;
+      }
+    }
+    paint();
+    node.__liveClockTimer = setInterval(paint, 1000);
+    return { refresh: paint, stop: function () { clearInterval(node.__liveClockTimer); node.__liveClockTimer = null; } };
+  }
+
+  /* ---------------- 初始化 ---------------- */
+  function init(opts) {
+    opts = opts || {};
+    for (var k in opts) if (opts.hasOwnProperty(k)) cfg[k] = opts[k];
+    if (cfg.asOf) {
+      var t = typeof cfg.asOf === "number" ? cfg.asOf : Date.parse(cfg.asOf);
+      state.asOf = isFinite(t) ? t : 0;
+    }
+    if (cfg.localAsOf) cfg.localAsOf = true;
+    if (state.ready) return Live;
+    state.ready = true;
+    state.readyAt = Date.now();
+
+    initChannel();
+    presenceTick();
+    every(5000, presenceTick);
+
+    pillEl = elOf(cfg.pill);
+    if (pillEl) { pillRender(); clock(pillEl.querySelector(".live-clock") || (function () { pillRender(); return pillEl.querySelector(".live-clock"); })()); }
+
+    if (cfg.autostart) connect();
+    autoNum(doc);
+    /* 推迟一个 tick：让页面在 init() 之后挂的监听也能收到 ready */
+    setTimeout(function () { dispatch("ready", { version: VERSION }, "local"); }, 0);
+    return Live;
+  }
+
+  /* ---------------- 对外 API ---------------- */
+  var Live = {
+    version: VERSION,
+    init: init,
+    on: function (type, fn) {
+      (subs[type] = subs[type] || []).push(fn);
+      return function () { Live.off(type, fn); };
+    },
+    off: function (type, fn) {
+      var list = subs[type];
+      if (!list) return;
+      var i = list.indexOf(fn);
+      if (i >= 0) list.splice(i, 1);
+    },
+    emit: function (type, payload) {
+      broadcastRaw({ t: type, p: payload });
+      dispatch(type, payload, "local");
+    },
+    /* 服务端事件 → 页面的统一入口：Live.event('session', fn) 等价于 on */
+    event: function (type, fn) { return Live.on(type, fn); },
+    /* 数字 */
+    num: num,
+    fmt: fmtNum,
+    delta: delta,
+    autonum: autoNum,
+    autoNum: autoNum,
+    /* 时间 */
+    clock: clock,
+    toDate: toDate,
+    ago: bindAgo,
+    countdown: bindCountdown,
+    /* 状态 */
+    state: function () { return { mode: state.mode, clients: state.clients, peers: peersCount(), server: state.server, asOf: state.asOf, since: state.since, lastBeat: state.lastBeat }; },
+    mode: function () { return state.mode; },
+    tabId: tabId,
+    /* 手动 */
+    connect: connect,
+    pill: function (x) {
+      var prev = pillEl; cfg.pill = x; pillEl = elOf(x); pillParts = null;
+      pillRender();
+      if (pillParts && pillParts.clock) clock(pillParts.clock);
+      return prev;
+    },
+    /* 供页面自定义：手动注入一条“同源实时”事件（仍会广播到其它标签页） */
+    ping: function () { presenceTick(); return true; }
+  };
+
+  global.Live = Live;
+
+  if (doc.readyState === "loading") {
+    doc.addEventListener("DOMContentLoaded", function () { autoNum(doc); });
+  }
+})(typeof window !== "undefined" ? window : this);
+</script>
+<!-- LIVE_JS_END -->
 <script>
 (function(){
   "use strict";
@@ -798,20 +1639,31 @@ close     每个 session 结束即 close，防遗漏计费</div>
       f.addEventListener('touchend',function(){setTimeout(function(){f.classList.remove('tap')},160)}); }
   });
 
-  /* ---------- 地层条：进场才长出来 ---------- */
+  /* ---------- 专业榜条形：进场才长出来 ---------- */
   var si=new IntersectionObserver(function(es){
     es.forEach(function(e){
       if(e.isIntersecting){
-        $$('#starta .bar i').forEach(function(b,i){
+        $$('#majors .bar i').forEach(function(b,i){
           b.style.transitionDelay=(i*70)+'ms';
-          b.style.transform='scaleX('+(b.parentElement.parentElement.classList.contains('hot')?1:1)+')';
           b.style.transform='scaleX(1)';
         });
         si.disconnect();
       }
     });
   },{threshold:.25});
-  if($('#starta')) si.observe($('#starta'));
+  if($('#majors')) si.observe($('#majors'));
+
+  /* ---------- 地层剖面：进入视口后自上而下「钻」出来 ---------- */
+  /* 观察锚点用不动的 .core-mask：柱子初始位移 -101%，若直接观察它，相交矩形恒为 0×0，永远等不到回调 */
+  var core=$('#core'), coreMask=$('.core-mask');
+  if(core&&coreMask){
+    var ci=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){ core.classList.add('grown'); ci.disconnect(); }
+      });
+    },{threshold:.2});
+    ci.observe(coreMask);
+  }
 
   /* ---------- 连线：进入视口后流动 ---------- */
   var graph=$('#graph');
@@ -931,9 +1783,21 @@ close     每个 session 结束即 close，防遗漏计费</div>
   $('#json').addEventListener('click',function(){
     var d={report:'岗位要求的地层',version:'preview',sites:19,submits:29,ok:20,positions:9200,units:4519,people:11208,
       majors:SKILLS.map(function(r){return {major:r[0],positions:r[1]}}),
-      evidence:{sessions:24,failed:9},generated:'2026-10-20'};
+      evidence:{sessions:20,submits:29,failed:9},generated:'2026-10-20'};
     dl('skill-starta.json',JSON.stringify(d,null,2),'application/json;charset=utf-8');
   });
+
+  /* ---------- 实时数据层：状态胶囊 / 数据截至 / 报名倒计时 / 数字滚动 ---------- */
+  if (window.Live) {
+    Live.init({ channel: "starta-live", pill: "#livePill", tabLabel: "采样报告" });
+    Live.ago("#liveAsOf", function () {
+      var st = Live.state && Live.state();
+      return (st && st.asOf) || null;          // 服务端真实扫描时间；离线时显式回落
+    }, { prefix: "数据截至 ", emptyText: "数据截至 2026-10-20" });
+    /* 大兴安岭林业集团公告原文：报名到 2026-10-26 17:00（北京时间） */
+    Live.countdown("#liveCd", "2026-10-26T17:00:00+08:00", { expiredText: "已截止" });
+    Live.autoNum(document);
+  }
 })();
 </script>
 </body>

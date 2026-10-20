@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='%23c2410c'/%3E%3Ctext%20x='16'%20y='22'%20font-family='sans-serif'%20font-size='15'%20font-weight='700'%20fill='white'%20text-anchor='middle'%3EST%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/styles.css">
 <link rel="stylesheet" href="assets/hr.css">
+<link rel="stylesheet" href="assets/live.css">
 </head>
 <body>
 <div class="app">
@@ -101,7 +102,7 @@
       <section class="kpis" aria-label="关键指标（可点，点了就筛）">
         <div class="kpi" role="button" tabindex="0" data-quick="all" aria-pressed="true" aria-label="全部岗位"><div class="lb">全库岗位 / POSITIONS</div><div class="v num"><span id="kpiOpen">9,200</span><i>个</i></div><div class="ft"><span class="dot"></span>来自 <span id="kpiWeekNew">2</span> 份公告 · 点此看全部</div></div>
         <div class="kpi" role="button" tabindex="0" data-goview="units" aria-label="覆盖雇主，跳转竞争雇主"><div class="lb">覆盖雇主 / EMPLOYERS</div><div class="v num"><span id="kpiUnits">4,512</span><i>家</i></div><div class="ft"><span class="dot"></span><span id="kpiTypes">2</span> 类性质 · 去竞争雇主 →</div></div>
-        <div class="kpi" role="button" tabindex="0" data-quick="open" aria-pressed="false" aria-label="只看正在报名的岗位"><div class="lb">报名中 / OPEN</div><div class="v num"><span id="kpiUrgent">31</span><i>个</i></div><div class="ft"><span class="dot warn"></span>最近截止 <span id="kpiEarliest">10-26</span> · 点此只筛这些</div></div>
+        <div class="kpi" role="button" tabindex="0" data-quick="open" aria-pressed="false" aria-label="只看正在报名的岗位"><div class="lb">报名中 / OPEN</div><div class="v num"><span id="kpiUrgent">31</span><i>个</i></div><div class="ft"><span class="dot warn"></span>最近截止 <span id="kpiEarliest">10-26</span><span id="kpiCd" class="live-cd"></span></div></div>
         <div class="kpi" role="button" tabindex="0" data-quick="saved" aria-pressed="false" aria-label="只看已对标的岗位"><div class="lb">已对标 / BENCHMARK</div><div class="v num"><span id="kpiSaved">0</span><i>个</i></div><div class="ft"><span class="dot"></span>点星标即对标</div></div>
       </section>
 
@@ -316,6 +317,8 @@
     <span>星他 情报台 v1.1</span>
     <span class="hideSm">·</span>
     <span id="statusMeta">数据源 2 份公告 · 9,200 条真实岗位</span>
+    <span id="livePill" class="live-pill live-pill--sm" role="status" aria-live="polite"></span>
+    <span id="liveAsOf" class="live-asof hideSm"></span>
     <a class="report-link-sm" href="https://mikuascendlog.com/position-starta/" target="_blank" rel="noopener">采样报告 ↗</a>
     <a class="report-link-sm" id="dualLinkSm" href="双端/index.html" target="_blank" rel="noopener">双端 ↗</a>
     <span class="sp"></span>
@@ -385,5 +388,7 @@
 <script src="assets/hr-market.js"></script>
 <script src="assets/hr-views-a.js"></script>
 <script src="assets/hr-views-b.js"></script>
+<script src="assets/live.js"></script>
+<script src="assets/live-boot.js"></script>
 </body>
 </html>

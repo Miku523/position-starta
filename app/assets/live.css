@@ -1,0 +1,150 @@
+/* =====================================================================
+   星他 STARTA · 实时数据层 样式 Live v1.0
+   ---------------------------------------------------------------------
+   不绑定配色：一切颜色继承 currentColor，只在“状态点/增量标签”上用固定
+   语义色。这样同一套组件能同时活在工作台的浅色纸面、双端的米白、报告
+   的深色版面上，不需要各自覆写。
+   ===================================================================== */
+
+/* ---------- 状态胶囊 ---------- */
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .08em;
+  color: inherit;
+  opacity: .92;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+.live-pill:hover { opacity: 1; }
+
+.live-pill .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #9ca3af;
+  transition: background .3s ease;
+}
+
+.live-pill .live-state { font-weight: 700; letter-spacing: .1em; }
+.live-pill .live-sep { opacity: .4; margin: 0 -1px; }
+.live-pill .live-clock { font-variant-numeric: tabular-nums; opacity: .85; }
+.live-pill .live-meta { opacity: .62; }
+
+/* 各状态：点色 + 呼吸动画（只对真连接呼吸） */
+.live-pill.is-live .live-dot { background: #12a150; }
+.live-pill.is-live .live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid rgba(18, 161, 80, .55);
+  animation: livePing 1.8s cubic-bezier(.2, .6, .35, 1) infinite;
+}
+.live-pill .live-dot { position: relative; }
+.live-pill.is-connecting .live-dot,
+.live-pill.is-reconnecting .live-dot { background: #e08a00; animation: liveBlink 1s steps(2, start) infinite; }
+.live-pill.is-sync .live-dot { background: #0e8fa3; }
+.live-pill.is-snapshot .live-dot { background: #9ca3af; }
+.live-pill.is-reconnecting .live-state { opacity: .75; }
+
+@keyframes livePing {
+  0% { transform: scale(.7); opacity: .9; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes liveBlink { to { opacity: .3; } }
+
+/* 若宿主支持 color-mix，再补一层极淡的底，不破坏任何主题 */
+@supports (color: color-mix(in srgb, currentColor 10%, transparent)) {
+  .live-pill { padding: 3px 7px 3px 6px; border-radius: 999px; }
+  .live-pill:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+  .live-pill.is-live { background: color-mix(in srgb, #12a150 9%, transparent); }
+}
+
+/* ---------- 数字 ---------- */
+.live-num { font-variant-numeric: tabular-nums; }
+.live-bump { animation: liveBump .5s cubic-bezier(.2, .7, .3, 1); }
+@keyframes liveBump {
+  0% { opacity: .35; filter: blur(.3px); }
+  100% { opacity: 1; filter: none; }
+}
+
+/* 真实 +N / -N 增量标签（由 Live.delta 生成） */
+.live-delta {
+  position: absolute;
+  top: -13px;
+  right: 0;
+  z-index: 5;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: .04em;
+  color: #fff;
+  pointer-events: none;
+  animation: liveDelta 1.6s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+.live-delta.up { background: #12a150; }
+.live-delta.down { background: #c2410c; }
+@keyframes liveDelta {
+  0% { opacity: 0; transform: translateY(4px) scale(.9); }
+  18% { opacity: 1; transform: translateY(0) scale(1); }
+  72% { opacity: 1; transform: translateY(-1px); }
+  100% { opacity: 0; transform: translateY(-7px); }
+}
+
+/* ---------- 倒计时 / 相对时间 ---------- */
+.live-cd, .live-ago { font-variant-numeric: tabular-nums; }
+.live-cd.is-hot { font-weight: 700; }
+.live-cd.is-over, .live-ago.is-over { opacity: .55; }
+
+/* 给报告深色版面用的一点统一微调（仍不写颜色，只写字距） */
+.live-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.live-strip .live-ago { font-family: var(--mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .06em; opacity: .7; }
+
+/* 尊重系统的“减少动态效果” */
+@media (prefers-reduced-motion: reduce) {
+  .live-pill .live-dot::after { animation: none; opacity: 0; }
+  .live-bump { animation: none; }
+  .live-delta { display: none; }
+  .live-pill .live-dot { animation: none !important; }
+}
+
+/* ---------- 紧凑变体：状态栏 / 报告页眉 ---------- */
+.live-pill--sm { font-size: 9.5px; letter-spacing: .06em; gap: 5px; }
+.live-pill--sm .live-dot { width: 5px; height: 5px; }
+.live-asof {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  opacity: .58;
+}
+.live-pill.live-flash,
+.live-pill.live-flash-warn { animation: liveFlash .9s ease; }
+@keyframes liveFlash {
+  0% { opacity: .35; }
+  40% { opacity: 1; }
+  70% { opacity: .55; }
+  100% { opacity: .92; }
+}
+/* 数字滚动时轻微提亮，让“变化”被看见但不抢注意力 */
+.live-num.live-bump, .live-cd.live-bump { will-change: contents; }
+
+/* 报告页眉：窄屏时统计口径让位给标题与实时状态（pill / 数据截至 / 倒计时仍在） */
+@media (max-width:1280px){.bar .r .stat-k{display:none}}
