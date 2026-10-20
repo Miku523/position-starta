@@ -301,7 +301,7 @@
   /* ---------------- drawer ---------------- */
   .scrim{
     position:fixed;inset:0;background:rgba(12,14,18,.28);opacity:0;pointer-events:none;
-    transition:opacity .22s;z-index:40;backdrop-filter:blur(1.5px);
+    transition:opacity .22s;z-index:40;-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);
   }
   .scrim.on{opacity:1;pointer-events:auto}
   .drawer{
@@ -1221,6 +1221,15 @@ a.lnk.is-dead:hover{color:var(--ink2);border-bottom-color:var(--muted)}
   .dwbtn.done,#dwApply.done,.ci-badge.open,.callout.ok,.score.ok,.applybtn.done{border-color:var(--line);background:var(--line2)}
   .score.low,.hotline{border-color:var(--line);background:var(--line2)}
   .molist,.density .dbtn{border-color:var(--line)}
+  /* 关键表面显式兜底：侧栏/顶栏/面板/KPI 卡片/表格 hover 与选中态 */
+  .rail,.topbar,.statusbar,.panel,.kpis .kpi,.tablewrap{background:var(--panel);border-color:var(--line)}
+  input[type="checkbox"]{border-color:var(--line2)}
+  .file{background:var(--line2)}
+  .role-open{background:var(--accent-soft)}
+  .score{border-color:var(--line);background:var(--line2)}
+  .c-unit .st[data-st]{background:var(--line2)}
+  .table .row.selected,tbody tr.selected,tbody tr[data-i].selected{background:var(--accent-soft);border-color:var(--accent-line)}
+  .kpi[role="button"]:hover,.kpi[role="button"][aria-pressed="true"]{border-color:var(--accent-line)}
   html[data-theme="dark"] .bar-row::before{background:var(--line2)}
   @media (max-width:680px){
     tbody tr[data-i],.table .row{background:var(--panel)}

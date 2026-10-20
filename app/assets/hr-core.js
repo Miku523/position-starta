@@ -709,9 +709,24 @@
     menu.hidden = false;
     var user = document.getElementById("hrUser");
     if (user) user.setAttribute("aria-expanded", "true");
+    /* 只读演示（viewer）：除当前身份外一律禁用，只能走「退出只读演示」二次确认 */
+    var readonly = state.role === "viewer";
     menu.querySelectorAll("[data-role]").forEach(function (b) {
-      b.setAttribute("aria-checked", b.getAttribute("data-role") === state.role ? "true" : "false");
+      var k = b.getAttribute("data-role");
+      var isCur = k === state.role;
+      b.setAttribute("aria-checked", isCur ? "true" : "false");
+      if (readonly && !isCur) {
+        b.disabled = true;
+        b.setAttribute("aria-disabled", "true");
+        b.title = "只读演示中不可直接切换身份；请用「退出只读演示」";
+      } else {
+        b.disabled = false;
+        b.removeAttribute("aria-disabled");
+        b.removeAttribute("title");
+      }
     });
+    var ex = menu.querySelector("[data-exit-ro]");
+    if (ex) ex.hidden = !readonly;
     _menuOutside = function (e) {
       if (!menu.contains(e.target) && !(user && user.contains(e.target))) closeRoleMenu();
     };
@@ -736,21 +751,30 @@
           "<b>" + esc(r.lb) + "<em>" + esc(r.tag) + "</em></b><small>" + esc(r.desc) + "</small></button>";
       }).join("") +
       '<div class="hrmenu-sep"></div>' +
-      '<button type="button" class="hrmenu-it slim" role="menuitem" data-open="settings"><b>设置与合规</b><small>数据源 · 权限 · 集成 · 本地数据</small></button>';
+      '<button type="button" class="hrmenu-it slim" role="menuitem" data-open="settings"><b>设置与合规</b><small>数据源 · 权限 · 集成 · 本地数据</small></button>' +
+      '<button type="button" class="hrmenu-it slim" role="menuitem" data-exit-ro="1" hidden><b>退出只读演示</b><small>二次确认后恢复「招聘负责人」写权限</small></button>';
     foot.appendChild(menu);
     menu.addEventListener("click", function (e) {
       var b = e.target.closest("[data-role]");
       if (b) { setRole(b.getAttribute("data-role")); return; }
       var o = e.target.closest("[data-open]");
-      if (o) { closeRoleMenu(); setViewSafe(o.getAttribute("data-open")); }
+      if (o) { closeRoleMenu(); setViewSafe(o.getAttribute("data-open")); return; }
+      if (e.target.closest("[data-exit-ro]")) exitReadonly();
     });
     return menu;
   }
 
-  function setRole(k) {
+  function setRole(k, opt) {
+    opt = opt || {};
     var r = ROLES.filter(function (x) { return x.k === k; })[0];
-    if (!r) return;
-    if (r.k === state.role) { closeRoleMenu(); return; }
+    if (!r) return false;
+    if (r.k === state.role) { closeRoleMenu(); return true; }
+    /* 守卫：只读演示身份只能经「退出只读演示」二次确认回到招聘负责人，
+       防止侧栏菜单/控制台/其它入口直接提权。 */
+    if (state.role === "viewer" && !(opt.force === true && r.k === "hr")) {
+      toast("只读演示中：请用「退出只读演示」恢复写权限");
+      return false;
+    }
     state.role = r.k;
     persist();
     audit("切换角色", r.lb, currentView());
@@ -760,6 +784,19 @@
     var v = currentView();
     if (HR.views[v]) hardSwitch(v);
     refreshBell();
+    return true;
+  }
+
+  /* 退出只读演示：二次确认后恢复招聘负责人（会写一条审计） */
+  function exitReadonly() {
+    closeRoleMenu();
+    if (state.role !== "viewer") return;
+    confirmBox(
+      "退出只读演示",
+      "当前为「只读演示」身份。退出后将恢复「招聘负责人」的写权限，此次切换会记入审计。",
+      function () { setRole("hr", { force: true }); },
+      "退出只读演示"
+    );
   }
 
   function mountChrome() {

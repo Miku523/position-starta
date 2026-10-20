@@ -557,7 +557,9 @@ function syncCountText(list) {
 function mineStatus() {
   let act = 0;
   state.saved.forEach(i => { if (stageOf(i).k !== "saved") act++; });
-  return state.saved.size ? `对标 ${state.saved.size} 条 · 已推进 ${act} 条` : "对标 0 条";
+  return state.saved.size
+    ? `对标 ${state.saved.size.toLocaleString("zh-CN")} 条 · 已推进 ${act.toLocaleString("zh-CN")} 条`
+    : "对标 0 条";
 }
 /* 按当前视图刷新状态栏（视图切换、阶段推进、漏斗筛选后都调它） */
 function syncStatusText() {
@@ -570,7 +572,7 @@ function syncStatusText() {
   else if (v === "collect") setText("#statusCount", `采集 ${NOTICES.length} 条公告`);
   else if (v === "units") setText("#statusCount", `聚合 ${typeof S.unitsOf === "function" ? (S.unitsOf() || []).length.toLocaleString("zh-CN") : DATA.length} 家雇主`);
   else if (v === "mine") setText("#statusCount", mineStatus());
-  else if (v === "me") setText("#statusCount", `投递 ${meCount()} 条 · 资料${meScoreLabel()}`);
+  else if (v === "me") setText("#statusCount", `投递 ${meCount().toLocaleString("zh-CN")} 条 · 资料${meScoreLabel()}`);
   else if (v === "skill") {
     const sr = skillRows(state.skillType === "全部" ? DATA : DATA.filter(d => d && d.t === state.skillType));
     setText("#statusCount", `门槛口径 ${sr.rows.length} 项 · 样本 ${sr.sample.toLocaleString("zh-CN")} 条`);
@@ -1405,7 +1407,7 @@ function renderUnits() {
   if (pg) {
     if (!all.length) { pg.innerHTML = `<span class="pg-meta">共 0 家</span>`; return; }
     const last = Math.min(from + per, all.length);
-    pg.innerHTML = `<span class="pg-meta">${from + 1}–${last} / 共 ${all.length.toLocaleString("zh-CN")} 家</span>
+    pg.innerHTML = `<span class="pg-meta">${(from + 1).toLocaleString("zh-CN")}–${last.toLocaleString("zh-CN")} / 共 ${all.length.toLocaleString("zh-CN")} 家</span>
       <div class="pg-nums">
         <button class="pg-btn" data-upage="${state.uPage - 1}" ${state.uPage === 0 ? "disabled" : ""} aria-label="上一页">‹</button>
         ${pageWindow(state.uPage, pages)}
@@ -1946,8 +1948,8 @@ function bindEvents() {
     persistFilters();
     render();
     const k = KPIS();
-    toast(state.quick === "urgent" ? `只显示 7 天内截止的 ${k.urgent7} 个岗位`
-      : state.quick === "saved" ? `只显示对标集里的 ${state.saved.size} 个岗位`
+    toast(state.quick === "urgent" ? `只显示 7 天内截止的 ${k.urgent7.toLocaleString("zh-CN")} 个岗位`
+      : state.quick === "saved" ? `只显示对标集里的 ${state.saved.size.toLocaleString("zh-CN")} 个岗位`
       : "已回到全部在招岗位");
   }
   on(".kpis", "click", hitKPI);

@@ -309,7 +309,7 @@
   /* ---------------- drawer ---------------- */
   .scrim{
     position:fixed;inset:0;background:rgba(12,14,18,.28);opacity:0;pointer-events:none;
-    transition:opacity .22s;z-index:40;backdrop-filter:blur(1.5px);
+    transition:opacity .22s;z-index:40;-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);
   }
   .scrim.on{opacity:1;pointer-events:auto}
   .drawer{
@@ -1229,6 +1229,15 @@ a.lnk.is-dead:hover{color:var(--ink2);border-bottom-color:var(--muted)}
   .dwbtn.done,#dwApply.done,.ci-badge.open,.callout.ok,.score.ok,.applybtn.done{border-color:var(--line);background:var(--line2)}
   .score.low,.hotline{border-color:var(--line);background:var(--line2)}
   .molist,.density .dbtn{border-color:var(--line)}
+  /* 关键表面显式兜底：侧栏/顶栏/面板/KPI 卡片/表格 hover 与选中态 */
+  .rail,.topbar,.statusbar,.panel,.kpis .kpi,.tablewrap{background:var(--panel);border-color:var(--line)}
+  input[type="checkbox"]{border-color:var(--line2)}
+  .file{background:var(--line2)}
+  .role-open{background:var(--accent-soft)}
+  .score{border-color:var(--line);background:var(--line2)}
+  .c-unit .st[data-st]{background:var(--line2)}
+  .table .row.selected,tbody tr.selected,tbody tr[data-i].selected{background:var(--accent-soft);border-color:var(--accent-line)}
+  .kpi[role="button"]:hover,.kpi[role="button"][aria-pressed="true"]{border-color:var(--accent-line)}
   html[data-theme="dark"] .bar-row::before{background:var(--line2)}
   @media (max-width:680px){
     tbody tr[data-i],.table .row{background:var(--panel)}
@@ -1361,7 +1370,7 @@ a.lnk.is-dead:hover{color:var(--ink2);border-bottom-color:var(--muted)}
 
 /* ---------- 弹层 ---------- */
 .hrmodal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 24px; }
-.hrmodal-scrim { position: absolute; inset: 0; background: rgba(17, 19, 24, .38); backdrop-filter: blur(2px); }
+.hrmodal-scrim { position: absolute; inset: 0; background: rgba(17, 19, 24, .38); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
 .hrmodal-box {
   position: relative; width: 480px; max-width: 100%; max-height: 86vh;
   display: flex; flex-direction: column; background: var(--panel, #fff);
@@ -3016,7 +3025,9 @@ function syncCountText(list) {
 function mineStatus() {
   let act = 0;
   state.saved.forEach(i => { if (stageOf(i).k !== "saved") act++; });
-  return state.saved.size ? `对标 ${state.saved.size} 条 · 已推进 ${act} 条` : "对标 0 条";
+  return state.saved.size
+    ? `对标 ${state.saved.size.toLocaleString("zh-CN")} 条 · 已推进 ${act.toLocaleString("zh-CN")} 条`
+    : "对标 0 条";
 }
 /* 按当前视图刷新状态栏（视图切换、阶段推进、漏斗筛选后都调它） */
 function syncStatusText() {
@@ -3029,7 +3040,7 @@ function syncStatusText() {
   else if (v === "collect") setText("#statusCount", `采集 ${NOTICES.length} 条公告`);
   else if (v === "units") setText("#statusCount", `聚合 ${typeof S.unitsOf === "function" ? (S.unitsOf() || []).length.toLocaleString("zh-CN") : DATA.length} 家雇主`);
   else if (v === "mine") setText("#statusCount", mineStatus());
-  else if (v === "me") setText("#statusCount", `投递 ${meCount()} 条 · 资料${meScoreLabel()}`);
+  else if (v === "me") setText("#statusCount", `投递 ${meCount().toLocaleString("zh-CN")} 条 · 资料${meScoreLabel()}`);
   else if (v === "skill") {
     const sr = skillRows(state.skillType === "全部" ? DATA : DATA.filter(d => d && d.t === state.skillType));
     setText("#statusCount", `门槛口径 ${sr.rows.length} 项 · 样本 ${sr.sample.toLocaleString("zh-CN")} 条`);
@@ -3864,7 +3875,7 @@ function renderUnits() {
   if (pg) {
     if (!all.length) { pg.innerHTML = `<span class="pg-meta">共 0 家</span>`; return; }
     const last = Math.min(from + per, all.length);
-    pg.innerHTML = `<span class="pg-meta">${from + 1}–${last} / 共 ${all.length.toLocaleString("zh-CN")} 家</span>
+    pg.innerHTML = `<span class="pg-meta">${(from + 1).toLocaleString("zh-CN")}–${last.toLocaleString("zh-CN")} / 共 ${all.length.toLocaleString("zh-CN")} 家</span>
       <div class="pg-nums">
         <button class="pg-btn" data-upage="${state.uPage - 1}" ${state.uPage === 0 ? "disabled" : ""} aria-label="上一页">‹</button>
         ${pageWindow(state.uPage, pages)}
@@ -4405,8 +4416,8 @@ function bindEvents() {
     persistFilters();
     render();
     const k = KPIS();
-    toast(state.quick === "urgent" ? `只显示 7 天内截止的 ${k.urgent7} 个岗位`
-      : state.quick === "saved" ? `只显示对标集里的 ${state.saved.size} 个岗位`
+    toast(state.quick === "urgent" ? `只显示 7 天内截止的 ${k.urgent7.toLocaleString("zh-CN")} 个岗位`
+      : state.quick === "saved" ? `只显示对标集里的 ${state.saved.size.toLocaleString("zh-CN")} 个岗位`
       : "已回到全部在招岗位");
   }
   on(".kpis", "click", hitKPI);
@@ -6012,9 +6023,24 @@ window.ME = (function () {
     menu.hidden = false;
     var user = document.getElementById("hrUser");
     if (user) user.setAttribute("aria-expanded", "true");
+    /* 只读演示（viewer）：除当前身份外一律禁用，只能走「退出只读演示」二次确认 */
+    var readonly = state.role === "viewer";
     menu.querySelectorAll("[data-role]").forEach(function (b) {
-      b.setAttribute("aria-checked", b.getAttribute("data-role") === state.role ? "true" : "false");
+      var k = b.getAttribute("data-role");
+      var isCur = k === state.role;
+      b.setAttribute("aria-checked", isCur ? "true" : "false");
+      if (readonly && !isCur) {
+        b.disabled = true;
+        b.setAttribute("aria-disabled", "true");
+        b.title = "只读演示中不可直接切换身份；请用「退出只读演示」";
+      } else {
+        b.disabled = false;
+        b.removeAttribute("aria-disabled");
+        b.removeAttribute("title");
+      }
     });
+    var ex = menu.querySelector("[data-exit-ro]");
+    if (ex) ex.hidden = !readonly;
     _menuOutside = function (e) {
       if (!menu.contains(e.target) && !(user && user.contains(e.target))) closeRoleMenu();
     };
@@ -6039,21 +6065,30 @@ window.ME = (function () {
           "<b>" + esc(r.lb) + "<em>" + esc(r.tag) + "</em></b><small>" + esc(r.desc) + "</small></button>";
       }).join("") +
       '<div class="hrmenu-sep"></div>' +
-      '<button type="button" class="hrmenu-it slim" role="menuitem" data-open="settings"><b>设置与合规</b><small>数据源 · 权限 · 集成 · 本地数据</small></button>';
+      '<button type="button" class="hrmenu-it slim" role="menuitem" data-open="settings"><b>设置与合规</b><small>数据源 · 权限 · 集成 · 本地数据</small></button>' +
+      '<button type="button" class="hrmenu-it slim" role="menuitem" data-exit-ro="1" hidden><b>退出只读演示</b><small>二次确认后恢复「招聘负责人」写权限</small></button>';
     foot.appendChild(menu);
     menu.addEventListener("click", function (e) {
       var b = e.target.closest("[data-role]");
       if (b) { setRole(b.getAttribute("data-role")); return; }
       var o = e.target.closest("[data-open]");
-      if (o) { closeRoleMenu(); setViewSafe(o.getAttribute("data-open")); }
+      if (o) { closeRoleMenu(); setViewSafe(o.getAttribute("data-open")); return; }
+      if (e.target.closest("[data-exit-ro]")) exitReadonly();
     });
     return menu;
   }
 
-  function setRole(k) {
+  function setRole(k, opt) {
+    opt = opt || {};
     var r = ROLES.filter(function (x) { return x.k === k; })[0];
-    if (!r) return;
-    if (r.k === state.role) { closeRoleMenu(); return; }
+    if (!r) return false;
+    if (r.k === state.role) { closeRoleMenu(); return true; }
+    /* 守卫：只读演示身份只能经「退出只读演示」二次确认回到招聘负责人，
+       防止侧栏菜单/控制台/其它入口直接提权。 */
+    if (state.role === "viewer" && !(opt.force === true && r.k === "hr")) {
+      toast("只读演示中：请用「退出只读演示」恢复写权限");
+      return false;
+    }
     state.role = r.k;
     persist();
     audit("切换角色", r.lb, currentView());
@@ -6063,6 +6098,19 @@ window.ME = (function () {
     var v = currentView();
     if (HR.views[v]) hardSwitch(v);
     refreshBell();
+    return true;
+  }
+
+  /* 退出只读演示：二次确认后恢复招聘负责人（会写一条审计） */
+  function exitReadonly() {
+    closeRoleMenu();
+    if (state.role !== "viewer") return;
+    confirmBox(
+      "退出只读演示",
+      "当前为「只读演示」身份。退出后将恢复「招聘负责人」的写权限，此次切换会记入审计。",
+      function () { setRole("hr", { force: true }); },
+      "退出只读演示"
+    );
   }
 
   function mountChrome() {
@@ -6878,7 +6926,7 @@ window.ME = (function () {
 
     /* 画像：对标清单为空时退到全库，保证简报不空转 */
     var profilePool = pool.length ? pool : HR.positions();
-    var profileNote = pool.length ? "对标清单 " + pool.length + " 条" : "全库 " + fmt(profilePool.length) + " 条（对标清单为空，画像按全库计算）";
+    var profileNote = pool.length ? "对标清单 " + fmt(pool.length) + " 条" : "全库 " + fmt(profilePool.length) + " 条（对标清单为空，画像按全库计算）";
 
     var eduHist = tally(profilePool, function (d) { return HR.market.eduLabel(HR.market.eduRank(d.e)); });
     var candHist = tally(profilePool, function (d) { return String(d.cand || "不限"); });
@@ -6920,7 +6968,7 @@ window.ME = (function () {
       sections: sections,
       kpis: [
         { lb: "岗位库", v: fmt(HR.positions().length), ft: fmt(new Set(HR.positions().map(function (d) { return d.u; })).size) + " 家单位 · " + fmt(HR.positions().reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0)) + " 个名额" },
-        { lb: "对标清单", v: fmt(benchRows.length), ft: benchRows.length ? "覆盖 " + new Set(benchRows.map(function (d) { return d.u; })).size + " 家单位" : "还没标记岗位" },
+        { lb: "对标清单", v: fmt(benchRows.length), ft: benchRows.length ? "覆盖 " + fmt(new Set(benchRows.map(function (d) { return d.u; })).size) + " 家单位" : "还没标记岗位" },
         { lb: "我的职位", v: fmt(jdList.length), ft: "在招 " + liveJds.length + " 个 · 草稿 " + (jdList.length - liveJds.length) + " 个" },
         { lb: "候选人", v: fmt(talent.length), ft: "待初筛 " + talent.filter(function (t) { return t.stage === "new"; }).length + " 人" }
       ],
@@ -8061,15 +8109,21 @@ window.ME = (function () {
       '<div class="head-side"><button type="button" class="btn ghost" data-hr-act="set-profile"' + ro + ' title="' + (HR.canWrite() ? "修改招聘方信息" : "只读角色：切换到「招聘负责人」后可编辑") + '">改招聘方信息</button></div></div>' + roNote;
 
     /* 数据源台账 */
+    var unitsMeta = Number(meta.units) || new Set(data.map(function (d) { return d.u; })).size;
+    var unitsNorm = new Set(data.map(function (d) {
+      return String(d.u || "").replace(/^\s*\d+\s*[.、,，]\s*/, "").trim();
+    })).size;
+    var seatsSum = data.reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0);
     var srcPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>数据源台账</b><span>快照 ' + esc(meta.snapshot || "—") + " · 可回溯到公告原文</span></div>" +
       '<div class="hrkvs">' +
         kv("岗位表", fmt(data.length) + " 行 × 16 列") +
-        kv("单位", fmt(new Set(data.map(function (d) { return d.u; })).size) + " 家") +
-        kv("名额", fmt(meta.seats || data.reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0)) + " 个") +
+        kv("单位", fmt(unitsMeta) + " 家") +
+        kv("名额", fmt(meta.seats || seatsSum) + " 个") +
         kv("公告", notices.length + " 份") +
         kv("地区", fmt(meta.regions || 24) + " 个城市") +
         kv("薪资口径", "缺失（原公告无薪资字段，简报不做薪资对比）") +
       "</div>" +
+      '<p class="hrnote-line">' + icon("alert", 13) + " 口径：单位按原始公告串去重 " + fmt(unitsMeta) + " 家；按解码后单位名去重 " + fmt(unitsNorm) + " 家（大兴安岭岗位名含序号，4 组重名合并）。名额按岗位表合计 " + fmt(seatsSum) + " 个；大兴安岭 CSV 行合计 142 个、公告计划 149 个（PDF 缺 7 行），公告口径保留 149。</p>" +
       '<div class="hrnotices">' + notices.map(function (n) {
         return '<div class="hrnotice">' +
           '<div><b>' + esc(n.title) + "</b><small>" + esc(n.org || "") + " · 发布 " + esc(n.published || "—") + " · " + fmt(n.rows || 0) + " 个岗位" + (n.attachments ? " · " + n.attachments.length + " 个附件" : "") + "</small></div>" +
@@ -8113,7 +8167,7 @@ window.ME = (function () {
     var localPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>本地数据</b><span>只存在这台设备的浏览器里</span></div>' +
       '<div class="hrkvs">' +
         kv("招聘数据", size + " KB（职位 " + st.jd.length + " · 候选人 " + st.talent.length + " · 规则 " + st.rules.length + "）") +
-        kv("对标清单", HR.bench().rows.length + " 个岗位（键 starta-wb-bench，与其他模块共用）") +
+        kv("对标清单", fmt(HR.bench().rows.length) + " 个岗位（键 starta-wb-bench，与其他模块共用）") +
         kv("存储位置", "localStorage · starta-hr-v1") +
       "</div>" +
       '<div class="hrdanger"><button type="button" class="btn ghost danger" data-hr-act="set-clear-hr"' + ro + ' title="' + (HR.canWrite() ? "清空招聘数据" : "只读角色：切换到「招聘负责人」后可编辑") + '">清空招聘数据</button>' +

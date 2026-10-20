@@ -257,15 +257,21 @@
       '<div class="head-side"><button type="button" class="btn ghost" data-hr-act="set-profile"' + ro + ' title="' + (HR.canWrite() ? "修改招聘方信息" : "只读角色：切换到「招聘负责人」后可编辑") + '">改招聘方信息</button></div></div>' + roNote;
 
     /* 数据源台账 */
+    var unitsMeta = Number(meta.units) || new Set(data.map(function (d) { return d.u; })).size;
+    var unitsNorm = new Set(data.map(function (d) {
+      return String(d.u || "").replace(/^\s*\d+\s*[.、,，]\s*/, "").trim();
+    })).size;
+    var seatsSum = data.reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0);
     var srcPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>数据源台账</b><span>快照 ' + esc(meta.snapshot || "—") + " · 可回溯到公告原文</span></div>" +
       '<div class="hrkvs">' +
         kv("岗位表", fmt(data.length) + " 行 × 16 列") +
-        kv("单位", fmt(new Set(data.map(function (d) { return d.u; })).size) + " 家") +
-        kv("名额", fmt(meta.seats || data.reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0)) + " 个") +
+        kv("单位", fmt(unitsMeta) + " 家") +
+        kv("名额", fmt(meta.seats || seatsSum) + " 个") +
         kv("公告", notices.length + " 份") +
         kv("地区", fmt(meta.regions || 24) + " 个城市") +
         kv("薪资口径", "缺失（原公告无薪资字段，简报不做薪资对比）") +
       "</div>" +
+      '<p class="hrnote-line">' + icon("alert", 13) + " 口径：单位按原始公告串去重 " + fmt(unitsMeta) + " 家；按解码后单位名去重 " + fmt(unitsNorm) + " 家（大兴安岭岗位名含序号，4 组重名合并）。名额按岗位表合计 " + fmt(seatsSum) + " 个；大兴安岭 CSV 行合计 142 个、公告计划 149 个（PDF 缺 7 行），公告口径保留 149。</p>" +
       '<div class="hrnotices">' + notices.map(function (n) {
         return '<div class="hrnotice">' +
           '<div><b>' + esc(n.title) + "</b><small>" + esc(n.org || "") + " · 发布 " + esc(n.published || "—") + " · " + fmt(n.rows || 0) + " 个岗位" + (n.attachments ? " · " + n.attachments.length + " 个附件" : "") + "</small></div>" +
@@ -309,7 +315,7 @@
     var localPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>本地数据</b><span>只存在这台设备的浏览器里</span></div>' +
       '<div class="hrkvs">' +
         kv("招聘数据", size + " KB（职位 " + st.jd.length + " · 候选人 " + st.talent.length + " · 规则 " + st.rules.length + "）") +
-        kv("对标清单", HR.bench().rows.length + " 个岗位（键 starta-wb-bench，与其他模块共用）") +
+        kv("对标清单", fmt(HR.bench().rows.length) + " 个岗位（键 starta-wb-bench，与其他模块共用）") +
         kv("存储位置", "localStorage · starta-hr-v1") +
       "</div>" +
       '<div class="hrdanger"><button type="button" class="btn ghost danger" data-hr-act="set-clear-hr"' + ro + ' title="' + (HR.canWrite() ? "清空招聘数据" : "只读角色：切换到「招聘负责人」后可编辑") + '">清空招聘数据</button>' +

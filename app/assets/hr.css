@@ -89,7 +89,7 @@
 
 /* ---------- 弹层 ---------- */
 .hrmodal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 24px; }
-.hrmodal-scrim { position: absolute; inset: 0; background: rgba(17, 19, 24, .38); backdrop-filter: blur(2px); }
+.hrmodal-scrim { position: absolute; inset: 0; background: rgba(17, 19, 24, .38); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
 .hrmodal-box {
   position: relative; width: 480px; max-width: 100%; max-height: 86vh;
   display: flex; flex-direction: column; background: var(--panel, #fff);

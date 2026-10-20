@@ -651,6 +651,34 @@ a.ext:hover{background:var(--accent-soft)}
 .ivbox .ivhint+.btn{margin-top:6px}
 
 .mrow.m3{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* 旧引擎无 color-mix：只回退装饰性底色，正文/边框仍由 var() 兜底 */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .navi button:hover, .btn:hover, .icobtn:hover { background: rgba(17, 24, 39, .05); }
+  .jobcard.no { background: #f6f7f5; }
+  tbody tr:hover { background: rgba(17, 24, 39, .025); }
+  .toast-act:hover { background: rgba(255, 255, 255, .14); }
+}
+
+/* 减少动效：实时层之外也统一降级 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 打印：只留单据本体，隐藏导航/实时浮层与深色底 */
+@media print {
+  .topbar, .rail, .statusbar, .scrim, .drawer, .modal, .toast,
+  .live-pill, .live-strip, .backlink { display: none !important; }
+  html, body { background: #fff !important; color: #111 !important; }
+  .app { display: block !important; min-height: 0 !important; }
+  .main { overflow: visible !important; }
+  .card, .table, .panel { box-shadow: none !important; break-inside: avoid; }
+}
 </style>
 <!-- LIVE_CSS_START -->
 <style>

@@ -285,7 +285,7 @@
 
     /* 画像：对标清单为空时退到全库，保证简报不空转 */
     var profilePool = pool.length ? pool : HR.positions();
-    var profileNote = pool.length ? "对标清单 " + pool.length + " 条" : "全库 " + fmt(profilePool.length) + " 条（对标清单为空，画像按全库计算）";
+    var profileNote = pool.length ? "对标清单 " + fmt(pool.length) + " 条" : "全库 " + fmt(profilePool.length) + " 条（对标清单为空，画像按全库计算）";
 
     var eduHist = tally(profilePool, function (d) { return HR.market.eduLabel(HR.market.eduRank(d.e)); });
     var candHist = tally(profilePool, function (d) { return String(d.cand || "不限"); });
@@ -327,7 +327,7 @@
       sections: sections,
       kpis: [
         { lb: "岗位库", v: fmt(HR.positions().length), ft: fmt(new Set(HR.positions().map(function (d) { return d.u; })).size) + " 家单位 · " + fmt(HR.positions().reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0)) + " 个名额" },
-        { lb: "对标清单", v: fmt(benchRows.length), ft: benchRows.length ? "覆盖 " + new Set(benchRows.map(function (d) { return d.u; })).size + " 家单位" : "还没标记岗位" },
+        { lb: "对标清单", v: fmt(benchRows.length), ft: benchRows.length ? "覆盖 " + fmt(new Set(benchRows.map(function (d) { return d.u; })).size) + " 家单位" : "还没标记岗位" },
         { lb: "我的职位", v: fmt(jdList.length), ft: "在招 " + liveJds.length + " 个 · 草稿 " + (jdList.length - liveJds.length) + " 个" },
         { lb: "候选人", v: fmt(talent.length), ft: "待初筛 " + talent.filter(function (t) { return t.stage === "new"; }).length + " 人" }
       ],

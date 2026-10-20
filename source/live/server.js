@@ -85,8 +85,31 @@ function logSse(...a) {
   if (sseNoise++ % 25 === 0 || clients.size <= 3) log(...a);
 }
 function stamp(d) { return new Date(d).toISOString(); }
-/* 安全响应头：nosniff 阻止 MIME 嗅探，Referrer-Policy 避免把内网地址带去外链 */
-const SECURITY_HEADERS = { "X-Content-Type-Options": "nosniff", "Referrer-Policy": "same-origin" };
+/* 安全响应头：
+   - nosniff 阻止 MIME 嗅探；
+   - Referrer-Policy 避免把内网地址带去外链；
+   - X-Frame-Options / CSP frame-ancestors 双重防嵌套（SAMEORIGIN）；
+   - CSP 允许 'unsafe-inline'：单文件报告/工作台和大屏都是内联 script/style；
+     connect-src 'self' 覆盖 SSE/fetch；img-src 允许 data: 图标；
+   - Permissions-Policy 关掉演示不需要的硬件权限。 */
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "connect-src 'self'",
+  "frame-ancestors 'self'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "object-src 'none'"
+].join("; ");
+const SECURITY_HEADERS = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "SAMEORIGIN",
+  "Referrer-Policy": "same-origin",
+  "Content-Security-Policy": CSP,
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+};
 function json(res, code, obj, extra) {
   const body = Buffer.from(JSON.stringify(obj, null, 2), "utf8");
   res.writeHead(code, Object.assign({
@@ -154,24 +177,34 @@ function flushLedger() {
 }
 /* 台账只追加，回放只要最后 50 条：只读文件尾部 2MB，不把几十 MB 台账整个读进内存 */
 const LEDGER_TAIL_BYTES = 2 * 1024 * 1024;
+/* 单条台账行上限 1MB：正常 payload ≤64KB，超长/损坏行直接跳过，不让一行毒掉整段回放 */
+const MAX_LEDGER_LINE = 1024 * 1024;
 function readTail(file, maxBytes) {
   const fd = fs.openSync(file, "r");
   try {
     const size = fs.fstatSync(fd).size;
-    const start = Math.max(0, size - maxBytes);
-    const len = size - start;
-    if (len <= 0) return "";
-    const buf = Buffer.alloc(len);
-    fs.readSync(fd, buf, 0, len, start);
-    let s = buf.toString("utf8");
-    /* 从中间截断时，第一行可能是半行，丢掉 */
-    if (start > 0) { const i = s.indexOf("\n"); s = i >= 0 ? s.slice(i + 1) : ""; }
-    return s;
+    if (size <= 0) return "";
+    let window = Math.min(size, maxBytes);
+    const hardLimit = maxBytes * 4; // 最多扩窗到 8MB，防被超长行拖进无底洞
+    for (;;) {
+      const start = size - window;
+      const buf = Buffer.alloc(window);
+      fs.readSync(fd, buf, 0, window, start);
+      let s = buf.toString("utf8");
+      /* 从中间截断时，第一行可能是半行，丢掉 */
+      if (start > 0) { const i = s.indexOf("\n"); s = i >= 0 ? s.slice(i + 1) : ""; }
+      if (s || start === 0) return s;
+      /* 尾部被一条超长行整段占满（找不到换行）：扩窗再读，跳过该行保留前面的完整行 */
+      if (window >= hardLimit || window >= size) { log("台账尾部单行超长，已跳过该行"); return ""; }
+      window = Math.min(size, window * 2);
+    }
   } finally { fs.closeSync(fd); }
 }
 function loadLedger() {
   try {
-    const lines = readTail(LEDGER, LEDGER_TAIL_BYTES).split("\n").filter(Boolean).slice(-50);
+    const lines = readTail(LEDGER, LEDGER_TAIL_BYTES).split("\n").filter(Boolean)
+      .filter((l) => l.length <= MAX_LEDGER_LINE)
+      .slice(-50);
     for (const l of lines) {
       try { const e = JSON.parse(l); if (e && e.type === "event") history.push(e); } catch (e2) { }
     }
@@ -194,6 +227,9 @@ let dataSnapshot = null;
    数字允许千分位（1,200）；单行/单格设上限，防止病态 CSV 把内存吃穿。 */
 const MAX_ROW_CELLS = 500;
 const MAX_CELL_CHARS = 8192;
+/* 真实岗位表约 4MB；超过 32MB 的 CSV 直接拒绝解析并在状态里标 oversized，
+   避免 readFileSync 把病态大文件整个吃进内存（health 会因解析出 0 行而变红）。 */
+const MAX_CSV_BYTES = 32 * 1024 * 1024;
 function csvNumber(s) {
   const v = String(s == null ? "" : s).replace(/[,，\s]/g, "");
   if (!v) return 0;
@@ -266,6 +302,15 @@ function readDataSnapshot() {
     const p = path.join(DATA_DIR, want.name);
     try {
       const st = fs.statSync(p);
+      /* 先看大小再读：32MB 上限，超大文件不解析、标 oversized，让 health 明确变红 */
+      if (st.size > MAX_CSV_BYTES) {
+        out.files.push({
+          key: want.key, name: want.name, bytes: st.size, mtime: st.mtimeMs,
+          oversized: true, rows: 0, sum: 0, uniq: want.key === "positions" ? 0 : undefined,
+          cols: 0, badRows: 0, headerOk: false
+        });
+        continue;
+      }
       const buf = fs.readFileSync(p);
       const m = want.key === "positions"
         ? csvMeasure(buf, 8, 2, false, { header: ["人数", "单位"] }) // 岗位表：人数=第 9 列，单位=第 3 列
@@ -384,14 +429,26 @@ function serveStream(req, res) {
 }
 
 /* ---------------- 事件入口 ---------------- */
-/* 简单令牌桶：突发 60 条、之后 30 条/秒；本地演示足够，也挡住脚本瞬间刷爆台账 */
-const RATE = { tokens: 60, at: Date.now() };
-function rateAllow() {
+/* 简单令牌桶：突发 60 条、之后 30 条/秒；本地演示足够，也挡住脚本瞬间刷爆台账。
+   按来源 IP 分桶（req.socket.remoteAddress，绝不信任 X-Forwarded-For），
+   多客户端互不影响；Map 超过 2000 个来源时清理最旧的一半，防被扫爆内存。 */
+const RATE_MAX = 60;
+const RATE_REFILL = 30; // 条/秒
+const RATE_MAX_IPS = 2000;
+const rateBuckets = new Map();
+function rateAllow(req) {
+  const ip = (req && req.socket && req.socket.remoteAddress) || "unknown";
   const now = Date.now();
-  RATE.tokens = Math.min(60, RATE.tokens + ((now - RATE.at) / 1000) * 30);
-  RATE.at = now;
-  if (RATE.tokens < 1) return false;
-  RATE.tokens -= 1;
+  let b = rateBuckets.get(ip);
+  if (!b) { b = { tokens: RATE_MAX, at: now }; rateBuckets.set(ip, b); }
+  b.tokens = Math.min(RATE_MAX, b.tokens + ((now - b.at) / 1000) * RATE_REFILL);
+  b.at = now;
+  if (b.tokens < 1) return false;
+  b.tokens -= 1;
+  if (rateBuckets.size > RATE_MAX_IPS) {
+    const arr = Array.from(rateBuckets.entries()).sort((a, b2) => a[1].at - b2[1].at);
+    for (let i = 0; i < arr.length / 2; i++) rateBuckets.delete(arr[i][0]);
+  }
   return true;
 }
 function serveEvent(req, res) {
@@ -420,14 +477,20 @@ function serveEvent(req, res) {
     const name = msg.name || msg.type;
     if (!name || typeof name !== "string") return json(res, 400, { ok: false, error: "缺少 name" });
     if (name.length > 200) return json(res, 400, { ok: false, error: "name 太长（上限 200 字符）" });
-    if (!rateAllow()) return json(res, 429, { ok: false, error: "事件太频繁，1 秒后再试" }, { "Retry-After": "1" });
-    /* at 只认可解析的时间；非法/对象/太远的未来一律用服务端当前时间，避免大屏出现 Invalid Date */
+    if (!rateAllow(req)) return json(res, 429, { ok: false, error: "事件太频繁，1 秒后再试" }, { "Retry-After": "1" });
+    /* at 只认可解析的时间；非法/对象/太远的未来一律用服务端当前时间，避免大屏出现 Invalid Date。
+       把“是否被修正”通过 atAdjusted 告诉调用方，客户端可自行决定是否提示/重试。 */
     let at = msg.at;
-    if (typeof at === "string") at = at.trim() ? Date.parse(at) : NaN;
-    if (!Number.isFinite(at) || at <= 0 || at > Date.now() + 86400000) at = Date.now();
+    let atAdjusted = false;
+    if (at === undefined || at === null) {
+      at = Date.now();
+    } else {
+      if (typeof at === "string") at = at.trim() ? Date.parse(at) : NaN;
+      if (!Number.isFinite(at) || at <= 0 || at > Date.now() + 86400000) { at = Date.now(); atAdjusted = true; }
+    }
     const ev = pushEvent(name, msg.payload, { at: at });
     log("事件", name, JSON.stringify(msg.payload || {}).slice(0, 120));
-    json(res, 200, { ok: true, id: ev.id, clients: clients.size });
+    json(res, 200, { ok: true, id: ev.id, at: ev.at, atAdjusted: atAdjusted, clients: clients.size });
   });
 }
 
@@ -452,21 +515,21 @@ function serveState(req, res) {
     since: START,
     events: history.length,
     ledger: safeSize(LEDGER),
-    data: dataSummary(),
-    root: ROOT
+    data: dataSummary()
   });
 }
 function serveHealth(req, res) {
   const d = dataSummary();
   const checks = [];
   const now = Date.now();
-  checks.push({ name: "静态根目录可读", ok: fs.existsSync(ROOT), detail: ROOT });
+  /* detail 只给相对位置，不把绝对路径（用户名/盘符/目录结构）漏给 HTTP 客户端 */
+  checks.push({ name: "静态根目录可读", ok: fs.existsSync(ROOT), detail: "." });
   checks.push({ name: "岗位表 CSV 存在", ok: d.files.some((f) => f.key === "positions" && !f.missing), detail: (d.files.find((f) => f.key === "positions") || {}).name || "" });
   checks.push({ name: "会话台账 CSV 存在", ok: d.files.some((f) => f.key === "sessions" && !f.missing), detail: (d.files.find((f) => f.key === "sessions") || {}).name || "" });
   checks.push({ name: "岗位表已解析出行", ok: d.positions > 0, detail: d.positions + " 行" });
   checks.push({ name: "数据新鲜度 < 7 天", ok: d.scannedAt > 0 && (now - newestMtime(d)) < 7 * 86400000, detail: newestMtime(d) ? new Date(newestMtime(d)).toISOString() : "—" });
   checks.push({ name: "SSE 在线页签", ok: true, detail: clients.size + " 个" });
-  checks.push({ name: "事件台账可写", ok: fs.existsSync(LIVE_DIR) && safeWritable(LIVE_DIR), detail: LEDGER });
+  checks.push({ name: "事件台账可写", ok: fs.existsSync(LIVE_DIR) && safeWritable(LIVE_DIR), detail: path.relative(path.dirname(LIVE_DIR), LEDGER).replace(/\\/g, "/") || "ledger.jsonl" });
   const failed = checks.filter((c) => !c.ok).length;
   json(res, failed ? 500 : 200, {
     ok: failed === 0,
@@ -618,8 +681,10 @@ const server = http.createServer((req, res) => {
 });
 
 function serveFileRaw(req, res, file, type) {
+  /* 404 只回文件名，不回绝对路径（避免把用户名/目录结构漏给客户端） */
+  const label = path.basename(file);
   fs.stat(file, (err, st) => {
-    if (err || !st.isFile()) return text(res, 404, "缺文件: " + file);
+    if (err || !st.isFile()) return text(res, 404, "缺文件: " + label);
     const etag = weakEtag(st.size, st.mtimeMs);
     const head = Object.assign({
       "Content-Type": type,
@@ -631,7 +696,7 @@ function serveFileRaw(req, res, file, type) {
       res.writeHead(304, head); return res.end();
     }
     fs.readFile(file, (err2, buf) => {
-      if (err2) return text(res, 404, "缺文件: " + file);
+      if (err2) return text(res, 404, "缺文件: " + label);
       head["Content-Length"] = buf.length;
       res.writeHead(200, head);
       res.end(req.method === "HEAD" ? undefined : buf);

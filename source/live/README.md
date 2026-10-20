@@ -38,8 +38,8 @@ node source/live/server.js --root 提交包 --port 8790 --quiet
 | `GET /live/stream` | SSE：首包 `hello`（在线数/启动时间/数据指标/心跳号）+ 回放最近 12 条真实事件，之后每 4 秒心跳 | 200；非 GET → 405 `Allow: GET` |
 | `POST /live/event` | 推一条真实事件：入环形缓冲（最近 50 条）并追加 `ledger.jsonl` | 200；非 POST → 405；非法 JSON → 400；`name` 缺失/非字符串 → 400；`name` > 200 字符 → 400；body > 64KB（UTF-8 字节）→ 413；跨源 `Origin` → 403；超速 → 429 |
 | `OPTIONS /live/event` | CORS 预检 | 204 |
-| `GET /live/state` | 当前状态 JSON（在线数/心跳/事件数/台账大小/数据指标/静态根） | 200 |
-| `GET /live/health` | 7 项自检（目录、两份 CSV、行数、<7 天新鲜度、SSE、台账可写） | 全过 200，任一失败 500 |
+| `GET /live/state` | 当前状态 JSON（在线数/心跳/事件数/台账大小/数据指标；**不返回服务端绝对路径**） | 200 |
+| `GET /live/health` | 7 项自检（目录、两份 CSV、行数、<7 天新鲜度、SSE、台账可写；detail 只给相对路径） | 全过 200，任一失败 500 |
 | `GET /live/`、`GET /live` | 运营大屏 | 200 |
 | `GET /live/live.js`、`/live/live.css`、`/live/dashboard.js` | 实时层自身资源（从服务目录读取，带 ETag） | 200 / 304 |
 | 其它 `/live/*` | 不暴露（防止把 `ledger.jsonl`、`server.js` 当静态文件读走） | 404 |
@@ -53,24 +53,26 @@ node source/live/server.js --root 提交包 --port 8790 --quiet
 
 - `name` 必填；`payload` 任意可 JSON 化值（大屏截断展示 90 字符）；`at` 可省略。
 - `at` 可以是毫秒时间戳或可被 `Date.parse` 解析的时间串；解析失败、≤0、或超过「现在 + 24 小时」的值一律落成服务端当前时间（不会让大屏出现 `Invalid Date`）。
-- 只信同源写入：浏览器带 `Origin` 且 host 与请求 Host 不一致 → 403；命令行/脚本不带 `Origin` 可正常写。速率上限突发 60 条、之后 30 条/秒，超了返回 429 并带 `Retry-After: 1`。
+- 只信同源写入：浏览器带 `Origin` 且 host 与请求 Host 不一致 → 403；命令行/脚本不带 `Origin` 可正常写。限流按来源 IP 分桶（`req.socket.remoteAddress`，不信任 `X-Forwarded-For`），突发 60 条、之后 30 条/秒，超了返回 429 并带 `Retry-After: 1`；多客户端互不影响。
+- 200 响应体带 `{ ok, id, at, atAdjusted, clients }`：`at` 是实际入账时间，`atAdjusted: true` 表示请求里的 `at` 非法/太远未来，已被服务端改成当前时间；客户端可据此提示或重发。
 
 ### 静态细节
 
 - `ETag`（弱）+ `Last-Modified` 协商缓存：`If-None-Match` 命中 → `304`。
 - `Range`：支持单段 `bytes=a-b` / `a-` / `-n` → `206` + `Content-Range`；不可满足 → `416` + `Content-Range: bytes */总长`；多段/非法格式按完整 `200` 处理。大文件流式发送，HEAD 不发 body。
 - `Cache-Control`：`html/htm/json/csv/txt/md/js/css` 为 `no-cache`（可缓存但每次校验，数据变了立刻可见）；图片、字体、PDF 等为 `public, max-age=300`。
-- 安全响应头：`X-Content-Type-Options: nosniff`、`Referrer-Policy: same-origin`；静态资源另带 `Access-Control-Allow-Origin: *`。
+- 安全响应头：所有响应带 `X-Content-Type-Options: nosniff`、`Referrer-Policy: same-origin`、`X-Frame-Options: SAMEORIGIN`、`Permissions-Policy: camera=(), microphone=(), geolocation=()` 与 CSP（`default-src 'self'; script-src/style-src 'self' 'unsafe-inline'`，单文件页面的内联脚本/样式可用；`img-src 'self' data:`；`connect-src 'self'`；`frame-ancestors 'self'`；`base-uri 'none'`；`form-action 'none'`；`object-src 'none'`）。静态资源另带 `Access-Control-Allow-Origin: *`。
+- 404 只回请求路径/文件名，不回服务端绝对路径；`/live/state` 与 `/live/health` 同样不含盘符和用户名。
 - MIME 覆盖 html/css/js/json/csv/txt/md/svg/png/jpg/webp/gif/ico/woff2/ttf/pdf/zip/map，以及 `xlsx`/`docx` 的 OpenXML 类型；未知后缀回退 `application/octet-stream`。
 
 ### 数据与台账细节
 
 - 服务直接读两份 CSV，引号感知解析：支持 BOM、CRLF/CR/LF、字段内逗号/双引号/换行；首行当表头。
 - 岗位表按表头取「人数」求和、「单位」去重、数据行数计岗位；会话台账取「提交次数」求和并跳过首列为「合计」的汇总行（所以是 29 次，不是 29+29=58）。数字允许千分位（`1,200` → 1200）。
-- 健壮性上限：单行最多 500 个单元格、单格最多 8192 字符（超出截断），防止病态大行吃穿内存；`/live/state` 的每个文件条目带 `cols` / `badRows` / `headerOk`，可直接核对表头识别与列数是否一致。
+- 健壮性上限：单行最多 500 个单元格、单格最多 8192 字符（超出截断），防止病态大行吃穿内存；CSV 超过 32MB 时不再整文件读取，文件条目标 `oversized: true` 且行数为 0（`/live/health` 会明确变红），避免病态大文件把进程拖垮。`/live/state` 的每个文件条目带 `cols` / `badRows` / `headerOk`，可直接核对表头识别与列数是否一致。
 - `fs.watch` 真监听文件变化（Windows 上配 3 秒 mtime 轮询兜底）；文件被删/恢复也能靠轮询发现，值真变了才广播 `data` 事件——大屏数字跟着变，不轮询假刷新。
 - 在线页签数来自真实 SSE 连接数；关掉一个页签，所有页面的胶囊数字立刻减一。写入慢到 1MB 还没发完的连接会被主动断开，防止一条坏连接拖垮广播。
-- 事件台账 `ledger.jsonl` 只追加；启动时只读文件尾部 2MB 取最近 50 条，不会随台账增长吃内存/拖慢启动；新连接回放最近 12 条，刷新页面后仍能看到之前真实发生过什么。
+- 事件台账 `ledger.jsonl` 只追加；启动时只读文件尾部 2MB 取最近 50 条，不会随台账增长吃内存/拖慢启动；单行超过 1MB 的损坏记录会被跳过（不会让一行毒掉整段回放），尾部被超长行占满时会扩大窗口找完整行，最多退到 8MB。新连接回放最近 12 条，刷新页面后仍能看到之前真实发生过什么。
 - 事件 ID 由服务端单调递增分配（客户端传的 `id` 会被忽略），重启后从台账尾部恢复计数。
 
 ### 浏览器口径
