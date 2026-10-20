@@ -8639,7 +8639,9 @@ window.ME = (function () {
   "use strict";
   if (!window.Live) return;
 
-  var LIVE_ASOF = (window.STARTA && window.STARTA.collectedAt) || "";
+  /* 采集时间的真实精度：能拿到 ISO 时间戳就用它（到分钟），只有日期才退回日期 */
+  var LIVE_COLLECT = (window.STARTA && window.STARTA.COLLECT) || null;
+  var LIVE_ASOF = (LIVE_COLLECT && LIVE_COLLECT.at) || (window.STARTA && window.STARTA.collectedAt) || "";
   var started = false;
 
   function $(sel) { return document.querySelector(sel); }

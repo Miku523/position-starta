@@ -1789,7 +1789,8 @@ close     每个 session 结束即 close，防遗漏计费</div>
 
   /* ---------- 实时数据层：状态胶囊 / 数据截至 / 报名倒计时 / 数字滚动 ---------- */
   if (window.Live) {
-    Live.init({ channel: "starta-live", pill: "#livePill", tabLabel: "采样报告" });
+    /* 采集现场时间：2026-10-20 03:14（COLLECT.at），离线也能说清数据截至几点 */
+    Live.init({ channel: "starta-live", pill: "#livePill", tabLabel: "采样报告", asOf: "2026-10-20T03:14:31+08:00" });
     Live.ago("#liveAsOf", function () {
       var st = Live.state && Live.state();
       return (st && st.asOf) || null;          // 服务端真实扫描时间；离线时显式回落
