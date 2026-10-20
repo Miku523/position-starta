@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>星他 · 招聘情报台</title>
 <link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/hr.css">
 </head>
 <body>
 <div class="app">
@@ -27,6 +28,14 @@
       <div class="rail-sec">我的 · 求职者视角</div>
       <nav class="navi" aria-label="个人中心导航">
         <a href="#" data-view="me" data-nav="个人中心" aria-label="个人中心"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg><span>个人中心</span><span class="ct" id="ctMe">0</span></a>
+      </nav>
+      <div class="rail-sec">招聘执行</div>
+      <nav class="navi" aria-label="招聘执行导航">
+        <a href="#" data-view="jd" data-nav="我的职位" aria-label="我的职位"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg><span>我的职位</span><span class="ct" id="ctJd">0</span></a>
+        <a href="#" data-view="talent" data-nav="人才库" aria-label="人才库"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.4 2.7-5.2 6-5.2s6 1.8 6 5.2"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 20c0-2.6-1-4.2-2.6-5"/></svg><span>人才库</span><span class="ct" id="ctTalent">0</span></a>
+        <a href="#" data-view="watch" data-nav="变化提醒" aria-label="变化提醒"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></svg><span>变化提醒</span><span class="ct" id="ctWatch">0</span></a>
+        <a href="#" data-view="brief" data-nav="对标简报" aria-label="对标简报"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h6"/></svg><span>对标简报</span></a>
+        <a href="#" data-view="settings" data-nav="设置 · 合规" aria-label="设置与合规"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg><span>设置 · 合规</span></a>
       </nav>
     </div>
     <div class="rail-foot">
@@ -289,6 +298,13 @@
       </div>
     </div>
 
+    <!-- 招聘执行视图：内容由 assets/hr-views-*.js 渲染 -->
+    <section class="page" id="view-jd" hidden></section>
+    <section class="page" id="view-talent" hidden></section>
+    <section class="page" id="view-watch" hidden></section>
+    <section class="page" id="view-brief" hidden></section>
+    <section class="page" id="view-settings" hidden></section>
+
   </main>
 
   <!-- ============ 状态栏 ============ -->
@@ -355,5 +371,9 @@
 <script src="assets/data.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/me.js"></script>
+<script src="assets/hr-core.js"></script>
+<script src="assets/hr-market.js"></script>
+<script src="assets/hr-views-a.js"></script>
+<script src="assets/hr-views-b.js"></script>
 </body>
 </html>
