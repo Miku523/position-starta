@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>采集台源码 · 岗位要求的地层</title>
+<style>
+:root{--bg:#0B0D10;--panel:#12151A;--ink:#EDECE7;--ink2:#C6C8CE;--dim:#8A8F98;--line:#252A31;--accent:#E4572E}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+header,main,footer{max-width:880px;margin:0 auto;padding:0 24px}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 0;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:.08em;color:var(--dim)}
+header a{color:var(--ink2);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px}
+header a:hover{color:var(--accent);border-color:var(--accent)}
+h1{font-size:26px;margin:40px 0 8px;font-family:Georgia,"Songti SC",serif;font-weight:600}
+p.lede{color:var(--dim);font-size:13px;margin:0}
+ul.list{list-style:none;padding:0;margin:26px 0 0;border-top:1px solid var(--line)}
+ul.list li{border-bottom:1px solid var(--line)}
+ul.list li a{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:13px 4px;color:var(--ink);text-decoration:none}
+ul.list li a:hover{color:var(--accent)}
+ul.list .nm{font-family:ui-monospace,Consolas,monospace;font-size:13px}
+ul.list .note{color:var(--dim);font-size:12px;text-align:right}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+figure img{display:block;width:100%;height:170px;object-fit:cover;background:#000}
+figcaption{padding:8px 10px;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+footer{padding:44px 24px 60px;color:var(--dim);font-size:11px;letter-spacing:.06em}
+code{background:#1A1E24;padding:1px 5px;border-radius:4px;font-size:12px}
+@media(max-width:640px){.grid{grid-template-columns:1fr 1fr}figure img{height:130px}}
+</style>
+</head>
+<body>
+<header>
+  <a href="../">← 回到报告</a>
+  <span>SOURCE · 可复现的最小实现</span>
+  <a href="../app/">招聘工作台 ↗</a>
+</header>
+<main>
+  <h1>采集台源码</h1>
+  <p class="lede">一台本地 Node 采集台：开页 → 抽取 → 截图 → 下载附件 → 关 Session。</p>
+<ul class="list"><li><a href="server.js"><span class="nm">server.js</span><span class="note">采集台主程序 · Node，无第三方依赖 · 端口 8901</span></a></li><li><a href="canon_stat.py"><span class="nm">canon_stat.py</span><span class="note">统计复算脚本 · 学历 / 专业 / 地区分布</span></a></li><li><a href="采集台界面.html"><span class="nm">采集台界面.html</span><span class="note">采集台前端；复现时复制为 public/index.html</span></a></li></ul><p class="lede" style="margin-top:22px">仓库只放源码：<code>bin/browser-cli.exe</code> 与 <code>bin/pdftotext/</code> 没有随包分发，复现时需自己放回 <code>source/bin/</code>。完整步骤见报告的 <a href="../#s07" style="color:var(--ink2)">07 附录 A-04</a>。</p>
+</main>
+<footer>岗位要求的地层 / SKILL STARTA SURVEY · Lexmount 云平台真实任务挑战 · 2026-10-20</footer>
+</body>
+</html>

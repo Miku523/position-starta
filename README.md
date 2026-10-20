@@ -23,6 +23,7 @@
 - 工作台顶栏「采样报告」→ **报告首页** → `/`（窄屏收在状态栏）
 - 工作台视图可直链：`/app/?view=lib|collect|units|mine|skill`（默认 `lib` 岗位库）
 - 报告 01–07 节：右下「目录 +」，或键盘 `↓` / `↑` / `PgDn` / `PgUp`；`#s06` 直达数据下载
+- 目录页：`/data/`、`/source/`、`/previews/` 都有索引页，进去是文件清单（`/previews/` 是可点缩略图）
 
 单文件版（`index.html`、`workbench-single.html`）双击即可离线打开；互链按钮指向线上地址。
 
