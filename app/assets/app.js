@@ -189,7 +189,7 @@ function restoreFilters() {
       if (typeof f.q === "string") state.q = f.q;
       if (typeof f.sort === "string" && ["due", "n", "unit", "role", "type"].indexOf(f.sort) >= 0) state.sort = f.sort;
       if (f.dir === 1 || f.dir === -1) state.dir = f.dir;
-      if (f.quick === null || f.quick === "urgent" || f.quick === "saved") state.quick = f.quick;
+      if (f.quick === null || f.quick === "urgent" || f.quick === "open" || f.quick === "saved") state.quick = f.quick;
     }
   } catch (e) { /* 坏数据直接忽略 */ }
 }
@@ -436,7 +436,7 @@ function expandRow(d) {
       <div><div class="k">报名渠道</div><b>${esc(d.w)}</b></div>
       <div><div class="k">报名窗口</div><b>${win}</b><span style="color:var(--muted);font-size:.78rem"> · 截止 ${esc(d.end || d.d)}</span></div>
       <div><div class="k">门槛</div>${esc(d.e)} · ${esc(d.x)} · 学位 ${esc(d.deg || "不限")} · 招 ${d.n} 人</div>
-      <div><div class="k">来源公告</div>${n ? `<a class="lnk" href="${esc(noticeUrl(n))}" target="_blank" rel="noopener">${esc(n.title)}</a>` : "—"}</div>
+      <div><div class="k">来源公告</div>${n ? `<a class="${lnkCls(noticeUrl(n))}" href="${esc(noticeUrl(n))}" target="_blank" rel="noopener"${deadTitle(noticeUrl(n)) ? ` title="${esc(deadTitle(noticeUrl(n)))}"` : ""}>${esc(n.title)}</a>${lnkDeadTag(noticeUrl(n))}` : "—"}</div>
     </div>
   </div></td></tr>`;
 }
@@ -654,7 +654,7 @@ function paintBanner() {
   const left = n.end ? daysLeft(n.end) : null;
   txt.innerHTML = `<b>${esc(n.title.replace(/公告$/, ""))}</b> 正在报名：招 ${n.seats ? n.seats.toLocaleString("zh-CN") : "—"} 人，`
     + `${left !== null && left >= 0 ? `还有 <b>${left}</b> 天关窗（${esc(n.end)} 截止）` : `报名已于 ${esc(n.end)} 截止`}。`
-    + ` <a class="lnk" href="#" data-notice-jump="${esc(n.id)}">看公告原文与附件</a>`;
+    + ` <a class="lnk" href="?view=collect&notice=${encodeURIComponent(n.id)}" data-notice-jump="${esc(n.id)}">看公告原文与附件</a>`;
   box.hidden = false;
 }
 
@@ -840,6 +840,36 @@ function copyTarget(d) {
   return jobUrl(d) || d.w || `${d.u || ""} ${d.r || ""}`.trim();
 }
 
+/* ---------------- 坏链标注 ----------------
+   来源：_aux/d/logs/t0_baseline.json 实测外链 HTTP 状态（1 条 403、5 条 404）。
+   只加类名与提示，不禁用链接：原站改版/下线后人工仍可能打开。
+   .lnk.is-dead / .dead-tag 的样式由 ui 样板块提供，这里不写内联样式。 */
+const DEAD_LINKS = [
+  { p: "https://jshrss.jiangsu.gov.cn/col/col77207/index.html", code: 403 },
+  { p: "https://hrss.shandong.gov.cn/col/col100176/index.html", code: 404 },
+  { p: "https://rlsbt.zj.gov.cn/col/col1229506794/index.html", code: 404 },
+  { p: "https://www.forestry.gov.cn/lyj/1/tzgg.html", code: 404 },
+  { p: "https://hrss.gd.gov.cn/zwgk/xxgk/tzgg/index.html", code: 404 },
+  { p: "https://www.forestry.gov.cn/lyj/1/gsgg/index.html", code: 404 }
+];
+function deadStatus(u) {
+  const v = String(u == null ? "" : u).trim();
+  if (!v) return 0;
+  for (let i = 0; i < DEAD_LINKS.length; i++) {
+    if (v.indexOf(DEAD_LINKS[i].p) === 0) return DEAD_LINKS[i].code;
+  }
+  return 0;
+}
+function deadTitle(u) {
+  const code = deadStatus(u);
+  if (!code) return "";
+  return code === 403
+    ? "原站拒绝自动访问（HTTP 403），仍可尝试打开"
+    : "原站已改版或下线（HTTP 404），仍可尝试打开";
+}
+function lnkCls(u) { return deadStatus(u) ? "lnk is-dead" : "lnk"; }
+function lnkDeadTag(u) { return deadStatus(u) ? ` <span class="dead-tag">失效</span>` : ""; }
+
 /* ---------------- CSV ---------------- */
 function csvDownload(head, rows, filename) {
   const body = rows.map(r => r.map(v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`).join(","));
@@ -872,7 +902,7 @@ function exportCsv() {
 let dwIndex = null;
 let dwReturn = null;
 
-function openDrawer(i, trigger) {
+function openDrawer(i, trigger, opts) {
   const d = byId.get(i);
   if (!d) return;
   dwIndex = i;
@@ -894,7 +924,7 @@ function openDrawer(i, trigger) {
   const srcLine = $("#dwSrcLine");
   if (srcLine) {
     srcLine.innerHTML = n
-      ? `<a class="lnk" href="${esc(noticeUrl(n))}" target="_blank" rel="noopener">${esc(n.title)}</a>
+      ? `<a class="${lnkCls(noticeUrl(n))}" href="${esc(noticeUrl(n))}" target="_blank" rel="noopener"${deadTitle(noticeUrl(n)) ? ` title="${esc(deadTitle(noticeUrl(n)))}"` : ""}>${esc(n.title)}</a>${lnkDeadTag(noticeUrl(n))}
          <span class="muted">${esc(n.org || "")} · 发布 ${esc(n.published || "")} · ${esc(n.status || "")}</span>`
       : `<span class="muted">这条岗位来自岗位表汇总，未挂到可打开的公告原文。</span>`;
   }
@@ -946,13 +976,21 @@ function openDrawer(i, trigger) {
     go.disabled = !(n || directJobUrl(d));
   }
   const drawer = $("#drawer");
+  const wasOpen = !!(drawer && drawer.classList.contains("on"));
   if (drawer) { drawer.inert = false; drawer.classList.add("on"); drawer.setAttribute("aria-hidden", "false"); }
   const scrim = $("#scrim");
   if (scrim) scrim.classList.add("on");
   const close = $("#dwClose");
   if (close) close.focus({ preventScroll: true });
+  /* 抽屉参与浏览器历史：用户点开时单独压一条记录，返回键先关抽屉；
+     boot 深链 / popstate 重放传 { history:false }，不重复压栈 */
+  const viaHistory = !(opts && opts.history === false) && __urlReady;
+  if (viaHistory) {
+    if (wasOpen) syncUrlState("replace");
+    else if (syncUrlState("push")) dwPushed = true;
+  }
 }
-function closeDrawer() {
+function closeDrawer(opts) {
   const drawer = $("#drawer");
   if (!drawer || !drawer.classList.contains("on")) return;
   drawer.classList.remove("on");
@@ -968,6 +1006,15 @@ function closeDrawer() {
       if (back.isConnected) { try { back.focus({ preventScroll: true }); } catch (e) { /* 忽略 */ } }
     });
   }
+  /* 历史收尾：用户点开的抽屉回退一条（popstate 负责把 URL 收干净）；
+     boot 深链只 replace 去掉 job；popstate 重放传 history:false，URL 已对齐 */
+  if (opts && opts.history === false) { dwPushed = false; return; }
+  if (dwPushed) {
+    dwPushed = false;
+    try { history.back(); } catch (e) { syncUrlState("replace"); }
+  } else {
+    syncUrlState("replace");
+  }
 }
 function openJobUrl(d) {
   const u = jobUrl(d);
@@ -975,18 +1022,193 @@ function openJobUrl(d) {
   window.open(u, "_blank", "noopener");
 }
 
-/* ---------------- 视图切换 ---------------- */
-const VIEW_LABEL = { lib: "市场岗位库", collect: "情报采集", units: "竞争雇主", mine: "对标清单", skill: "门槛基准", me: "个人中心" };
+/* ---------------- 视图切换与 URL 状态 ----------------
+   URL 是筛选状态的唯一真源：
+   - 启动：URL 上出现的参数覆盖 localStorage，缺失时才用本地记忆（?q= 空串 = 显式清空）
+   - 筛选 / 页码 / 排序 / 快捷筛选 / 公告：replaceState；视图切换：pushState 且只带 view（lib 省略）
+   - 抽屉开着带 job；用户点开的抽屉单独压一条历史，返回键先关抽屉
+   - file:// 或 history 不可用时全部跳过，页面照常工作 */
+const VIEW_LABEL = { lib: "市场岗位库", collect: "情报采集", units: "竞争雇主", mine: "对标清单", skill: "门槛基准", me: "个人中心", jd: "我的职位", talent: "人才库", watch: "变化提醒", brief: "对标简报", settings: "设置与合规" };
+const SORT_KEYS = ["due", "n", "unit", "role", "type"];
+let __urlMute = false;    /* popstate 重放期间禁止回写，避免自己触发自己 */
+let __urlReady = false;   /* bindEvents 完成后才允许回写 URL */
+let __qRaf = 0;           /* 搜索输入合帧：同一帧只渲染一次 */
+let dwPushed = false;     /* 当前抽屉是否压了一条历史（关闭时要 back 回去） */
+let noticeLink = null;    /* URL 上显式携带的情报采集公告 id */
+
+/* 标题：hr-core 在 HR 视图里会调 window.strataTitle(v)，这里对 11 个视图都给出唯一标题 */
+function strataTitle(v) {
+  document.title = (VIEW_LABEL[v] || VIEW_LABEL.lib) + " · 星他 招聘情报台";
+  return document.title;
+}
+window.strataTitle = strataTitle;
+
+/* 从地址栏读一份状态；null = 参数没出现（启动时保留 localStorage），空串语义只给 q */
+function readUrlState() {
+  const out = { view: null, q: null, pg: null, type: null, major: null, edu: null, sort: null, dir: null, quick: null, job: null, notice: null };
+  let sp;
+  try { sp = new URLSearchParams(location.search); } catch (e) { return out; }
+  const get = k => sp.has(k) ? sp.get(k) : null;
+  let v = get("view");
+  if (!v) v = get("v");   /* ?v= 作为 view 别名，兼容旧分享链接 */
+  if (v && VIEW_LABEL[v]) out.view = v;
+  if (!out.view) {
+    try {
+      const m = /^#view-([a-z]+)$/.exec(location.hash || "");
+      if (m && VIEW_LABEL[m[1]]) out.view = m[1];
+    } catch (e) { /* 忽略 */ }
+  }
+  const rawQ = get("q");
+  if (rawQ !== null) out.q = rawQ;
+  if (get("pg") !== null) {
+    const pg = Number(get("pg"));
+    if (Number.isFinite(pg) && pg >= 1) out.pg = Math.floor(pg);
+  }
+  const t = get("type");
+  if (t !== null) out.type = (t === "" || t === "全部") ? "全部" : (TYPES.indexOf(t) >= 0 ? t : null);
+  const mj = get("major");
+  if (mj !== null) out.major = (mj === "" || mj === "全部专业") ? "全部专业" : (majorOptions().indexOf(mj) >= 0 ? mj : null);
+  const ed = get("edu");
+  if (ed !== null) out.edu = (ed === "" || ed === "全部学历") ? "全部学历" : (eduOptions().indexOf(ed) >= 0 ? ed : null);
+  const st = get("sort");
+  if (st !== null) out.sort = SORT_KEYS.indexOf(st) >= 0 ? st : null;
+  const dr = get("dir");
+  if (dr !== null) out.dir = dr === "-1" ? -1 : (dr === "1" ? 1 : null);
+  const qk = get("quick");
+  if (qk !== null && qk !== "" && qk !== "all" && ["urgent", "open", "saved"].indexOf(qk) >= 0) out.quick = qk;
+  const job = get("job");
+  if (job !== null) {
+    const j = Number(job);
+    if (Number.isFinite(j) && byId.has(j)) out.job = j;
+  }
+  const nt = get("notice");
+  if (nt && NOTICES.some(n => String(n.id) === nt)) out.notice = nt;
+  return out;
+}
+
+/* 把 URL 状态写回 state：complete=true 时 URL 是完整真源（popstate 重放）；
+   false 时只覆盖 URL 上实际出现的参数（启动时与 localStorage 合并） */
+function applyUrlToState(us, complete) {
+  if (!us) return;
+  if (complete) {
+    state.q = us.q === null ? "" : us.q;
+    state.type = us.type === null ? "全部" : us.type;
+    state.major = us.major === null ? "全部专业" : us.major;
+    state.edu = us.edu === null ? "全部学历" : us.edu;
+    state.sort = us.sort === null ? "due" : us.sort;
+    state.dir = us.dir === null ? 1 : us.dir;
+    state.quick = us.quick === null ? null : us.quick;
+    state.page = us.pg === null ? 0 : Math.max(0, us.pg - 1);
+    state.noticeFilter = null;
+    return;
+  }
+  if (us.q !== null) state.q = us.q;
+  if (us.type !== null) state.type = us.type;
+  if (us.major !== null) state.major = us.major;
+  if (us.edu !== null) state.edu = us.edu;
+  if (us.sort !== null) state.sort = us.sort;
+  if (us.dir !== null) state.dir = us.dir;
+  if (us.quick !== null) state.quick = us.quick;
+  if (us.pg !== null) state.page = Math.max(0, us.pg - 1);
+}
+
+/* 全量状态 → query 串（默认值省略：lib / 空 q / 第 1 页 / 全部筛选 / sort=due / dir=1） */
+function buildUrlQuery() {
+  const sp = new URLSearchParams();
+  if (state.view !== "lib") sp.set("view", state.view);
+  if (state.q) sp.set("q", state.q);
+  if (state.page > 0) sp.set("pg", String(state.page + 1));
+  if (state.type && state.type !== "全部") sp.set("type", state.type);
+  if (state.major && state.major !== "全部专业") sp.set("major", state.major);
+  if (state.edu && state.edu !== "全部学历") sp.set("edu", state.edu);
+  if (state.sort && state.sort !== "due") sp.set("sort", state.sort);
+  if (state.dir === -1) sp.set("dir", "-1");
+  if (state.quick) sp.set("quick", state.quick);
+  if (dwIndex != null) sp.set("job", String(dwIndex));
+  /* 情报采集的 notice 表示「正在看的公告」；市场岗位库的 notice 表示「公告筛选」，
+     后者要显式带 view=lib，否则会被误解成采集视图的深链 */
+  const noticeId = state.view === "collect"
+    ? (noticeLink && NOTICES.some(n => String(n.id) === String(noticeLink)) ? noticeLink : null)
+    : (state.noticeFilter && NOTICES.some(n => String(n.id) === String(state.noticeFilter)) ? state.noticeFilter : null);
+  if (noticeId) {
+    if (state.view === "lib") sp.set("view", "lib");
+    sp.set("notice", noticeId);
+  }
+  return sp.toString();
+}
+
+/* 写地址栏：onlyView=true 用于视图切换（只保留 view；抽屉开着补 job）
+   返回写入后的完整地址，没写则返回 ""（file:// / 静音 / 地址没变） */
+function syncUrlState(mode, opts) {
+  if (__urlMute || !__urlReady) return "";
+  try { if (location.protocol === "file:") return ""; } catch (e) { return ""; }
+  if (!window.history || typeof history.pushState !== "function") return "";
+  const onlyView = !!(opts && opts.onlyView);
+  let url;
+  try { url = new URL(location.href); } catch (e) { return ""; }
+  let qs;
+  if (onlyView) {
+    if (state.view === "lib") {
+      /* lib 是筛选页：地址栏必须等于当前可见结果，切回时保留 q/pg/type/... */
+      qs = buildUrlQuery();
+    } else {
+      const sp = new URLSearchParams();
+      sp.set("view", state.view);
+      if (dwIndex != null) sp.set("job", String(dwIndex));
+      qs = sp.toString();
+    }
+  } else {
+    qs = buildUrlQuery();
+  }
+  url.search = qs ? "?" + qs : "";
+  url.hash = "";
+  const next = url.href;
+  if (next === location.href) return "";
+  try {
+    const st = { strata: 1, view: state.view, drawer: dwIndex != null ? 1 : 0 };
+    if (mode === "push") history.pushState(st, "", next);
+    else history.replaceState(st, "", next);
+    return next;
+  } catch (e) { return ""; }
+}
+
+/* 视图切换后的焦点兜底：优先 h1，其次页面容器（都补 tabindex=-1），并把主区滚回顶部 */
+function focusViewPage(v) {
+  const run = () => {
+    try {
+      const page = document.getElementById("view-" + v);
+      if (!page) return;
+      const h1 = page.querySelector("h1");
+      const target = h1 || page;
+      if (h1 && !h1.hasAttribute("tabindex")) h1.setAttribute("tabindex", "-1");
+      if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+      const main = document.querySelector(".main");
+      if (main) main.scrollTop = 0;
+    } catch (e) { /* 忽略 */ }
+  };
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(run);
+  else setTimeout(run, 0);
+}
+
+/* 搜索输入合帧：同一帧里连打多个字符只渲染一次 */
+function scheduleRender() {
+  if (__qRaf) return;
+  const run = () => { __qRaf = 0; render(); };
+  __qRaf = typeof requestAnimationFrame === "function" ? requestAnimationFrame(run) : setTimeout(run, 16);
+}
+
 function setView(v, opts) {
   if (!VIEW_LABEL[v]) v = "lib";
   const prevView = state.view;
   state.view = v;
+  if (v !== "collect") noticeLink = null;   /* 离开情报采集就不在 URL 上继续带 notice */
   $$(".main .page").forEach(el => { el.hidden = el.id !== "view-" + v; });
   $$(".navi a").forEach(a => {
     if (a.dataset.view === v) a.setAttribute("aria-current", "page");
     else if (a.dataset.view) a.removeAttribute("aria-current");
   });
   setText(".topbar .crumb b", VIEW_LABEL[v]);
+  try { document.documentElement.dataset.view = v; } catch (e) { /* 忽略 */ }
   /* 状态栏跟着当前视图走，别让门槛基准底下还留着「共 9,200 条 · 第 1/184 页」 */
   syncStatusText();
   if (v === "collect") { renderCitems(); renderCinfo(); }
@@ -994,28 +1216,68 @@ function setView(v, opts) {
   else if (v === "mine") renderMine();
   else if (v === "skill") renderSkill();
   else if (v === "me" && window.ME && typeof window.ME.render === "function") window.ME.render();
+  strataTitle(v);   /* silent 也要设：hr-core 的 hardSwitch 依赖它 */
   if (!(opts && opts.silent)) {
-    try {
-      const u = new URL(location.href);
-      u.searchParams.set("view", v);
-      if (u.href === location.href) { /* 同地址不写历史 */ }
-      else if (prevView && prevView !== v) history.pushState(null, "", u.href);
-      else history.replaceState(null, "", u.href);
-    } catch (e) { /* file:// 或权限受限时忽略 */ }
+    syncUrlState(prevView !== v ? "push" : "replace", { onlyView: true });
+    focusViewPage(v);
   }
 }
-function viewFromUrl() {
+
+/* popstate 重放：写入 state → 同步筛选 UI → 输入框 → render → setView（顺序按契约来） */
+function replayUrlState() {
+  if (!__urlReady) return;
+  const us = readUrlState();
+  __urlMute = true;
   try {
-    const v = new URLSearchParams(location.search).get("view");
-    return VIEW_LABEL[v] ? v : "lib";
-  } catch (e) { return "lib"; }
+    applyUrlToState(us, true);
+    /* ?notice= 按 view 解释：lib=公告筛选；collect=正在看的公告；无 view 时兼容旧链接回落采集 */
+    if (us.notice && us.view === "lib") state.noticeFilter = us.notice;
+    syncFiltersUI();
+    const qEl = $("#q");
+    if (qEl) qEl.value = state.q;
+    lastSig = filterSig();   /* URL 已带页码，别让 render 因筛选签名变化把页拉回第 1 页 */
+    render();
+    setView(us.notice && !us.view ? "collect" : (us.view || "lib"), { silent: true });
+    if (us.notice && us.view !== "lib") {
+      curNotice = us.notice;
+      noticeLink = us.notice;
+      renderCitems();
+      renderCinfo();
+    }
+    /* 抽屉与 URL 对齐：后退到没有 job 的地址就关；前进到有 job 的地址就开（都不写历史） */
+    const drawer = $("#drawer");
+    const open = !!(drawer && drawer.classList.contains("on"));
+    if (us.job !== null) {
+      if (!open || dwIndex !== us.job) openDrawer(us.job, null, { history: false });
+    } else if (open) {
+      closeDrawer({ history: false });
+    }
+  } finally {
+    __urlMute = false;
+  }
+  syncUrlState("replace");   /* 规范化：去掉 ?v= / hash / 越界页码 */
 }
-/* 浏览器后退/前进：HR 视图交给 hr-core，其余走 setView（不再写历史） */
+
+/* 浏览器后退/前进：HR 视图交给 hr-core，其余重放完整状态 */
 window.addEventListener("popstate", () => {
   let raw = "";
-  try { raw = new URLSearchParams(location.search).get("view") || ""; } catch (e) { /* ignore */ }
+  try {
+    const sp = new URLSearchParams(location.search);
+    raw = sp.get("view") || sp.get("v") || "";
+  } catch (e) { /* ignore */ }
   if (window.HR && window.HR.views && window.HR.views[raw]) return;
-  setView(viewFromUrl(), { silent: true });
+  replayUrlState();
+});
+/* #view-x：没有 ?view/?v 时支持 hash 直达；hashchange 时同样切换并规范化地址 */
+window.addEventListener("hashchange", () => {
+  if (!__urlReady || __urlMute) return;
+  let sp;
+  try { sp = new URLSearchParams(location.search); } catch (e) { return; }
+  if (sp.has("view") || sp.has("v")) return;
+  const us = readUrlState();
+  if (!us.view) return;
+  setView(us.view, { silent: true });
+  syncUrlState("replace", { onlyView: true });
 });
 
 /* ---------------- 竞争雇主 ---------------- */
@@ -1387,6 +1649,7 @@ function render() {
   else if (state.view === "mine") renderMine();
   else if (state.view === "skill") renderSkill();
   else if (state.view === "me" && window.ME && typeof window.ME.render === "function") window.ME.render();
+  if (__urlReady) syncUrlState("replace");   /* 筛选 / 页码 / 排序 / 快捷的变化只替换当前历史 */
 }
 
 /* ======================================================================
@@ -1473,6 +1736,7 @@ function renderCinfo() {
   const collect = collectItems();
   const preview = roles.slice(0, 12);
   const stored = NOTICES.map(x => x.id);
+  const applyHref = withScheme(n.applyUrl) || "";
   box.innerHTML = `
   <div class="cinfo-hd">
     <div class="cinfo-tt">
@@ -1489,7 +1753,7 @@ function renderCinfo() {
     <div><div class="k">招聘人数</div><div class="v">${fmtNum(n.seats)} 人</div></div>
     <div><div class="k">岗位表行数</div><div class="v">${fmtNum(n.rows)} 条</div></div>
     <div><div class="k">报名期</div><div class="v">${esc(n.applyStart || "—")} → ${esc(n.applyEnd || "—")}</div></div>
-    <div><div class="k">报名入口</div><div class="v"><a class="lnk" href="${esc(withScheme(n.applyUrl) || "#")}" target="_blank" rel="noopener">${esc(hostOf(n.applyUrl) || "—")}</a></div></div>
+    <div><div class="k">报名入口</div><div class="v">${applyHref ? `<a class="${lnkCls(applyHref)}" href="${esc(applyHref)}" target="_blank" rel="noopener"${deadTitle(applyHref) ? ` title="${esc(deadTitle(applyHref))}"` : ""}>${esc(hostOf(applyHref) || "—")}</a>${lnkDeadTag(applyHref)}` : `<span class="muted">—</span>`}</div></div>
   </div>
   ${n.open
       ? `<div class="callout ok"><b>${esc(n.status || "报名中")}</b>${esc(n.applyStart || "")} 起报名，<b>${esc(n.applyEnd || "")}</b> 截止${n.exam ? " · " + esc(n.exam) : ""}</div>`
@@ -1497,7 +1761,10 @@ function renderCinfo() {
   <div class="cinfo-grid">
     <section class="ci-sec">
       <h3>附件 <span class="n">${files.length}</span></h3>
-      ${files.length ? files.map(a => `<div class="att-row">${attLink(a)}<a class="att-src" href="${esc(withScheme(a.url) || "#")}" target="_blank" rel="noopener">原站链接 ↗</a></div>`).join("") : `<p class="muted">这份公告没有可下载的附件。</p>`}
+      ${files.length ? files.map(a => {
+        const src = withScheme(a.url) || "";
+        return `<div class="att-row">${attLink(a)}${src ? `<a class="att-src" href="${esc(src)}" target="_blank" rel="noopener">原站链接 ↗</a>` : ""}</div>`;
+      }).join("") : `<p class="muted">这份公告没有可下载的附件。</p>`}
     </section>
     <section class="ci-sec">
       <h3>招聘流程 <span class="n">${timeline.length}</span></h3>
@@ -1530,7 +1797,7 @@ function renderCinfo() {
         return `<tr>
           <td><span class="ci-dot ${srcOk ? "ok" : "wait"}" aria-hidden="true"></span>${srcOk ? "已抓取" : "空页"}</td>
           <td class="mono" title="${esc(it.host || "")}">${esc(it.host || "—")}</td>
-          <td class="c-major"><a class="lnk" href="${esc(to)}" target="_blank" rel="noopener" title="${esc(it.title || "")}">${esc(it.title || it.url)}</a></td>
+          <td class="c-major"><a class="${lnkCls(to)}" href="${esc(to)}" target="_blank" rel="noopener" title="${esc(deadTitle(to) || it.title || "")}">${esc(it.title || it.url)}</a>${lnkDeadTag(to)}</td>
           <td class="c-num">${fmtNum(it.chars)}</td>
           <td class="c-num">${fmtNum(it.files && it.files.length)}</td>
           <td>${(it.stored && it.stored.length) ? it.stored.map(id => {
@@ -1601,7 +1868,28 @@ function bindEvents() {
   });
   on("#major", "change", e => { state.major = e.target.value; persistFilters(); render(); });
   on("#edu", "change", e => { state.edu = e.target.value; persistFilters(); render(); });
-  on("#q", "input", e => { state.q = e.target.value.trim(); persistFilters(); render(); });
+  /* 搜索：非岗位库视图里输入就先切回岗位库；rAF 合帧，连打多个字符只渲染一次 */
+  on("#q", "input", e => {
+    state.q = e.target.value.trim();
+    state.page = 0;
+    persistFilters();
+    if (state.view !== "lib") {
+      setView("lib", { silent: true });
+      syncUrlState("push", { onlyView: true });
+    }
+    scheduleRender();
+  });
+  on("#q", "keydown", e => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      state.q = "";
+      e.target.value = "";
+      state.page = 0;
+      persistFilters();
+      render();
+    }
+  });
   on("#sort", "change", e => setSort(e.target.value));
   on("#resetBtn", "click", () => {
     state.type = "全部";
@@ -1613,6 +1901,7 @@ function bindEvents() {
     state.exp.clear();
     state.sort = "due";
     state.dir = 1;
+    state.noticeFilter = null;
     const q = $("#q"); if (q) q.value = "";
     persistFilters();
     mountFilters();
@@ -1651,6 +1940,20 @@ function bindEvents() {
 
   /* 表格交互 */
   on("#rows", "click", e => {
+    /* 列表/展开行里的「看公告原文与附件」：左键走 SPA 切到情报采集，中键/修饰键保持浏览器默认 */
+    const nj = e.target.closest("[data-notice-jump]");
+    if (nj) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      curNotice = noticeLink = nj.dataset.noticeJump;
+      setView("collect");
+      renderCitems();
+      renderCinfo();
+      syncUrlState("replace");
+      const cbox = $("#cinfo");
+      if (cbox) { try { cbox.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (err) { window.scrollTo(0, 0); } }
+      return;
+    }
     const ex = e.target.closest("[data-exp]");
     if (ex) {
       const i = Number(ex.dataset.exp);
@@ -1700,6 +2003,33 @@ function bindEvents() {
     if (sel && !sel.isCollapsed && String(sel).trim()) return;
     const tr = e.target.closest("tr[data-i]");
     if (tr) openDrawer(Number(tr.dataset.i), tr);
+  });
+  /* 行键盘：上下移动焦点、Home/End 到首尾、Enter 打开抽屉；不改鼠标行为 */
+  on("#rows", "keydown", e => {
+    const key = e.key;
+    if (key !== "ArrowDown" && key !== "ArrowUp" && key !== "Home" && key !== "End" && key !== "Enter") return;
+    if (e.target.closest("button, a, input, select, textarea")) return;
+    if (key === "Enter") {
+      const tr = e.target.closest("tr[data-i]");
+      if (!tr) return;
+      e.preventDefault();
+      openDrawer(Number(tr.dataset.i), tr);
+      return;
+    }
+    const rows = $$("#rows tr[data-i]");
+    if (!rows.length) return;
+    const cur = e.target.closest("tr[data-i]");
+    let idx = cur ? rows.indexOf(cur) : -1;
+    if (key === "Home") idx = 0;
+    else if (key === "End") idx = rows.length - 1;
+    else if (key === "ArrowDown") idx = idx < 0 ? 0 : Math.min(idx + 1, rows.length - 1);
+    else idx = idx < 0 ? rows.length - 1 : Math.max(idx - 1, 0);
+    const next = rows[idx];
+    if (!next) return;
+    e.preventDefault();
+    if (!next.hasAttribute("tabindex")) next.setAttribute("tabindex", "-1");
+    next.focus({ preventScroll: true });
+    try { next.scrollIntoView({ block: "nearest" }); } catch (err) { /* 忽略 */ }
   });
   on("#checkAll", "change", e => {
     const list = filtered();
@@ -1845,11 +2175,15 @@ function bindEvents() {
   on("#banner", "click", e => {
     const b = e.target.closest("[data-notice-jump]");
     if (!b) return;
+    /* 中键 / Ctrl / Shift / Cmd 点击交给浏览器，让「新标签打开」照常工作 */
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     curNotice = b.dataset.noticeJump;
+    noticeLink = curNotice;
     setView("collect");
     renderCitems();
     renderCinfo();
+    syncUrlState("replace");
     const box = $("#cinfo");
     if (box) { try { box.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (err) { window.scrollTo(0, 0); } }
   });
@@ -1880,6 +2214,16 @@ function bindEvents() {
   });
 
   /* 抽屉 */
+  /* 复制链接：把当前岗位的深链复制给同事；file:// 下没有可分享的 origin，给出提示 */
+  on("#dwCopyLink", "click", () => {
+    if (dwIndex == null) return;
+    let base = "";
+    try {
+      if (location.protocol === "file:") { toast("file:// 打开时没有可分享的网址，请用本地服务地址"); return; }
+      base = location.origin + location.pathname;
+    } catch (e) { toast("当前环境拿不到页面地址"); return; }
+    copyAndToast(base + "?view=lib&job=" + dwIndex, "岗位链接已复制", "复制失败：请手动复制地址栏");
+  });
   on("#dwClose", "click", closeDrawer);
   on("#scrim", "click", closeDrawer);
   on("#dwStages", "click", e => {
@@ -1915,8 +2259,10 @@ function bindEvents() {
     });
     if (!best) return null;
     curNotice = best.id;
+    noticeLink = curNotice;
     renderCitems();
     renderCinfo();
+    syncUrlState("replace");
     syncCountText(filtered());
     const sel = document.querySelector(`#citems .citem[data-n="${best.id}"]`);
     if (sel && sel.focus) sel.focus({ preventScroll: false });
@@ -1948,8 +2294,10 @@ function bindEvents() {
     const b = e.target.closest(".citem");
     if (!b) return;
     curNotice = b.dataset.n;
+    noticeLink = curNotice;
     renderCitems();
     renderCinfo();
+    syncUrlState("replace");
     const sel = document.querySelector(`#citems .citem[data-n="${curNotice}"]`);
     if (sel) sel.focus({ preventScroll: true });
   });
@@ -1977,7 +2325,7 @@ function bindEvents() {
       return;
     }
     const jum = e.target.closest("[data-n]");
-    if (jum) { curNotice = jum.dataset.n; renderCitems(); renderCinfo(); return; }
+    if (jum) { curNotice = jum.dataset.n; noticeLink = curNotice; renderCitems(); renderCinfo(); syncUrlState("replace"); return; }
     const fold = e.target.closest("[data-fold]");
     if (fold) {
       exOpen = !exOpen;
@@ -2005,6 +2353,19 @@ function bindEvents() {
 
   /* 快捷键 */
   document.addEventListener("keydown", e => {
+    /* 全局 /：直接聚焦搜索框（焦点在输入类元素里时不抢） */
+    if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const t = e.target;
+      const tag = t && t.tagName ? t.tagName.toLowerCase() : "";
+      const typing = tag === "input" || tag === "textarea" || tag === "select" || !!(t && t.isContentEditable);
+      if (!typing) {
+        e.preventDefault();
+        if (state.view !== "lib") setView("lib");
+        const q = $("#q");
+        if (q) requestAnimationFrame(() => { q.focus(); q.select(); });
+      }
+      return;
+    }
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
       e.preventDefault();
       const q = $("#q");
@@ -2082,26 +2443,38 @@ function initA11y() {
   const savedFs = parseFloat(lsGet(LS.fs, ""));
   applyFs(Number.isFinite(savedFs) ? FS_STEPS.reduce((b, s) => Math.abs(s - savedFs) < Math.abs(b - savedFs) ? s : b, FS_STEPS[1]) : 17, true);
 
+  /* 后退/前进时浏览器别自作主张恢复滚动位置，视图由我们自己重放 */
+  try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (e) { /* file:// 等环境忽略 */ }
+
   restoreSaved();
   restoreFilters();
   mountTypebar();
   reindex();
+  initA11y();
+
+  /* URL 优先于 localStorage：URL 上出现的参数覆盖本地记忆（?q= 空串 = 清空搜索） */
+  const us = readUrlState();
+  applyUrlToState(us, false);
   syncFiltersUI();
   const q = $("#q");
   if (q) q.value = state.q;
-  initA11y();
 
+  /* ?notice= 按 view 解释：lib=公告筛选；collect=正在看的公告；单独出现时兼容旧链接回落到采集 */
+  if (us.notice && us.view === "lib") state.noticeFilter = us.notice;
+  lastSig = filterSig();   /* 深链带页码时别被筛选签名变化拉回第 1 页 */
   render();
+  if (us.notice && us.view !== "lib") { curNotice = us.notice; noticeLink = us.notice; }
   renderCitems();
   renderCinfo();
-  setView(viewFromUrl(), { silent: true });
+  setView(us.notice && !us.view ? "collect" : (us.view || "lib"), { silent: true });
   bindEvents();
 
-  /* 深链：?job=<行号> 直接打开那条岗位的抽屉，方便把一条岗位发给别人看 */
-  try {
-    const j = new URLSearchParams(location.search).get("job");
-    if (j !== null && byId.has(Number(j)) && state.view === "lib") openDrawer(Number(j), null);
-  } catch (e) { /* 参数不合法就正常打开列表 */ }
+  /* 深链：?job=<行号> 直接打开那条岗位的抽屉；boot 场景不压历史，收起时只替换地址 */
+  if (us.job !== null) openDrawer(us.job, null, { history: false });
+
+  /* 从这里开始，所有筛选 / 视图 / 抽屉变化才回写 URL */
+  __urlReady = true;
+  syncUrlState("replace");
 
   /* me.js 在 app.js 之后加载：等 DOM 都就绪再补一次 KPI / 状态栏，
      否则侧栏「个人中心」计数会在首屏停在 0 */

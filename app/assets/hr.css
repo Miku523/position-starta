@@ -407,3 +407,11 @@ html[data-fs="sm"] .kpi > b { font-size: 1.4rem; }
 #view-jd, #view-talent, #view-watch, #view-brief, #view-settings { display: block; }
 #view-jd .panel, #view-talent .panel, #view-watch .panel,
 #view-brief .panel, #view-settings .panel { flex: 0 0 auto; min-height: 0; }
+
+/* ---------- v1.1 · 窄屏 panel 标题不被正文挤成竖排（D组 smooth） ---------- */
+.hrpanel .panel-hd > b{flex:0 0 auto;white-space:nowrap}
+.hrpanel .panel-hd > span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+@media (max-width:520px){
+  .hrpanel .panel-hd{flex-wrap:wrap;row-gap:2px}
+  .hrpanel .panel-hd > b{flex:1 1 100%}
+}

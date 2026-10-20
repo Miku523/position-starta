@@ -1158,3 +1158,70 @@ html[data-density="tight"] td.c-unit .u-name{font-size:.92rem}
   .cinfo-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
   .collect{grid-template-columns:minmax(0,1fr)}
 }
+
+/* ===================================================================
+   v1.1 · 流畅交互层（增量覆写，不改上方既有版式）
+   转场 / 滚动容器 / 坏链 / 微交互 / 粗指针触控 / 动效降级
+   =================================================================== */
+
+/* ---------- 1. 视图转场：display:none→flex 会重放 CSS 动画，零 JS ---------- */
+@keyframes page-in{
+  from{opacity:0;transform:translateY(4px)}
+  to{opacity:1;transform:none}
+}
+.page:not([hidden]){animation:page-in .15s cubic-bezier(.22,.61,.36,1) both}
+/* 视图切换时若把焦点程序化交给 .page，不画整页外圈 */
+.page:focus,.page:focus-visible{outline:0}
+
+/* ---------- 2. 滚动容器：切视图不抖 + 回顶平滑 ---------- */
+.main{scrollbar-gutter:stable}
+@media (prefers-reduced-motion:no-preference){
+  .main{scroll-behavior:smooth}
+}
+
+/* ---------- 3. 坏链弱化：保持可点，仅去强调 ---------- */
+a.lnk.is-dead{color:var(--muted);border-bottom-style:dashed;border-bottom-color:var(--line2);cursor:pointer}
+a.lnk.is-dead:hover{color:var(--ink2);border-bottom-color:var(--muted)}
+.dead-tag{
+  display:inline-block;margin-left:5px;padding:1px 5px;border-radius:999px;
+  border:1px solid var(--line);background:var(--line2);color:var(--muted);
+  font-family:var(--mono);font-size:.64rem;font-weight:500;line-height:1.5;
+  letter-spacing:.02em;white-space:nowrap;vertical-align:1px;pointer-events:none;
+}
+
+/* ---------- 4. 微交互：只动小件，不给大容器加 transform ---------- */
+.kpi[role="button"]{transition:border-color .15s,box-shadow .15s,transform .15s}
+.kpi[role="button"]:hover{transform:translateY(-1px);box-shadow:var(--sh2);border-color:var(--accent-line)}
+.icobtn,.chip{transition:background .15s,color .15s,border-color .15s,transform .1s}
+.btn:active,.icobtn:active,.chip:active{transform:translateY(1px) scale(.98)}
+.pg-btn{transition:background .12s,border-color .12s,color .12s}
+.pg-btn:active:not([disabled]){transform:translateY(1px)}
+.meter i{transition:width .4s cubic-bezier(.22,.61,.36,1),opacity .2s}
+/* 抽屉常驻合成层，开合走 compositor，不吃主线程；关闭后保留成本可控 */
+#drawer{will-change:transform}
+
+/* ---------- 5. 粗指针（触控）目标 ≥36px，不撑破 rail ---------- */
+@media (pointer:coarse){
+  .chip{height:36px;padding:0 12px}
+  .btn{min-height:38px}
+  .pg-btn{min-width:36px;height:36px}
+  .icobtn{width:38px;height:38px}
+  .fsgrp .icobtn{width:36px;height:38px}
+  .navi a{min-height:40px}
+}
+
+/* ---------- 6. 打印与「减弱动效」全局降级 ---------- */
+@media print{
+  .page:not([hidden]){animation:none!important}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+    transition-delay:0s!important;
+    scroll-behavior:auto!important;
+  }
+  .page:not([hidden]){animation:none!important}
+  #drawer{will-change:auto}
+}

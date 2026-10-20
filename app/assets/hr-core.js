@@ -586,6 +586,26 @@
      由 hr-core 自己控制 .main .page 的显示与导航高亮。
      这样 app.js 可以保持零改动，减少与其它工具并发写同一文件的冲突。 */
   var _navInit = false;
+  var HR_TITLES = { jd: "我的职位", talent: "人才库", watch: "变化提醒", brief: "对标简报", settings: "设置与合规" };
+  /* 每视图标题：优先用 app.js 暴露的 window.strataTitle（11 个视图统一格式），失败再回退自有映射 */
+  function applyViewTitle(v) {
+    if (typeof window.strataTitle === "function") {
+      try { window.strataTitle(v); return; } catch (e) { /* 回退下方映射 */ }
+    }
+    document.title = (HR_TITLES[v] || VIEW_LB[v] || "星他") + " · 星他 招聘情报台";
+  }
+  /* 视图=页面：切过去回到顶部，焦点落到该页 h1，键盘/读屏不会留在旧页 */
+  function focusViewPage(v, opts) {
+    if (opts && (opts.initial || opts.silent)) return;
+    var page = document.getElementById("view-" + v);
+    if (!page) return;
+    requestAnimationFrame(function () {
+      var h = page.querySelector("h1");
+      var target = h || page;
+      if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+      try { target.focus({ preventScroll: true }); } catch (e) { /* 旧浏览器忽略 */ }
+    });
+  }
   function hardSwitch(v, opts) {
     if (!v) return false;
     var page = document.getElementById("view-" + v);
@@ -600,14 +620,23 @@
     var sc = document.getElementById("statusCount");
     if (sc) sc.textContent = statusText(v);
     document.documentElement.setAttribute("data-view", v);
+    applyViewTitle(v);
+    /* 视图切换写干净的 ?view=：筛选参数只属于岗位库，别带着走 */
     try {
       var u = new URL(location.href);
-      u.searchParams.set("view", v);
+      ["q", "pg", "type", "major", "edu", "sort", "dir", "quick", "job", "notice"].forEach(function (k) {
+        u.searchParams.delete(k);
+      });
+      if (v === "lib") u.searchParams.delete("view");
+      else u.searchParams.set("view", v);
       var next = u.href;
       if (!_navInit || (opts && opts.initial) || next === location.href) history.replaceState(null, "", next);
       else history.pushState(null, "", next);
     } catch (e) { /* file:// 忽略 */ }
     render(v);
+    var main = document.querySelector(".main");
+    if (main && main.scrollTop) main.scrollTop = 0;
+    focusViewPage(v, opts);
     return true;
   }
 
@@ -745,7 +774,7 @@
     if (!link) {
       link = document.createElement("a");
       link.className = "hr-footlink";
-      link.href = "#";
+      link.href = "?view=settings";
       link.setAttribute("data-view", "settings");
       link.innerHTML = icon("settings", 13) + "<span>设置 · 合规</span>";
       link.addEventListener("click", function (e) { e.preventDefault(); setViewSafe("settings"); });
