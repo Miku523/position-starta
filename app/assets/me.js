@@ -11,7 +11,7 @@ window.ME = (function () {
     ["name", "姓名", 8], ["gender", "性别", 3], ["birth", "出生年月", 4], ["politics", "政治面貌", 3],
     ["phone", "手机", 8], ["email", "邮箱", 7], ["idcard", "身份证号", 6],
     ["edu", "最高学历", 8], ["degree", "学位", 5], ["school", "毕业院校", 7], ["major", "专业", 7],
-    ["grad", "毕业时间", 5], ["city", "期望地区", 5], ["want", "求职意向", 6], ["intent", "意向岗位", 7],
+    ["grad", "毕业时间", 5], ["years", "工作年限", 5], ["city", "期望地区", 5], ["want", "求职意向", 6], ["intent", "意向岗位", 7],
     ["resume", "简历附件", 8]
   ];
   const TOTAL = FIELDS.reduce((s, f) => s + f[2], 0);

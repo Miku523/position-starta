@@ -257,7 +257,7 @@
     var srcPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>数据源台账</b><span>快照 ' + esc(meta.snapshot || "—") + " · 可回溯到公告原文</span></div>" +
       '<div class="hrkvs">' +
         kv("岗位表", fmt(data.length) + " 行 × 16 列") +
-        kv("单位", fmt(meta.units || new Set(data.map(function (d) { return d.u; })).size) + " 家") +
+        kv("单位", fmt(new Set(data.map(function (d) { return d.u; })).size) + " 家") +
         kv("名额", fmt(meta.seats || data.reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0)) + " 个") +
         kv("公告", notices.length + " 份") +
         kv("地区", fmt(meta.regions || 24) + " 个城市") +

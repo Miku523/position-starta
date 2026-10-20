@@ -120,7 +120,7 @@ b,strong{font-weight:600}
 .backlink{display:none;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--line);border-radius:8px;color:var(--ink2);text-decoration:none;font-size:.78rem;white-space:nowrap}
 .backlink:hover{border-color:var(--accent-line);color:var(--accent)}
 @media (min-width:981px){.topbar .backlink{display:inline-flex}}
-@media (max-width:980px){.rail>.backlink{display:inline-flex;position:fixed;left:10px;bottom:74px;z-index:55;margin:0;background:var(--panel);box-shadow:var(--sh2);border-color:var(--line)}}
+@media (max-width:980px){.rail>.backlink{display:inline-flex;position:fixed;left:10px;bottom:14px;z-index:40;margin:0;background:var(--panel);box-shadow:var(--sh2);border-color:var(--line);opacity:.94}}
 .emptrow td{padding:30px 14px!important;text-align:center;color:var(--muted);font-size:.82rem}
 .landing .fine a{color:var(--accent);text-decoration:none;border-bottom:1px dashed var(--accent-line)}
 .mfield input,.mfield textarea{height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:0 10px;font-size:.85rem;outline:none;font-family:inherit;color:var(--ink)}
@@ -165,6 +165,9 @@ h1{font-size:1.34rem;letter-spacing:-.015em;font-weight:600}
 
 /* ---------- KPI ---------- */
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 14px}
+.kpis.k6{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:1180px){.kpis.k6{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.kpis.k6{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .kpi{
   text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;
   padding:13px 15px;transition:border-color .15s,box-shadow .15s;
@@ -465,7 +468,7 @@ td.num{font-family:var(--mono);text-align:right}
   font-size:.8rem;box-shadow:var(--sh2);opacity:0;pointer-events:none;
   transition:opacity .2s,transform .2s;z-index:120;max-width:min(92vw,560px);
 }
-.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .toast-act{
   margin-left:10px;padding:3px 9px;border:1px solid color-mix(in srgb,var(--bg) 42%,transparent);
   border-radius:6px;background:transparent;color:var(--bg);font-size:.75rem;font-weight:600;
@@ -513,6 +516,42 @@ td.num{font-family:var(--mono);text-align:right}
   .tdv{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0}
   .tdv .dim{font-size:.72rem}
 }
+/* ---------- v0.4 修订 ---------- */
+:root{--on-accent:#FFFFFF}
+html[data-theme="dark"]{--on-accent:#180B05}
+::selection{color:var(--on-accent)}
+.btn.primary{color:var(--on-accent)}
+.brandline .mark,.logo .mark,.m-brand .mark{color:var(--on-accent)}
+select{
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23686D76' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 9px center;padding-right:26px;
+}
+html[data-theme="dark"] select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A9099' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+.mfield input:focus,.mfield textarea:focus,.mfield select:focus{
+  border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft);
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+a.ext{color:var(--accent);text-decoration:none;border-bottom:1px dashed color-mix(in srgb,var(--accent) 45%,transparent)}
+a.ext:hover{background:var(--accent-soft)}
+.frow{grid-template-columns:90px minmax(0,1fr) 44px 52px}
+.fpct{font-family:var(--mono);font-size:.76rem;color:var(--muted);text-align:right}
+@media (max-width:640px){
+  .icobtn{width:40px;height:40px}
+  .navi button{min-height:40px}
+  .chip{min-height:34px;padding:6px 12px}
+  .btn.sm{min-height:36px}
+  .pstrip{padding:10px 12px;gap:8px;margin-top:12px}
+  .pstrip .ptags{display:none}
+  .kpis{gap:8px;margin-top:12px}
+  .kpi{padding:11px 12px}
+  .kpi .v{font-size:1.55rem}
+  .jobcard{padding:13px 12px}
+}
 </style>
 </head>
 <body>
@@ -531,7 +570,7 @@ const KEY = "starta-dual-v1";
 const BACK_LINK = '<a class="backlink" href="../index.html" title="回招聘情报台主工作台"><span aria-hidden="true">←</span>回工作台</a>';
 const APP_STATUSES = ["已投递","初筛","面试","已录用","已淘汰"];
 
-const J = (id,t,u,r,m,mf,e,x,n,d,w,city,desc,src) => ({id,t,u,r,m,mf,e,x,n,d,w,city,desc,src});
+const J = (id,t,u,r,m,mf,e,x,n,d,w,city,desc,src,hard,nogov) => ({id,t,u,r,m,mf,e,x,n,d,w,city,desc,src,hard:hard||null,nogov:!!nogov});
 
 const JOBS = [
   J("j01","央企","国家电网","变电运维","电气工程及自动化","电气","本科","应届",12,"11-28","国聘网 · 校招","全国","负责 220kV 及以下变电站设备巡视、倒闸操作与缺陷记录；需懂继电保护基础，接受轮班与驻站。","采集"),
@@ -540,12 +579,12 @@ const JOBS = [
   J("j04","央企","中建三局","土建工程师","土木工程","土木","本科","3-5 年",5,"12-12","官网 · 社招","武汉","房建项目现场技术管理，需有一级建造师或同岗经验，能接受项目地调动。","采集"),
   J("j05","央企","国家能源","集控运行","热能与动力工程","能源","本科","应届",10,"11-29","国聘网 · 校招","银川","火电机组集控巡检与运行调整，四班三倒；热动、自动化专业优先。","采集"),
   J("j06","事业单位","市第一人民医院","临床医师","临床医学","医学","硕士","应届",25,"11-25","市卫健委 · 统考","广州","住院医师规范化培训合格者优先；岗位表与专业限制写在公告 XLSX 附件里，需逐条核对。","采集"),
-  J("j07","事业单位","省属高校","专职辅导员","不限（中共党员）","不限","硕士","应届",8,"12-01","人事考试网","广州","负责学生日常管理与思政工作，须为中共党员，需住校值班。","采集"),
-  J("j08","事业单位","市疾控中心","检验技师","医学检验技术","医学","本科","1-3 年",5,"12-09","人事考试网","广州","理化与微生物检验，需持检验技师资格证；有 PCR 实验室经验优先。","采集"),
+  J("j07","事业单位","省属高校","专职辅导员","不限（中共党员）","不限","硕士","应届",8,"12-01","人事考试网","广州","负责学生日常管理与思政工作，须为中共党员，需住校值班。","采集","party"),
+  J("j08","事业单位","市疾控中心","检验技师","医学检验技术","医学","本科","1-3 年",5,"12-09","人事考试网","广州","理化与微生物检验，需持检验技师资格证；有 PCR 实验室经验优先。","采集","inspector"),
   J("j09","事业单位","市图书馆","读者服务","图书馆学 / 汉语言","文科","本科","不限",3,"10-25","人事考试网","广州","借阅服务与阅读推广，需轮班含周末；有活动策划经验者优先。","采集"),
   J("j10","国企","市城投集团","投融资专员","金融学 / 经济学","金融","硕士","3-5 年",2,"12-08","市国资委官网","广州","负责债券发行与项目融资测算，需熟悉地方政府投融资平台监管口径。","采集"),
   J("j11","国企","地铁集团","运营调度","交通运输","交通","本科","应届",15,"11-26","官网 · 校招","广州","行车调度与应急指挥，需通过体检与心理测评，倒班制。","采集"),
-  J("j12","国企","交投集团","法务岗","法学（过法考）","法学","本科","1-3 年",1,"12-03","官网 · 社招","广州","合同审核与诉讼管理，须通过法律职业资格考试；党员优先。","采集"),
+  J("j12","国企","交投集团","法务岗","法学（过法考）","法学","本科","1-3 年",1,"12-03","官网 · 社招","广州","合同审核与诉讼管理，须通过法律职业资格考试；党员优先。","采集","law"),
   J("j13","民营","新能源科技","算法工程师","计算机 / 自动化","计算机","硕士","1-3 年",5,"长期","官网","深圳","储能 BMS 算法与数据建模，要求有落地项目；薪资区间写在 JD 正文，常年开放。","采集"),
   J("j14","民营","智能制造","供应链计划","物流管理 / 工业工程","管理","本科","3-5 年",2,"长期","官网","苏州","主生产计划与物料齐套，需熟练 ERP；制造业计划岗 3 年以上经验。","采集"),
   J("j15","公务员","区市场监管局","行政执法","法学 / 食品科学","法学","本科","不限",3,"11-20","国家公务员局","广州","基层执法岗位，需通过体能测试；专业限制写在职位表备注栏，报名窗口极短。","采集"),
@@ -554,15 +593,15 @@ const JOBS = [
   J("j18","外企","医疗器械","注册专员","生物医学工程","医学","本科","1-3 年",1,"12-10","官网","北京","NMPA 注册资料撰写与审评沟通，需熟悉二类器械注册流程，英语读写熟练。","采集"),
   J("j19","央企","国家电网","调度运行","电气工程及自动化","电气","本科","应届",6,"11-28","国聘网 · 校招","全国","省级调度中心值班岗，需掌握电网潮流计算与继电保护，四班三倒。","采集"),
   J("j20","央企","国家电网","信息通信","通信工程 / 计算机","计算机","本科","应届",4,"12-05","国聘网 · 校招","全国","电力通信网运维与网络安全，需熟悉 SDH 传输与调度数据网。","采集"),
-  J("j21","事业单位","市第一人民医院","护理","护理学","医学","专科","应届",30,"12-09","市卫健委 · 统考","广州","临床护理岗，合同制不占编制，需已取得或当年通过护士执业资格。","采集"),
-  J("j22","事业单位","市第一人民医院","医学检验","医学检验技术","医学","本科","1-3 年",6,"12-10","市卫健委 · 统考","广州","检验科常规与生化检验，需持检验技师资格证，能独立值班。","采集"),
+  J("j21","事业单位","市第一人民医院","护理","护理学","医学","专科","应届",30,"12-09","市卫健委 · 统考","广州","临床护理岗，合同制不占编制，需已取得或当年通过护士执业资格。","采集","nurse",true),
+  J("j22","事业单位","市第一人民医院","医学检验","医学检验技术","医学","本科","1-3 年",6,"12-10","市卫健委 · 统考","广州","检验科常规与生化检验，需持检验技师资格证，能独立值班。","采集","inspector"),
   J("j23","事业单位","省属高校","专任教师（计算机）","计算机科学与技术","计算机","博士","不限",5,"12-15","人事考试网","广州","教学科研岗，博士学历可免笔试直接面试，需有 SCI 或 CCF 论文。","采集"),
   J("j24","事业单位","省属高校","实验技术","材料 / 化学","理科","硕士","应届",3,"12-08","人事考试网","广州","实验室仪器管理与实验课支撑，需熟悉 SEM、XRD 等设备操作。","采集"),
   J("j25","央企","国家电网","财务核算","会计学 / 财务管理","财会","本科","应届",2,"11-28","国聘网 · 校招","全国","财务报表、税务申报与资金计划；熟练使用 Excel，持初级会计职称优先。","发布"),
   J("j26","央企","中国移动","客户经理","不限","不限","本科","应届",8,"12-10","国聘网 · 校招","广州","政企客户拓展与存量经营，需沟通与方案能力，接受外勤。","发布"),
   J("j27","央企","中国石油","销售运营","不限","不限","本科","应届",5,"12-18","官网 · 校招","广州","成品油销售运营与客户维护，需接受轮岗与区域调配。","发布"),
   J("j28","国企","地铁集团","站务员","不限","不限","专科","应届",20,"11-30","官网","广州","车站客运组织与乘客服务，倒班制，需通过体检。","发布"),
-  J("j29","国企","交投集团","行政综合","汉语言 / 行政管理","文科","本科","应届",2,"12-01","官网","广州","公文流转、会务与综合事务，需文字功底扎实。","发布")
+  J("j29","国企","交投集团","行政综合","汉语言 / 行政管理","文科","本科","应届",2,(new Date().getFullYear()-1)+"-12-01","官网","广州","公文流转、会务与综合事务，需文字功底扎实。","发布")
 ];
 
 const SKILLS = [
@@ -577,9 +616,13 @@ const SKILLS = [
   {id:"writing",label:"公文写作",kw:["公文","文字功底"]},
   {id:"teacher",label:"教师资格",kw:["教师资格"]},
   {id:"nurse",label:"护士资格",kw:["护士执业"]},
-  {id:"builder",label:"一级建造师",kw:["建造师"]}
+  {id:"builder",label:"一级建造师",kw:["建造师"]},
+  // 这两项是准入门槛，不是加分技能：命中只用于过关，不计入技能分
+  {id:"party",label:"中共党员",kw:["党员"],noScore:true},
+  {id:"inspector",label:"检验技师资格",kw:["检验技师"],noScore:true}
 ];
 const SKILL_BY_ID = Object.fromEntries(SKILLS.map(s=>[s.id,s]));
+const HARD_LABEL = {law:"法考",party:"党员",nurse:"护士执业",inspector:"检验技师"};
 
 const MAJORS = ["会计学","财务管理","审计学","金融学","经济学","计算机科学与技术","软件工程","数据科学与大数据","通信工程","电气工程及自动化","自动化","土木工程","工程管理","交通运输","物流管理","工业工程","市场营销","行政管理","汉语言文学","图书馆学","教育学","临床医学","医学检验技术","护理学","生物医学工程","材料科学与工程","化学","热能与动力工程","法学"];
 const MAJOR_FAMILY = {
@@ -598,7 +641,7 @@ const MAJOR_FAMILY = {
 };
 const EDU_RANK = {"专科":1,"本科":2,"硕士":3,"博士":4};
 const EXP_RANK = {"应届":0,"1-3 年":1,"3-5 年":2,"5 年以上":3};
-const REASONS = ["综合排序靠后","名额已满","经验不匹配","薪资不匹配","其他原因"];
+const REASONS = ["综合排序靠后","名额已满","经验不匹配","学历不符","专业不匹配","资质不达标","薪资不匹配","其他原因"];
 
 const DEFAULT_PROFILE = {name:"林一",edu:"本科",major:"会计学",exp:"应届",city:"广州",skills:["excel","sql","accounting"]};
 
@@ -622,7 +665,7 @@ const SEED = [
   {name:"韩笑",edu:"本科",major:"汉语言文学",exp:"应届",city:"广州",skills:["writing"],apps:[
     {job:"j27",status:"已淘汰",reason:"综合排序靠后",events:[["已投递",4,10],["已淘汰",3,14]]}
   ]},
-  {name:"郑好",edu:"本科",major:"会计学",exp:"应届",city:"广州",skills:["accounting"],apps:[
+  {name:"郑好",edu:"本科",major:"审计学",exp:"应届",city:"深圳",skills:["accounting","cpa"],apps:[
     {job:"j25",status:"已投递",events:[["已投递",1,9]]}
   ]}
 ];
@@ -642,7 +685,9 @@ const esc = s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt
 const nowISO = ()=>new Date().toISOString();
 const fmt = iso=>{const d=new Date(iso);return pad(d.getMonth()+1)+"-"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());};
 const jobById = id=>JOBS.find(j=>j.id===id);
-const isGov = j=>j.t==="事业单位"||j.t==="公务员";
+// 市第一人民医院护理岗是合同制、不占编：单位性质是事业单位，但徽章不该写「编制岗」
+if(typeof JOBS!=="undefined"){ const _j=JOBS.find(function(x){return x.id==="j21";}); if(_j) _j.nogov=true; }
+const isGov = j=>!j.nogov && (j.t==="事业单位"||j.t==="公务员");
 const skillLabel = id=>SKILL_BY_ID[id]?SKILL_BY_ID[id].label:id;
 
 function isoDaysAgo(days,hour){
@@ -651,20 +696,28 @@ function isoDaysAgo(days,hour){
   return t.toISOString();
 }
 function agoText(iso){
-  const d=Math.round((Date.now()-new Date(iso).getTime())/86400000);
+  const now=new Date(); now.setHours(0,0,0,0);
+  const t=new Date(iso);
+  const d=Math.round((now-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/86400000);
   if(d<=0) return "今天";
   if(d===1) return "昨天";
   return d+" 天前";
 }
 function daysLeft(str){
   if(!str||str==="长期") return null;
+  const base=new Date(); base.setHours(0,0,0,0);
+  const full=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(str);
+  if(full){
+    const d=new Date(Number(full[1]),Number(full[2])-1,Number(full[3]));
+    return Math.round((d-base)/86400000);
+  }
   const m=/(\d{1,2})-(\d{1,2})/.exec(str);
   if(!m) return null;
-  const base=new Date(); base.setHours(0,0,0,0);
-  let d=new Date(base.getFullYear(),Number(m[1])-1,Number(m[2]));
-  const gap=Math.round((d-base)/86400000);
-  if(gap>183) d=new Date(base.getFullYear()-1,Number(m[1])-1,Number(m[2]));
-  else if(gap<-183) d=new Date(base.getFullYear()+1,Number(m[1])-1,Number(m[2]));
+  const mo=Number(m[1])-1, da=Number(m[2]);
+  let d=new Date(base.getFullYear(),mo,da);
+  // 只有「月-日」的公告一律取未来最近一次。
+  // 旧实现用 ±183 天猜年份，会让每年 1–4 月打开时整盘岗位被误判「已截止」。
+  if(Math.round((d-base)/86400000)<0) d=new Date(base.getFullYear()+1,mo,da);
   return Math.round((d-base)/86400000);
 }
 function deadlineText(j){
@@ -716,16 +769,24 @@ function evalJob(job, p){
   parts.city=cOk?10:5;
 
   const text=(job.m+" "+job.desc+" "+job.w+" "+job.r).toLowerCase();
-  const hits=p.skills.map(id=>SKILL_BY_ID[id]).filter(Boolean).filter(s=>s.kw.some(kw=>text.indexOf(kw)>=0));
-  parts.skill=Math.min(20,hits.length*7);
+  const hits=(p.skills||[]).map(id=>SKILL_BY_ID[id]).filter(Boolean).filter(s=>s.kw.some(kw=>text.indexOf(kw)>=0));
+  const scored=hits.filter(s=>!s.noScore);
+  parts.skill=Math.min(20,scored.length*7);
+
+  // 硬资质单独判：真实公告常把「须过法考」「限党员」「需持证」写在正文而不是专业栏，
+  // 只按专业名判断会给出「符合资格」的错误答案——这比不给结论更危险。
+  if(job.hard && (p.skills||[]).indexOf(job.hard)<0){
+    fails.push(HARD_LABEL[job.hard]||job.hard);
+  }
 
   const score=parts.edu+parts.major+parts.exp+parts.city+parts.skill;
-  return {ok:fails.length===0,fails,parts,score,hits};
+  return {ok:fails.length===0,fails,parts,score,hits:scored,creds:(p.skills||[])};
 }
 function failLabel(ev, job){
   const exp=(job && job.x==="应届")?"非应届":"经验不足";
-  const map={"学历":"学历不符","专业":"专业不符","经验":exp};
-  return ev.fails.length===1 ? map[ev.fails[0]] : "差 "+ev.fails.length+" 项";
+  const map={"学历":"学历不符","专业":"专业不符","经验":exp,"法考":"未过法考","党员":"非党员","护士执业":"无护士证","检验技师":"无检验证"};
+  const first=ev.fails[0];
+  return ev.fails.length===1 ? (map[first]||(first+"不符")) : "差 "+ev.fails.length+" 项";
 }
 
 /* ================= 状态 ================= */
@@ -859,14 +920,21 @@ function loadState(){
   }catch(e){}
   return seedState();
 }
+let persistWarned=false;
 function save(){
-  try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){}
+  try{ localStorage.setItem(KEY,JSON.stringify(state)); }
+  catch(e){
+    // 隐私模式 / 配额满：静默失败会让演示看起来「操作成功但刷新就没了」
+    if(!persistWarned){ persistWarned=true; toast("本机存储写入失败：刷新后这次的改动可能不保留"); }
+  }
 }
 function applyTheme(){
   document.documentElement.setAttribute("data-theme",state.theme==="dark"?"dark":"light");
 }
 function hideToast(){
-  $("#toast").classList.remove("show");
+  const t=$("#toast");
+  t.classList.remove("show");
+  t.setAttribute("aria-hidden","true");
   toastAction=null;
 }
 function toast(msg, action){
@@ -998,7 +1066,7 @@ function topbarHtml(){
 function statusbarHtml(){
   const pub=JOBS.filter(j=>j.src==="发布").length;
   return '<span>示例数据 · '+JOBS.length+' 个岗位（'+(JOBS.length-pub)+' 采集 + '+pub+' 发布）</span>'+
-         '<span>本地存储 · 刷新不丢 · 演示版 v0.3</span>';
+         '<span>本地存储 · 刷新不丢 · 演示版 v0.4</span>';
 }
 
 /* ================= 主视图 ================= */
@@ -1048,10 +1116,11 @@ function filteredJobs(){
 function ringHtml(ev){
   if(!ev.ok) return '<div class="ring na" aria-label="资格不符"><b>—</b></div><span class="ringlb">差 '+ev.fails.length+' 项</span>';
   const cls=ev.score>=90?"":ev.score>=80?" mid":" low";
-  const off=(125.66*(1-ev.score/100)).toFixed(1);
+  const RING_C=125.66; // 2πr, r=20
+  const off=(RING_C*(1-ev.score/100)).toFixed(1);
   return '<div class="ring'+cls+'" aria-label="对口分 '+ev.score+'"><svg viewBox="0 0 48 48" aria-hidden="true">'+
     '<circle class="rg" cx="24" cy="24" r="20"/>'+
-    '<circle class="rf" cx="24" cy="24" r="20" stroke-dasharray="125.66" stroke-dashoffset="'+off+'"/>'+
+    '<circle class="rf" cx="24" cy="24" r="20" stroke-dasharray="'+RING_C+'" stroke-dashoffset="'+off+'"/>'+
   '</svg><b>'+ev.score+'</b></div><span class="ringlb">对口分</span>';
 }
 function jobCard(item){
@@ -1069,8 +1138,9 @@ function jobCard(item){
   else if(gov) stateBadge='<span class="badge warn">可报 · 官方</span>';
   else stateBadge='<span class="badge ok">可投</span>';
   let cta;
-  if(!ev.ok) cta='<button class="btn ghost sm" disabled>资格不符</button>';
-  else if(applied) cta='<button class="btn ghost sm" disabled>已投递</button>';
+  // 已投递是既成事实：改画像后资格重算变了，也不该把已投出去的单显示成「资格不符」
+  if(applied) cta='<button class="btn ghost sm" disabled>已投递</button>';
+  else if(!ev.ok) cta='<button class="btn ghost sm" disabled>资格不符</button>';
   else if(closed) cta='<button class="btn ghost sm" disabled>已截止</button>';
   else if(gov) cta='<button class="btn ghost sm" data-act="gov" data-job="'+j.id+'">去官方报名</button>';
   else cta='<button class="btn primary sm" data-act="apply" data-job="'+j.id+'">投递</button>';
@@ -1175,6 +1245,7 @@ function appCard(a){
       '<div class="app-meta"><span>'+esc(j.t)+'</span><i>·</i><span>'+esc(j.city)+'</span><i>·</i><span>'+esc(j.e)+'</span><i>·</i><span>'+esc(j.x)+'</span></div>'+
     '</div><span class="badge '+STATUS_TONE[a.status]+'">'+STATUS_LABEL[a.status]+'</span></div>'+
     progressBlock(a)+
+    '<div class="dsec" style="margin:14px 0 2px">进度明细</div>'+timelineHtml(a)+
     (rejected?'<div class="rejectbox"><b>未通过</b><span>理由：'+esc(a.reason||"未填写")+'</span><p>理由会同时沉淀到招聘漏斗，帮后面的人少走弯路。</p></div>':"")+
     '<div class="app-foot"><span>投递 '+fmt(first)+' · 更新 '+fmt(a.updatedAt)+'</span><span>'+deadlineText(j)+'</span>'+
       '<span class="app-acts"><button class="btn ghost sm" data-act="job" data-job="'+j.id+'">看岗位</button>'+
@@ -1287,11 +1358,13 @@ function viewPool(){
   const statuses=["全部","已投递","初筛","面试","已录用","已淘汰"];
   return '<div class="page">'+
     '<div class="page-head"><div><h1>候选人池</h1><p class="sub">同一批投递单的另一面：求职者投的是它，你筛的也是它。推进或淘汰，对面立刻看到。</p></div></div>'+
-    '<div class="kpis">'+
-      '<div class="kpi"><div class="lb">收到投递</div><div class="v">'+apps.length+'</div><div class="ft">含全部岗位</div></div>'+
-      '<div class="kpi"><div class="lb">初筛中</div><div class="v">'+count("初筛")+'</div><div class="ft">待推进或淘汰</div></div>'+
-      '<div class="kpi"><div class="lb">面试中</div><div class="v">'+count("面试")+'</div><div class="ft">等面试结果</div></div>'+
-      '<div class="kpi"><div class="lb">已录用</div><div class="v">'+count("已录用")+'</div><div class="ft">流程结束</div></div>'+
+    '<div class="kpis k6">'+
+      '<button class="kpi" data-act="pool-status" data-status="全部"><div class="lb">收到投递</div><div class="v">'+apps.length+'</div><div class="ft">含全部岗位</div></button>'+
+      '<button class="kpi" data-act="pool-status" data-status="已投递"><div class="lb">待处理</div><div class="v">'+count("已投递")+'</div><div class="ft">还没筛过</div></button>'+
+      '<button class="kpi" data-act="pool-status" data-status="初筛"><div class="lb">初筛中</div><div class="v">'+count("初筛")+'</div><div class="ft">待推进或淘汰</div></button>'+
+      '<button class="kpi" data-act="pool-status" data-status="面试"><div class="lb">面试中</div><div class="v">'+count("面试")+'</div><div class="ft">等面试结果</div></button>'+
+      '<button class="kpi" data-act="pool-status" data-status="已录用"><div class="lb">已录用</div><div class="v">'+count("已录用")+'</div><div class="ft">流程结束</div></button>'+
+      '<button class="kpi" data-act="pool-status" data-status="已淘汰"><div class="lb">已淘汰</div><div class="v">'+count("已淘汰")+'</div><div class="ft">理由已沉淀</div></button>'+
     '</div>'+
     '<div class="toolbar">'+
       '<select class="sel" id="poolJob" aria-label="按岗位筛选">'+poolJobOptions()+'</select>'+
@@ -1337,10 +1410,12 @@ function viewFunnel(){
   return '<div class="page">'+
     '<div class="page-head"><div><h1>招聘漏斗</h1><p class="sub">投递单往前走一格，漏斗就变一次。淘汰理由不是垃圾桶，是下一轮定 JD 的输入。</p></div></div>'+
     (total?'<div class="card" style="margin-top:16px">'+
-      '<div class="listmeta"><span>累计转化</span><span>当前 '+total+' 张投递单 · 已淘汰 '+rej+' 张</span></div>'+
-      '<div class="frows">'+rows.map(([label,n,cls])=>
-        '<div class="frow"><span class="lb">'+label+'</span><div class="ftrack"><i class="'+cls+'" style="width:'+(n/denom*100)+'%"></i></div><b>'+n+'</b></div>'
-      ).join("")+'</div>'+
+      '<div class="listmeta"><span>累计转化</span><span>当前 '+total+' 张投递单 · 已淘汰 '+rej+' 张 · 各行为累计到达数</span></div>'+
+      '<div class="frows">'+rows.map(([label,n,cls],i)=>{
+        const prevN=i?rows[i-1][1]:null;
+        const pct=(prevN===null||!prevN)?"—":(Math.round(n/prevN*100)+"%");
+        return '<div class="frow"><span class="lb">'+label+'</span><div class="ftrack"><i class="'+cls+'" style="width:'+(n/denom*100)+'%"></i></div><b>'+n+'</b><span class="fpct">'+pct+'</span></div>';
+      }).join("")+'</div>'+
     '</div>':'<div class="empty" style="margin-top:16px"><div class="eic">漏</div><h3>还没有投递单</h3><p>去求职者端投一份，漏斗就会开始出数。</p></div>')+
     '<div class="card" style="margin-top:12px"><div class="listmeta"><span>淘汰原因分布</span><span>会回灌到「门槛基准」</span></div>'+
       (rej?'<div class="reasons">'+Object.keys(reasons).map(r=>
@@ -1358,12 +1433,12 @@ function postRows(){
   state.apps.forEach(a=>counts[a.jobId]=(counts[a.jobId]||0)+1);
   const list=JOBS.filter(j=>{
     if(!q) return true;
-    return (j.u+" "+j.r+" "+j.m+" "+j.t).toLowerCase().indexOf(q)>=0;
+    return (j.u+" "+j.r+" "+j.m+" "+j.t+" "+j.desc).toLowerCase().indexOf(q)>=0;
   });
   if(!list.length) return '<tr class="emptrow"><td colspan="8">没有匹配的岗位，换个关键词试试</td></tr>';
   return list.map(j=>{
     const dl=daysLeft(j.d);
-    const stateText=dl===null?"长期":(dl<0?"已截止":"在招 · "+dl+" 天");
+    const stateText=dl===null?"长期":(dl<0?"已截止":(dl===0?"今天截止":"在招 · "+dl+" 天"));
     return '<tr>'+
       '<td data-label="单位"><span class="tdv">'+esc(j.u)+'</span></td>'+
       '<td data-label="岗位"><span class="tdv"><b>'+esc(j.r)+'</b><span class="dim">'+esc(j.m)+'</span></span></td>'+
@@ -1371,7 +1446,7 @@ function postRows(){
       '<td data-label="门槛" class="dim"><span class="tdv">'+esc(j.e+' · '+j.x)+'</span></td>'+
       '<td data-label="名额" class="num"><span class="tdv">'+j.n+'</span></td>'+
       '<td data-label="投递" class="num"><span class="tdv">'+(counts[j.id]||0)+'</span></td>'+
-      '<td data-label="截止"><span class="tdv">'+stateText+'</span></td>'+
+      '<td data-label="状态"><span class="tdv">'+stateText+'</span></td>'+
       '<td data-label="来源" class="dim"><span class="tdv">'+esc(j.src==="发布"?"企业发布":"公告采集")+'</span></td>'+
     '</tr>';
   }).join("");
@@ -1382,7 +1457,7 @@ function viewPosts(){
     '<div class="toolbar"><label class="search">'+ICONS.search+'<input id="postQ" type="search" placeholder="搜单位、岗位或专业…" value="'+esc(ui.posts.q)+'" aria-label="搜索岗位"></label>'+
       '<span class="muted small">共 '+JOBS.length+' 个岗位</span><button class="btn primary sm" style="margin-left:auto" data-act="post-open">发布岗位</button></div>'+
     '<div class="tablewrap"><table><thead><tr>'+
-      '<th>单位</th><th>岗位</th><th>性质</th><th>门槛</th><th style="text-align:right">名额</th><th style="text-align:right">投递</th><th>截止</th><th>来源</th>'+
+      '<th>单位</th><th>岗位</th><th>性质</th><th>门槛</th><th style="text-align:right">名额</th><th style="text-align:right">投递</th><th>状态</th><th>来源</th>'+
     '</tr></thead><tbody id="postBody">'+postRows()+'</tbody></table></div>'+
   '</div>';
 }
@@ -1400,6 +1475,7 @@ function openPostModal(){
     '<label class="mfield">岗位名称<input id="ppR" type="text" maxlength="20" value="财务核算"></label>'+
     '<div class="form-grid">'+
       '<label class="mfield">性质<select id="ppT"><option>央企</option><option>国企</option><option selected>民企</option><option>外企</option><option>事业单位</option></select></label>'+
+      '<label class="mfield">专业<select id="ppM"><option value="不限">不限</option>'+MAJORS.map(m=>'<option'+(m==="会计学"?" selected":"")+'>'+m+'</option>').join("")+'</select></label>'+
       '<label class="mfield">学历<select id="ppE"><option>不限</option><option selected>本科</option><option>硕士</option><option>专科</option></select></label>'+
       '<label class="mfield">经验<select id="ppX"><option>不限</option><option selected>应届</option><option>1-3 年</option><option>3-5 年</option><option>5 年以上</option></select></label>'+
       '<label class="mfield">城市<input id="ppCity" type="text" maxlength="10" value="广州"></label>'+
@@ -1417,7 +1493,9 @@ function confirmPost(){
   const n=parseInt(formVal("ppN"),10), d=formVal("ppD"), err=$("#ppErr");
   if(!u||!r||!city||!n||n<1||!d){ if(err) err.hidden=false; return; }
   const dd=d.split("-").slice(1).map(function(x){return x.replace(/^0/,"");}).join("-");
-  const job=J("p"+Date.now(),formVal("ppT")||"民企",u,r,"会计学","财会",formVal("ppE")||"本科",formVal("ppX")||"应届",n,dd,"企业发布",city,desc||("负责"+r+"的日常工作。"),"发布");
+  const m=formVal("ppM")||"不限";
+  const mf=MAJOR_FAMILY[m]||"不限";
+  const job=J("p"+Date.now(),formVal("ppT")||"民企",u,r,m,mf,formVal("ppE")||"本科",formVal("ppX")||"应届",n,dd,"企业发布",city,desc||("负责"+r+"的日常工作。"),"发布");
   state.posts=state.posts||[]; state.posts.unshift(job);
   save(); syncPostedJobs(); closeModal(); renderApp();
   toast("已发布 · 求职者端现在能看到「"+u+" · "+r+"」");
@@ -1458,7 +1536,8 @@ function openModal(html){
   modalFocus=document.activeElement;
   const m=$("#modal");
   m.hidden=false;
-  m.innerHTML='<div class="modal-card" role="dialog" aria-modal="true">'+html+'</div>';
+  const title=(/<h2[^>]*>([^<]+)</.exec(html)||[])[1]||"对话框";
+  m.innerHTML='<div class="modal-card" role="dialog" aria-modal="true" aria-label="'+esc(title)+'">'+html+'</div>';
   const f=focusables(m)[0];
   if(f) f.focus();
 }
@@ -1476,10 +1555,14 @@ function breakdownHtml(job,ev){
     ["学历",20,p.edu,ev.fails.indexOf("学历")<0,"要求 "+job.e],
     ["专业",30,p.major,ev.fails.indexOf("专业")<0,"要求 "+job.m],
     ["经验",20,p.exp,ev.fails.indexOf("经验")<0,"要求 "+job.x],
-    ["地点",10,p.city,true,job.city==="全国"?"全国":("要求 "+job.city)],
+    ["地点",10,p.city,p.city===10,job.city==="全国"?"全国":("要求 "+job.city)],
     ["技能",20,p.skill,true,ev.hits.length?ev.hits.map(h=>h.label).join(" / "):"无命中"]
   ];
-  return '<div class="scoretop"><b>'+ev.score+'</b><span>'+(ev.ok?"硬门槛全过 · 5 项合计":"资格不符 · 以下为预估分")+'</span></div>'+
+  if(job.hard){
+    const has=(ev.creds||[]).indexOf(job.hard)>=0;
+    rows.push(["准入",1,has?1:0,has,"要求 "+(HARD_LABEL[job.hard]||job.hard)]);
+  }
+  return '<div class="scoretop"><b>'+ev.score+'</b><span>'+(ev.ok?"硬门槛全过 · 满分 100":"资格不符 · 以下仅为软分预估")+'</span></div>'+
     rows.map(([label,max,val,ok,note])=>
       '<div class="brow"><span class="bl">'+label+'</span>'+
         '<div class="bt"><i class="'+(ok?"":"fail")+'" style="width:'+(val/max*100)+'%"></i></div>'+
@@ -1494,8 +1577,8 @@ function jobDrawer(job,ev){
   const closed=isClosed(job);
   const applied=state.apps.some(a=>a.mine && a.jobId===job.id);
   let cta;
-  if(!ev.ok) cta='<button class="btn" disabled>资格不符</button>';
-  else if(applied) cta='<button class="btn ghost" disabled>已投递 · 看进度</button>';
+  if(applied) cta='<button class="btn ghost" disabled>已投递 · 看进度</button>';
+  else if(!ev.ok) cta='<button class="btn" disabled>资格不符</button>';
   else if(closed) cta='<button class="btn" disabled>已截止 · 不能投递</button>';
   else if(gov) cta='<button class="btn" data-act="gov" data-job="'+job.id+'">去官方报名</button>';
   else cta='<button class="btn primary" data-act="apply" data-job="'+job.id+'">投递这个岗位</button>';
@@ -1516,9 +1599,10 @@ function jobDrawer(job,ev){
       '</div>'+
       '<div><div class="dsec" style="margin-bottom:8px">对口分构成</div>'+breakdownHtml(job,ev)+'</div>'+
       '<div><div class="dsec" style="margin-bottom:6px">岗位职责</div><p class="dtext">'+esc(job.desc)+'</p></div>'+
-      '<div><div class="dsec" style="margin-bottom:6px">报名入口</div><p class="dtext">'+esc(job.w)+'</p></div>'+
+      '<div><div class="dsec" style="margin-bottom:6px">报名入口</div><p class="dtext">'+((gov||job.src!=="发布")?'<a class="ext" href="'+esc(govEntryUrl(job))+'" target="_blank" rel="noopener noreferrer">'+esc(job.w)+' ↗</a>':esc(job.w))+'</p></div>'+
       (closed&&!applied?'<div class="dnote">这个岗位已经过了截止日期，投递入口已关闭。要求还在，可以留着判断下一轮要不要投。</div>':
         gov?'<div class="dnote">编制岗由主管部门统一组织报名与考试：平台只做资格自查和入口跳转，这张单不进企业筛选。</div>':
+        !ev.ok?'<div class="dnote">这份画像不满足硬门槛，投递入口不可用；去「我的画像」改完会自动重算。</div>':
         '<div class="dnote">投递后，招聘方会在候选人池看到你的画像快照；TA 推进或淘汰，你在这里都能看到。</div>')+
     '</div>'+
     '<div class="dfoot">'+cta+'<button class="btn ghost" data-act="close-drawer">关闭</button></div>';
@@ -1595,6 +1679,8 @@ function switchRole(role){
   state.role=role;
   ui.view=role==="candidate"?"jobs":"pool";
   ui.pool={q:"",status:"全部",job:"all"};
+  Object.assign(ui.jobs,{q:"",type:"全部",only:false});
+  ui.posts={q:""};
   save();
   closeDrawer(); closeModal();
   renderApp();
@@ -1609,7 +1695,7 @@ function applyJob(id){
   if(isGov(job)){ openGov(job); return; }
   if(state.apps.some(a=>a.mine && a.jobId===id)){ toast("这个岗位你已经投过了"); return; }
   const me={
-    id:"m"+Date.now().toString(36),
+    id:"m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     jobId:id,
     candidate:{name:state.profile.name,edu:state.profile.edu,major:state.profile.major,exp:state.profile.exp,city:state.profile.city,skills:state.profile.skills.slice()},
     mine:true,status:"已投递",reason:null,score:ev.score,
@@ -1672,7 +1758,8 @@ function openReject(id){
   openModal('<div class="mhead"><h2>淘汰 · '+esc(a.candidate.name)+'</h2><span class="badge">'+esc(j.u+" · "+j.r)+'</span></div>'+
     '<p class="mtext">淘汰理由会给求职者看到，也会汇总进「淘汰原因分布」。</p>'+
     '<label class="mfield">淘汰理由<select id="rejectSel">'+REASONS.map(r=>'<option>'+r+'</option>').join("")+'</select></label>'+
-    '<p class="muted small" style="margin-top:10px">别写人身评价，写这条投递单卡在哪个条件上。</p>'+
+    '<label class="mfield">补充说明（可选，选「其他原因」时作为理由）<input id="rejectNote" type="text" maxlength="30" placeholder="例：须持证，候选人暂无"></label>'+
+    '<p class="muted small" style="margin-top:10px">别写人身评价，写这条投递单卡在哪个条件上。淘汰后 6 秒内可撤销。</p>'+
     '<div class="mfoot"><button class="btn ghost" data-act="close-modal">取消</button>'+
     '<button class="btn danger" data-act="reject-confirm" data-app="'+a.id+'">确认淘汰</button></div>');
 }
@@ -1680,14 +1767,28 @@ function confirmReject(id){
   const a=state.apps.find(x=>x.id===id);
   if(!a) return;
   const sel=$("#rejectSel");
+  const prevStatus=a.status, prevReason=a.reason, prevUpdated=a.updatedAt, prevLen=a.events.length;
+  const note=$("#rejectNote");
+  let reason=sel?sel.value:"其他原因";
+  if(reason==="其他原因" && note && note.value.trim()) reason="其他："+note.value.trim();
   a.status="已淘汰";
-  a.reason=sel?sel.value:"其他原因";
+  a.reason=reason;
   a.events.push({status:"已淘汰",at:nowISO()});
   a.updatedAt=nowISO();
   save();
   closeModal(); closeDrawer();
   renderApp();
-  toast("已淘汰 · 理由已同步给求职端");
+  // 淘汰是不可逆的破坏性操作，比推进更需要纠错入口
+  toast("已淘汰 · 理由已同步给求职端", {label:"撤销", fn:function(){
+    if(a.status!=="已淘汰" || a.events.length!==prevLen+1) return;
+    a.events.length=prevLen;
+    a.status=prevStatus;
+    a.reason=prevReason;
+    a.updatedAt=prevUpdated;
+    save();
+    renderApp();
+    toast("已撤销淘汰 · 回到「"+STATUS_LABEL[prevStatus]+"」");
+  }});
 }
 function saveProfile(){
   const name=($("#pfName").value||"").trim()||"林一";
@@ -1702,10 +1803,23 @@ function saveProfile(){
   const ok=JOBS.filter(j=>evalJob(j,state.profile).ok).length;
   toast("画像已更新 · 当前对口 "+ok+" 个岗位");
 }
+const SITE_URL=[
+  ["国聘网","https://www.iguopin.com/"],
+  ["人事考试网","http://www.cpta.com.cn/"],
+  ["国家公务员局","http://www.scs.gov.cn/"],
+  ["国考专题页","https://bm.scs.gov.cn/"],
+  ["LinkedIn","https://www.linkedin.com/jobs/"]
+];
+function govEntryUrl(job){
+  const hit=SITE_URL.find(function(x){return String(job.w).indexOf(x[0])>=0;});
+  if(hit) return hit[1];
+  // 认不出站点时退到站内搜索，不编造具体岗位页
+  return "https://www.bing.com/search?q="+encodeURIComponent(job.u+" "+job.r+" 招聘 官网");
+}
 function openGov(job){
   openModal('<div class="mhead"><h2>'+esc(job.u+" · "+job.r)+'</h2><span class="badge warn">编制岗</span></div>'+
     '<p class="mtext">编制岗由主管部门统一组织报名与考试。平台只做资格自查和入口跳转，这张「投递单」不会进入企业筛选。</p>'+
-    '<div class="kv"><span>报名入口</span><b>'+esc(job.w)+'</b></div>'+
+    '<div class="kv"><span>报名入口</span><b><a class="ext" href="'+esc(govEntryUrl(job))+'" target="_blank" rel="noopener noreferrer">'+esc(job.w)+' ↗</a></b></div>'+
     '<div class="kv"><span>截止</span><b>'+esc(job.d==="长期"?"长期":job.d)+'</b></div>'+
     '<p class="muted small" style="margin-top:12px">企业岗才有完整闭环：投递 → 初筛 → 面试 → 录用。切到「招聘方」或改投企业岗看看。</p>'+
     '<div class="mfoot"><button class="btn primary" data-act="close-modal">知道了</button></div>');
@@ -1713,7 +1827,7 @@ function openGov(job){
 function openHelp(){
   openModal('<h2>演示路径 · 2 分钟</h2>'+
     '<ol class="steps">'+
-      '<li><b>01</b>求职者端：先看「对口岗位」，点一张卡片，看对口分由哪 5 项拼出来。</li>'+
+      '<li><b>01</b>求职者端：先看「对口岗位」，点一张卡片，看对口分由哪几项拼出来（有硬资质的岗位会多一行「准入」）。</li>'+
       '<li><b>02</b>点「投递」投 2–3 个岗位；被硬门槛卡住的岗位会标出原因。</li>'+
       '<li><b>03</b>右上角切到「招聘方」：候选人池里能看到刚才那几张投递单。</li>'+
       '<li><b>04</b>推进一个、淘汰一个（选理由）——数据实时改。</li>'+
@@ -1728,15 +1842,20 @@ function openReset(){
     '<button class="btn danger" data-act="reset-confirm">确认重置</button></div>');
 }
 function doReset(){
+  const role=state.role, theme=state.theme;
   try{ localStorage.removeItem(KEY); }catch(e){}
   state=seedState();
+  // 重置只该清演示数据：保留身份与明暗主题，否则演示讲到一半会被踢回落地页
+  state.role=role; state.theme=theme;
   syncPostedJobs();
   save();
-  ui.view="jobs";
+  ui.view=role==="hr"?"pool":"jobs";
+  Object.assign(ui.jobs,{q:"",type:"全部",only:false});
   ui.pool={q:"",status:"全部",job:"all"};
+  ui.posts={q:""};
   closeModal(); closeDrawer();
   renderApp();
-  toast("演示数据已重置");
+  toast("演示数据已重置 · 身份保留在"+(role==="hr"?"招聘方":"求职者")+"端");
 }
 
 /* ================= 事件 ================= */

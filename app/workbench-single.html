@@ -1423,13 +1423,13 @@ html[data-density="tight"] td.c-unit .u-name{font-size:.92rem}
 .stchip:disabled { opacity: .45; cursor: not-allowed; }
 
 /* ---------- 提醒中心 ---------- */
-.hrrules { display: grid; }
-.hrrule { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line2, #EFEFEA); }
+.hrrules { display: grid; grid-template-columns: minmax(0, 1fr); }
+.hrrule { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 16px; border-bottom: 1px solid var(--line2, #EFEFEA); }
 .hrrule:last-child { border-bottom: 0; }
 .hrrule.is-off { opacity: .55; }
 .hrrule-t { font: 10px/1 var(--mono, ui-monospace, Consolas, monospace); letter-spacing: .1em; color: var(--muted, #686D76); border: 1px solid var(--line, #E6E6E0); border-radius: 4px; padding: 3px 5px; }
 .hrrule-v { font-size: 12.5px; min-width: 90px; }
-.hrrule-n { flex: 1; font-size: 11px; color: var(--muted, #686D76); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hrrule-n { flex: 1; min-width: 0; font-size: 11px; color: var(--muted, #686D76); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hrswitch {
   position: relative; width: 34px; height: 19px; flex: 0 0 auto; border-radius: 10px;
   border: 1px solid var(--line, #E6E6E0); background: var(--line2, #EFEFEA); cursor: pointer; padding: 0;
@@ -1558,6 +1558,11 @@ html[data-density="tight"] td.c-unit .u-name{font-size:.92rem}
   .hrtal-row.head span:nth-child(2), .hrtal-row.head span:nth-child(3), .hrtal-row.head span:nth-child(5),
   .hrtal-row:not(.head) > span:nth-child(3), .hrtal-row:not(.head) > span:nth-child(5) { display: none; }
   .hrbrief-preview .bf-bars { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .hrrule { flex-wrap: wrap; row-gap: 4px; }
+  .hrrule-n { order: 5; flex: 1 1 100%; white-space: normal; overflow: visible; }
 }
 
 /* KPI 兼容：views 里用 span/b/small 的简化写法，视觉对齐 .kpi 的 lb/v/ft */
@@ -4299,7 +4304,7 @@ window.ME = (function () {
     ["name", "姓名", 8], ["gender", "性别", 3], ["birth", "出生年月", 4], ["politics", "政治面貌", 3],
     ["phone", "手机", 8], ["email", "邮箱", 7], ["idcard", "身份证号", 6],
     ["edu", "最高学历", 8], ["degree", "学位", 5], ["school", "毕业院校", 7], ["major", "专业", 7],
-    ["grad", "毕业时间", 5], ["city", "期望地区", 5], ["want", "求职意向", 6], ["intent", "意向岗位", 7],
+    ["grad", "毕业时间", 5], ["years", "工作年限", 5], ["city", "期望地区", 5], ["want", "求职意向", 6], ["intent", "意向岗位", 7],
     ["resume", "简历附件", 8]
   ];
   const TOTAL = FIELDS.reduce((s, f) => s + f[2], 0);
@@ -6151,7 +6156,7 @@ window.ME = (function () {
       target: savedOnly ? "对标清单" : "对标清单 + 我的职位",
       sections: sections,
       kpis: [
-        { lb: "岗位库", v: fmt(HR.positions().length), ft: meta.units ? fmt(meta.units) + " 家单位 · " + fmt(meta.seats) + " 个名额" : "" },
+        { lb: "岗位库", v: fmt(HR.positions().length), ft: fmt(new Set(HR.positions().map(function (d) { return d.u; })).size) + " 家单位 · " + fmt(HR.positions().reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0)) + " 个名额" },
         { lb: "对标清单", v: fmt(benchRows.length), ft: benchRows.length ? "覆盖 " + new Set(benchRows.map(function (d) { return d.u; })).size + " 家单位" : "还没标记岗位" },
         { lb: "我的职位", v: fmt(jdList.length), ft: "在招 " + liveJds.length + " 个 · 草稿 " + (jdList.length - liveJds.length) + " 个" },
         { lb: "候选人", v: fmt(talent.length), ft: "待初筛 " + talent.filter(function (t) { return t.stage === "new"; }).length + " 人" }
@@ -7280,7 +7285,7 @@ window.ME = (function () {
     var srcPanel = '<div class="panel hrpanel"><div class="panel-hd"><b>数据源台账</b><span>快照 ' + esc(meta.snapshot || "—") + " · 可回溯到公告原文</span></div>" +
       '<div class="hrkvs">' +
         kv("岗位表", fmt(data.length) + " 行 × 16 列") +
-        kv("单位", fmt(meta.units || new Set(data.map(function (d) { return d.u; })).size) + " 家") +
+        kv("单位", fmt(new Set(data.map(function (d) { return d.u; })).size) + " 家") +
         kv("名额", fmt(meta.seats || data.reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0)) + " 个") +
         kv("公告", notices.length + " 份") +
         kv("地区", fmt(meta.regions || 24) + " 个城市") +

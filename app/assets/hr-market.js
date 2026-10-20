@@ -325,7 +325,7 @@
       target: savedOnly ? "对标清单" : "对标清单 + 我的职位",
       sections: sections,
       kpis: [
-        { lb: "岗位库", v: fmt(HR.positions().length), ft: meta.units ? fmt(meta.units) + " 家单位 · " + fmt(meta.seats) + " 个名额" : "" },
+        { lb: "岗位库", v: fmt(HR.positions().length), ft: fmt(new Set(HR.positions().map(function (d) { return d.u; })).size) + " 家单位 · " + fmt(HR.positions().reduce(function (a, d) { return a + (Number(d.n) || 0); }, 0)) + " 个名额" },
         { lb: "对标清单", v: fmt(benchRows.length), ft: benchRows.length ? "覆盖 " + new Set(benchRows.map(function (d) { return d.u; })).size + " 家单位" : "还没标记岗位" },
         { lb: "我的职位", v: fmt(jdList.length), ft: "在招 " + liveJds.length + " 个 · 草稿 " + (jdList.length - liveJds.length) + " 个" },
         { lb: "候选人", v: fmt(talent.length), ft: "待初筛 " + talent.filter(function (t) { return t.stage === "new"; }).length + " 人" }

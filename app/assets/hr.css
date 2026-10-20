@@ -253,13 +253,13 @@
 .stchip:disabled { opacity: .45; cursor: not-allowed; }
 
 /* ---------- 提醒中心 ---------- */
-.hrrules { display: grid; }
-.hrrule { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line2, #EFEFEA); }
+.hrrules { display: grid; grid-template-columns: minmax(0, 1fr); }
+.hrrule { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 16px; border-bottom: 1px solid var(--line2, #EFEFEA); }
 .hrrule:last-child { border-bottom: 0; }
 .hrrule.is-off { opacity: .55; }
 .hrrule-t { font: 10px/1 var(--mono, ui-monospace, Consolas, monospace); letter-spacing: .1em; color: var(--muted, #686D76); border: 1px solid var(--line, #E6E6E0); border-radius: 4px; padding: 3px 5px; }
 .hrrule-v { font-size: 12.5px; min-width: 90px; }
-.hrrule-n { flex: 1; font-size: 11px; color: var(--muted, #686D76); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hrrule-n { flex: 1; min-width: 0; font-size: 11px; color: var(--muted, #686D76); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hrswitch {
   position: relative; width: 34px; height: 19px; flex: 0 0 auto; border-radius: 10px;
   border: 1px solid var(--line, #E6E6E0); background: var(--line2, #EFEFEA); cursor: pointer; padding: 0;
@@ -388,6 +388,11 @@
   .hrtal-row.head span:nth-child(2), .hrtal-row.head span:nth-child(3), .hrtal-row.head span:nth-child(5),
   .hrtal-row:not(.head) > span:nth-child(3), .hrtal-row:not(.head) > span:nth-child(5) { display: none; }
   .hrbrief-preview .bf-bars { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .hrrule { flex-wrap: wrap; row-gap: 4px; }
+  .hrrule-n { order: 5; flex: 1 1 100%; white-space: normal; overflow: visible; }
 }
 
 /* KPI 兼容：views 里用 span/b/small 的简化写法，视觉对齐 .kpi 的 lb/v/ft */
