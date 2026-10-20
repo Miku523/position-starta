@@ -21,7 +21,6 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const url = require("url");
 
 /* ---------------- 参数 ---------------- */
 function parseArgs(argv) {
@@ -411,8 +410,8 @@ function serveStream(req, res) {
   res.write("retry: 3000\n\n");
   const c = { res: res, at: Date.now(), tab: "", ua: req.headers["user-agent"] || "" };
   clients.add(c);
-  const q = url.parse(req.url, true).query;
-  c.tab = q.tab || "";
+  const q = new URL(req.url, "http://127.0.0.1").searchParams;
+  c.tab = q.get("tab") || "";
   // 首包：告诉客户端确实连上了，并给全量状态
   c.res.write("data: " + JSON.stringify({
     type: "hello", clients: clients.size, since: START, asOf: dataFreshness(),
@@ -660,7 +659,9 @@ function text(res, code, msg, extra) {
 
 /* ---------------- 路由 ---------------- */
 const server = http.createServer((req, res) => {
-  const parsed = url.parse(req.url);
+  let parsed;
+  try { parsed = new URL(req.url, "http://127.0.0.1"); }
+  catch (e) { return text(res, 400, "400 · 请求地址不合法"); }
   const p = parsed.pathname || "/";
   if (req.method === "OPTIONS" && p.startsWith("/live/")) { res.writeHead(204, Object.assign(corsHeaders(), SECURITY_HEADERS)); return res.end(); }
 
